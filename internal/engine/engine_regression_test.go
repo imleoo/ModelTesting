@@ -115,7 +115,7 @@ func TestRegression_ToolCallForbidden_RequiresNonEmptyText(t *testing.T) {
 	result := e.RunCase(context.Background(), c)
 
 	if result.Status != model.StatusFail {
-		t.Fatalf("期望 FAIL（无 tool_calls 但 content 也为空，不满足“仅文本”），实际 status=%s", result.Status)
+		t.Fatalf("expected FAIL (no tool_calls but content also empty, does not satisfy text-only requirement), got status=%s", result.Status)
 	}
 }
 
@@ -259,7 +259,45 @@ func TestRegression_SchemaValid_OmittedContentWithToolCallsIsValid(t *testing.T)
 	}
 }
 
-// 缺陷 7：非法 required_rule 不能被默认当作”必须执行”悄悄放行。
+// Codex P2 复审发现：省略 content 字段的兼容放宽范围过大，会连"既无 content
+// 也无 tool_calls 的空消息"都放过。这里锁定边界：省略 content 时必须存在
+// 合法非空 tool_calls，否则仍应判 schema 不合规。
+func TestRegression_SchemaValid_OmittedContentWithoutToolCallsIsInvalid(t *testing.T) {
+	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// message 里既没有 content 键，也没有 tool_calls。
+		fmt.Fprint(w, `{
+			"id":"c1","object":"chat.completion","created":1700000000,"model":"test-model",
+			"choices":[{"index":0,"message":{"role":"assistant"},"finish_reason":"stop"}]
+		}`)
+	})
+	defer closeFn()
+
+	c := simpleCase("content_nonempty", map[string]any{
+		"model": "{{model_key}}", "messages": []any{map[string]any{"role": "user", "content": "hi"}}, "stream": false,
+	})
+	result := e.RunCase(context.Background(), c)
+
+	if result.Status != model.StatusFail {
+		t.Fatalf("expected FAIL (message has neither content nor tool_calls, should be rejected by openai_schema_valid), got status=%s", result.Status)
+	}
+	if result.CaseAttempts[0].FailReason == "" || !containsAny(result.CaseAttempts[0].FailReason, "openai_schema_valid") {
+		t.Fatalf("expected failure to originate from openai_schema_valid check, got reason=%q", result.CaseAttempts[0].FailReason)
+	}
+}
+
+func containsAny(s string, sub string) bool {
+	return len(s) >= len(sub) && (func() bool {
+		for i := 0; i+len(sub) <= len(s); i++ {
+			if s[i:i+len(sub)] == sub {
+				return true
+			}
+		}
+		return false
+	})()
+}
+
+// 缺陷 7：非法 required_rule 不能被默认当作"必须执行"悄悄放行。
 func TestRegression_InvalidRequiredRule_FailsInsteadOfSilentlyRunning(t *testing.T) {
 	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("非法 required_rule 的用例不应该发起任何网络请求")

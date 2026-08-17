@@ -95,28 +95,19 @@ func validateChoice(c any, i int, streamed bool, violations *[]string) {
 func validateMessageBody(bodyMap map[string]any, choiceIdx int, key string, streamed bool, violations *[]string) {
 	prefix := fmt.Sprintf("choices[%d].%s", choiceIdx, key)
 
+	contentVal, hasContentKey := bodyMap["content"]
+	if hasContentKey && contentVal != nil {
+		if _, ok := contentVal.(string); !ok {
+			*violations = append(*violations, prefix+".content 类型应为 string 或 null")
+		}
+	}
+
 	if !streamed {
 		// 非流式 message：role 必须存在（delta 允许省略，只有首个分片才带 role）。
 		requireString(bodyMap, "role", violations)
-		// content 键是否存在不强制要求：真实网关在返回 tool_calls 时常见做法是
-		// 直接省略 content 字段，而不是显式写 "content":null（P2 用真实
-		// kimi-k3 网关验证时发现的情况，二者语义等价，都表示"无文本内容"，
-		// 不应因为字段被省略就判结构不合规）。出现时仍要求类型正确。
-		if v, has := bodyMap["content"]; has && v != nil {
-			if _, ok := v.(string); !ok {
-				*violations = append(*violations, prefix+".content 类型应为 string 或 null")
-			}
-		}
-	} else {
-		if role, hasRole := bodyMap["role"]; hasRole && role != nil {
-			if _, ok := role.(string); !ok {
-				*violations = append(*violations, prefix+".role 类型应为 string")
-			}
-		}
-		if v, has := bodyMap["content"]; has && v != nil {
-			if _, ok := v.(string); !ok {
-				*violations = append(*violations, prefix+".content 类型应为 string 或 null")
-			}
+	} else if role, hasRole := bodyMap["role"]; hasRole && role != nil {
+		if _, ok := role.(string); !ok {
+			*violations = append(*violations, prefix+".role 类型应为 string")
 		}
 	}
 
@@ -126,15 +117,30 @@ func validateMessageBody(bodyMap map[string]any, choiceIdx int, key string, stre
 		}
 	}
 
+	hasValidToolCalls := false
 	if toolCallsRaw, hasToolCalls := bodyMap["tool_calls"]; hasToolCalls && toolCallsRaw != nil {
 		toolCalls, ok := toolCallsRaw.([]any)
 		if !ok {
 			*violations = append(*violations, prefix+".tool_calls 应为数组")
-		} else {
+		} else if len(toolCalls) > 0 {
+			before := len(*violations)
 			for j, tc := range toolCalls {
 				validateToolCall(tc, choiceIdx, j, key, violations)
 			}
+			hasValidToolCalls = len(*violations) == before
 		}
+	}
+
+	// content 键可以省略，但只有在真的存在合法 tool_calls 时才算"这条消息有实质
+	// 内容"——真实网关返回 tool_calls 时常见做法是直接省略 content 字段而不是
+	// 显式写 "content":null（P2 用真实 kimi-k3 网关验证时发现的情况，二者语义
+	// 等价）。但不能反过来放宽到"content 和 tool_calls 都没有也算合规"，那种
+	// 响应本质上是空消息，必须判违规，不能被这条兼容规则掩盖过去。
+	// 只对非流式 message 做这条约束：流式 delta 天然会拆成多个分片，单个分片
+	// （例如只带 finish_reason 的收尾分片）既没有 content 也没有 tool_calls 是
+	// 正常现象，不能套用同一条"消息不能为空"的规则。
+	if !streamed && !hasContentKey && !hasValidToolCalls {
+		*violations = append(*violations, prefix+" 既没有 content 字段也没有合法 tool_calls，消息内容为空")
 	}
 }
 
