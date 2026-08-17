@@ -52,6 +52,13 @@ func RedactCommand(cmd string) string {
 // Run 执行一次完整压测：生成会话 → 按爬坡到达率并发执行 → 汇总指标 → 按 6.2
 // 节规则判定 → 产出 BenchmarkRun + []BenchmarkMetric。
 func Run(ctx context.Context, cfg RunConfig) (RunResult, error) {
+	// LogRef 是 BenchmarkRun.RawStdoutRef 的唯一来源；留空会产出不满足 6.3 节
+	// "stdout/stderr 全量日志引用"要求的留痕，因此在入口就拒绝，而不是留到
+	// 报告阶段才发现引用缺失。
+	if cfg.LogRef == "" {
+		return RunResult{}, fmt.Errorf("RunConfig.LogRef 不能为空：6.3 节要求 BenchmarkRun.RawStdoutRef 必须是可复核的日志引用")
+	}
+
 	runMu.Lock()
 	defer runMu.Unlock()
 
@@ -159,32 +166,50 @@ func computeMetrics(outcomes []RequestOutcome, durationS float64) []model.Benchm
 		BaselineVerdict: model.BaselineNotApplicable, Note: "PDF 未给该分项独立基线，随 throughput_req_s 一并参考",
 	})
 
-	// TTFT
+	// TTFT：只用真正观测到首个非空 delta.content 分片的样本——全部成功请求
+	// 都没有该分片时，TTFTSeconds 恒为 0，绝不能当作"极快"计入判定，否则会
+	// 把"没测到"误判成"性能达标"。
 	ttftSamples := make([]float64, 0, len(successful))
 	for _, o := range successful {
-		ttftSamples = append(ttftSamples, o.TTFTSeconds)
+		if o.TTFTObserved {
+			ttftSamples = append(ttftSamples, o.TTFTSeconds)
+		}
 	}
-	ttftP := ComputePercentiles(ttftSamples)
+	ttftVerdict := model.BaselineNotObservable
+	ttftNote := "所有成功请求均未观测到首个非空 delta.content 分片，无法计算 TTFT，按 6.2 节兜底规则移出验收判定"
+	var ttftP Percentiles
+	if len(ttftSamples) > 0 {
+		ttftP = ComputePercentiles(ttftSamples)
+		ttftVerdict = judgeLowerIsBetter(ttftP.P50, baselineTTFTP50Seconds)
+		ttftNote = "判定仅看 P50，其余分位仅记录（06 节 6.2 表）"
+	}
 	metrics = append(metrics, model.BenchmarkMetric{
 		Name: "ttft", Scope: "overall", Unit: "s",
 		Avg: ttftP.Avg, P50: ttftP.P50, P75: ttftP.P75, P90: ttftP.P90, P95: ttftP.P95, P99: ttftP.P99,
-		BaselineVerdict: judgeLowerIsBetter(ttftP.P50, baselineTTFTP50Seconds),
-		Note:            "判定仅看 P50，其余分位仅记录（06 节 6.2 表）",
+		BaselineVerdict: ttftVerdict,
+		Note:            ttftNote,
 	})
 
-	// TPOT
+	// TPOT：同理，只用真正算出过 TPOT 的样本（首内容分片存在且 output_tokens>1）。
 	tpotSamples := make([]float64, 0, len(successful))
 	for _, o := range successful {
-		if o.TPOTMillis > 0 {
+		if o.TPOTObserved {
 			tpotSamples = append(tpotSamples, o.TPOTMillis)
 		}
 	}
-	tpotP := ComputePercentiles(tpotSamples)
+	tpotVerdict := model.BaselineNotObservable
+	tpotNote := "所有成功请求均无法计算 TPOT（缺首内容分片或 output_tokens≤1），按 6.2 节兜底规则移出验收判定"
+	var tpotP Percentiles
+	if len(tpotSamples) > 0 {
+		tpotP = ComputePercentiles(tpotSamples)
+		tpotVerdict = judgeLowerIsBetterStrict(tpotP.P50, baselineTPOTP50Millis)
+		tpotNote = "判定仅看 P50，其余分位仅记录（06 节 6.2 表）"
+	}
 	metrics = append(metrics, model.BenchmarkMetric{
 		Name: "tpot", Scope: "overall", Unit: "ms",
 		Avg: tpotP.Avg, P50: tpotP.P50, P75: tpotP.P75, P90: tpotP.P90, P95: tpotP.P95, P99: tpotP.P99,
-		BaselineVerdict: judgeLowerIsBetterStrict(tpotP.P50, baselineTPOTP50Millis),
-		Note:            "判定仅看 P50，其余分位仅记录（06 节 6.2 表）",
+		BaselineVerdict: tpotVerdict,
+		Note:            tpotNote,
 	})
 
 	// Latency：无 PDF 基线，首版仅记录 + MANUAL_REVIEW（06 节）。

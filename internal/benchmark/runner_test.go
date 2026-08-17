@@ -92,6 +92,7 @@ func TestRun_EndToEndAgainstMockGateway(t *testing.T) {
 		DatasetVersion: "synthetic-v1",
 		Seed:           42,
 		LogWriter:      &logBuf,
+		LogRef:         "test.log",
 	})
 	if err != nil {
 		t.Fatalf("Run: %v", err)
@@ -150,6 +151,30 @@ func TestRun_EndToEndAgainstMockGateway(t *testing.T) {
 	}
 	if ttft.BaselineVerdict != model.BaselineOK {
 		t.Errorf("expected ttft OK against 15s baseline with a fast mock server, got verdict=%s p50=%v", ttft.BaselineVerdict, ttft.P50)
+	}
+
+	if result.Run.RawStdoutRef != "test.log" {
+		t.Errorf("expected RawStdoutRef to carry RunConfig.LogRef, got %q", result.Run.RawStdoutRef)
+	}
+}
+
+// TestRun_RequiresLogRef 验证 6.3 节"stdout/stderr 全量日志引用"要求在入口
+// 就被强制：留空 LogRef 时 Run 必须直接报错，而不是悄悄产出一个
+// RawStdoutRef=="" 的、不满足留痕要求的 BenchmarkRun。
+func TestRun_RequiresLogRef(t *testing.T) {
+	params, err := benchmark.DefaultParams(1)
+	if err != nil {
+		t.Fatalf("DefaultParams: %v", err)
+	}
+	_, err = benchmark.Run(context.Background(), benchmark.RunConfig{
+		Params:   params,
+		BaseURL:  "http://example.invalid",
+		ModelKey: "mock-model",
+		Seed:     1,
+		LogRef:   "",
+	})
+	if err == nil {
+		t.Fatal("expected error when RunConfig.LogRef is empty")
 	}
 }
 

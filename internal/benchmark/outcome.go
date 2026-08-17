@@ -5,19 +5,26 @@ import "strconv"
 // RequestOutcome 是单次请求（会话内某一轮）压测完成后提炼出的指标样本，
 // 对应设计方案 6.2 节要回传的各项指标的"一个样本点"。
 type RequestOutcome struct {
-	SessionID      int
-	RoundIndex     int
-	Success        bool
-	HTTPStatus     int
-	Err            string
-	TTFTSeconds    float64
+	SessionID   int
+	RoundIndex  int
+	Success     bool
+	HTTPStatus  int
+	Err         string
+	TTFTSeconds float64
+	// TTFTObserved 为 false 表示这次成功（HTTP 200）的响应自始至终没有出现过
+	// 非空 delta.content 分片（比如模型返回了空内容或只有控制分片），此时
+	// TTFTSeconds 是无意义的 0，不能当作"极快"计入样本，否则会把"没测到"
+	// 误判成"性能优秀"。
+	TTFTObserved   bool
 	LatencySeconds float64
 	// TPOTMillis 用 usage.completion_tokens 做分母（首 token 之后的耗时 /
 	// (completion_tokens-1)），是标准 TPOT 定义（time per output token）的
 	// 直接实现，不是用 SSE 分片数近似 token 数——分片数 ≠ token 数（一个分片
 	// 可能携带多个 token 的文本，或反过来一个 token 分几个分片下发）。
-	// 缺少 usage.completion_tokens 时 TPOTMillis 为 0（不产出误导性数字）。
-	TPOTMillis float64
+	// 缺少 usage.completion_tokens 或首内容分片时 TPOTMillis 为 0；TPOTObserved
+	// 标记这是否是一次真实测量，理由同 TTFTObserved。
+	TPOTMillis   float64
+	TPOTObserved bool
 	// ITLMillis 是相邻 SSE 分片的到达间隔（毫秒），作为 token 间延迟的近似——
 	// 受限于没有真正的逐 token 时间戳，这是"分片级"而非"token 级"的测量，
 	// 6.2 节里 ITL 本身也无 PDF 基线、只记录不做硬判定，精度要求相应更低。
@@ -50,6 +57,7 @@ func DeriveOutcome(sessionID, roundNumber int, r StreamCallResult) RequestOutcom
 	o.Success = true
 	if !r.FirstContentAt.IsZero() {
 		o.TTFTSeconds = r.FirstContentAt.Sub(r.SentAt).Seconds()
+		o.TTFTObserved = true
 	}
 	o.LatencySeconds = r.DoneAt.Sub(r.SentAt).Seconds()
 	o.PromptTokens = r.PromptTokens
@@ -59,6 +67,7 @@ func DeriveOutcome(sessionID, roundNumber int, r StreamCallResult) RequestOutcom
 	if !r.FirstContentAt.IsZero() && o.OutputTokens > 1 {
 		afterFirstMs := r.DoneAt.Sub(r.FirstContentAt).Seconds() * 1000
 		o.TPOTMillis = afterFirstMs / float64(o.OutputTokens-1)
+		o.TPOTObserved = true
 	}
 
 	var itlTimes []float64
