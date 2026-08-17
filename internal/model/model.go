@@ -78,3 +78,43 @@ type CaseResult struct {
 	// 如 reasoning_effort 不计入 22 项分母），供报告/CLI 汇总时无需回查套件定义。
 	CountsInBase22 bool `json:"counts_in_base22"`
 }
+
+// BenchmarkRun 对应 03 节 BENCHMARK_RUN 实体：一次压测的整体留痕。
+type BenchmarkRun struct {
+	ID             string  `json:"id"`
+	RawCommand     string  `json:"raw_command"`
+	RawParamsJSON  string  `json:"raw_params_json"`
+	ToolVersion    string  `json:"tool_version"`
+	DatasetVersion string  `json:"dataset_version"`
+	RawStdoutRef   string  `json:"raw_stdout_ref"`
+	TotalRequests  int     `json:"total_requests"`
+	DurationS      float64 `json:"duration_s"`
+}
+
+// BaselineVerdict 对应 06 节 6.2 判定规则的三态结果。
+type BaselineVerdict string
+
+const (
+	BaselineOK            BaselineVerdict = "OK"             // 达到或优于基线
+	BaselineSameOrder     BaselineVerdict = "SAME_ORDER"     // 劣化但仍在 MAX_DEGRADE_RATIO 倍数内，"同一数量级"
+	BaselineFail          BaselineVerdict = "FAIL"           // 劣化超出 MAX_DEGRADE_RATIO
+	BaselineManualReview  BaselineVerdict = "MANUAL_REVIEW"  // 无 PDF 基线，仅记录（Latency/ITL）
+	BaselineNotObservable BaselineVerdict = "NOT_OBSERVABLE" // 指标来源不可得（缓存命中率兜底规则）
+	BaselineNotApplicable BaselineVerdict = "NOT_APPLICABLE" // 该指标本身无判定规则（仅记录，如 Total requests/Duration）
+)
+
+// BenchmarkMetric 对应 03 节 BENCHMARK_METRIC 实体：单个指标的分位数与判定结果。
+type BenchmarkMetric struct {
+	Name            string          `json:"name"`  // "throughput_req_s" | "ttft_s" | "tpot_ms" | "itl_ms" | "latency_s" | "cache_hit_rate" ...
+	Scope           string          `json:"scope"` // "overall" | "per_round"
+	RoundIndex      int             `json:"round_index,omitempty"`
+	Avg             float64         `json:"avg"`
+	P50             float64         `json:"p50"`
+	P75             float64         `json:"p75"`
+	P90             float64         `json:"p90"`
+	P95             float64         `json:"p95"`
+	P99             float64         `json:"p99"`
+	Unit            string          `json:"unit"`
+	BaselineVerdict BaselineVerdict `json:"baseline_verdict"`
+	Note            string          `json:"note,omitempty"`
+}
