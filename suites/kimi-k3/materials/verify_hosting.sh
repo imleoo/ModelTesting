@@ -2,8 +2,9 @@
 # 可复现的素材托管服务验收脚本。
 # 用法：从仓库根目录执行 `bash suites/kimi-k3/materials/verify_hosting.sh`
 # 行为：编译 cmd/materials-server，在本地临时端口启动，下载两个素材并与源文件比对 sha256，
-# 验证明文路径穿越、百分号编码路径穿越（suiteID=%2e%2e）、未知 suite_id 均被明确拒绝
-# （400/403/404 之一，且响应体不含目标文件内容），最后停止进程并清理。
+# 验证明文路径穿越、百分号编码路径穿越（suiteID=%2e%2e）、未知 suite_id、
+# 素材目录内指向目录外的符号链接均被明确拒绝（400/403/404 之一，且响应体
+# 不含目标文件内容），最后停止进程并清理。
 # 任何一步失败都会以非零退出码结束，便于 CI/人工复核判断整体是否通过。
 set -euo pipefail
 
@@ -13,18 +14,21 @@ cd "$REPO_ROOT"
 PORT="${VERIFY_PORT:-18453}"
 BIN="$(mktemp -t materials-server-verify.XXXXXX 2>/dev/null || echo "/tmp/materials-server-verify.$$")"
 SERVER_PID=""
+SYMLINK_TARGET="/tmp/verify_symlink_target.$$"
+SYMLINK_PATH="suites/kimi-k3/materials/verify_symlink_escape.$$"
 
 cleanup() {
   [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true
   [ -n "$SERVER_PID" ] && wait "$SERVER_PID" 2>/dev/null || true
   rm -f "$BIN" /tmp/verify_dl_image.png /tmp/verify_dl_video.mp4 /tmp/verify_hosting_server.log
+  rm -f "$SYMLINK_PATH" "$SYMLINK_TARGET"
 }
 trap cleanup EXIT
 
-echo "[1/7] go build"
+echo "[1/8] go build"
 go build -o "$BIN" ./cmd/materials-server
 
-echo "[2/7] start server on 127.0.0.1:${PORT}"
+echo "[2/8] start server on 127.0.0.1:${PORT}"
 "$BIN" -addr ":${PORT}" -root suites >/tmp/verify_hosting_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
@@ -41,14 +45,14 @@ check() {
   fi
 }
 
-echo "[3/7] download image_qa_v1.png"
+echo "[3/8] download image_qa_v1.png"
 IMG_STATUS=$(curl -sS -o /tmp/verify_dl_image.png -w "%{http_code}" "http://127.0.0.1:${PORT}/materials/kimi-k3/v1/image_qa_v1.png")
 check "image http status" "200" "$IMG_STATUS"
 IMG_SHA_DL=$(shasum -a 256 /tmp/verify_dl_image.png | awk '{print $1}')
 IMG_SHA_SRC=$(shasum -a 256 suites/kimi-k3/materials/image_qa_v1.png | awk '{print $1}')
 check "image sha256 matches source" "$IMG_SHA_SRC" "$IMG_SHA_DL"
 
-echo "[4/7] download video_qa_v1.mp4"
+echo "[4/8] download video_qa_v1.mp4"
 VID_STATUS=$(curl -sS -o /tmp/verify_dl_video.mp4 -w "%{http_code}" "http://127.0.0.1:${PORT}/materials/kimi-k3/v1/video_qa_v1.mp4")
 check "video http status" "200" "$VID_STATUS"
 VID_SHA_DL=$(shasum -a 256 /tmp/verify_dl_video.mp4 | awk '{print $1}')
@@ -82,7 +86,7 @@ reject_check() {
   rm -f "$body"
 }
 
-echo "[5/7] path traversal (plain '..') must be rejected end-to-end"
+echo "[5/8] path traversal (plain '..') must be rejected end-to-end"
 # --path-as-is：禁止 curl 客户端在发送前折叠 URL 中的 ".." 片段，确保穿越 payload
 # 真的原样发到服务端。-L：跟随服务端可能返回的重定向（net/http.ServeMux 会对含
 # ".." 的路径先做一次 307 重定向到清理后的路径），验证端到端最终结果，而不是只看
@@ -92,18 +96,31 @@ reject_check "plain traversal ../../go.mod" \
   "module github.com/leoobai/modeltestbed" \
   --path-as-is -L
 
-echo "[6/7] path traversal via percent-encoded '..' (suiteID=%2e%2e) must be rejected"
-# net/http.ServeMux 的 cleanPath 只处理明文路径段，不解码 %2e%2e；这类请求会带着
-# suiteID == ".." 直接进入 handler，必须靠应用层 suiteIDPattern 校验挡住，
-# 不能指望 ServeMux 帮忙清理。
+echo "[6/8] path traversal via percent-encoded '..' (suiteID=%2e%2e) must be rejected"
+# 复现 suiteID 解码后为 ".." 的攻击向量。实测中这类请求在当前 Go 版本下已经被
+# net/http.ServeMux 自身的路由匹配拒绝（未进入本服务的 handler），但不能把这一具体
+# 观测结果当作可依赖的安全边界——它属于标准库内部路由实现细节，不同 Go 版本/不同
+# 路由写法下是否始终如此并未验证过。真正兜底的是应用层 suiteIDPattern 白名单校验
+# （main.go），本用例的意义是即使 ServeMux 这层保护不存在，应用层校验也必须独立
+# 能挡住同样的请求；本检查只关心最终有没有越权/泄露，不对是哪一层拦截的做任何假设。
 reject_check "percent-encoded suiteID=.. traversal" \
   "http://127.0.0.1:${PORT}/materials/%2e%2e/v1/go.mod" \
   "module github.com/leoobai/modeltestbed"
 
-echo "[7/7] unknown suite_id must be rejected"
+echo "[7/8] unknown suite_id must be rejected"
 reject_check "unknown suite_id" \
   "http://127.0.0.1:${PORT}/materials/does-not-exist/v1/x.png" \
   ""
+
+echo "[8/8] symlink inside materials dir pointing outside absRoot must not be served"
+# main.go 的两层前缀检查是纯词法比较；如果素材目录里出现指向目录外的符号链接，
+# 词法上仍"在前缀内"，但 http.ServeFile 最终会让操作系统解析符号链接读取真实文件，
+# 可能越出 absRoot。这里放一个真实符号链接验证 EvalSymlinks 兜底检查生效。
+echo "SYMLINK_ESCAPE_MARKER_$$" > "$SYMLINK_TARGET"
+ln -sf "$SYMLINK_TARGET" "$SYMLINK_PATH"
+reject_check "symlink escape via materials dir" \
+  "http://127.0.0.1:${PORT}/materials/kimi-k3/v1/verify_symlink_escape.$$" \
+  "SYMLINK_ESCAPE_MARKER_$$"
 
 if [ "$fail" -eq 0 ]; then
   echo "=== ALL CHECKS PASSED ==="

@@ -32,6 +32,13 @@ func main() {
 	if _, err := os.Stat(absRoot); err != nil {
 		log.Fatalf("suites root %q 不存在: %v", absRoot, err)
 	}
+	// absRoot 本身的路径里也可能含符号链接（如 macOS /tmp -> /private/tmp）；
+	// 预先解析出真实路径，后续符号链接边界校验统一与这个真实路径比较，
+	// 避免绝对路径的字面形式和 EvalSymlinks 解析结果不一致导致误判。
+	absRootReal, err := filepath.EvalSymlinks(absRoot)
+	if err != nil {
+		log.Fatalf("resolve real root: %v", err)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/materials/", func(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +67,18 @@ func main() {
 		if !filepathHasPrefix(full, suiteDir) || !filepathHasPrefix(full, absRoot) {
 			http.Error(w, "invalid path", http.StatusBadRequest)
 			return
+		}
+		// 上面两次 filepathHasPrefix 只是词法比较，不解析符号链接：如果素材目录里
+		// 存在指向目录外的符号链接，词法上仍在 absRoot 前缀内，但 http.ServeFile
+		// 最终由操作系统解析符号链接实际读取的文件可能已经越出 absRoot。
+		// EvalSymlinks 把路径解析到真实文件系统位置后再校验一次同一边界；
+		// 若目标文件不存在（EvalSymlinks 报错），跳过校验，交给 ServeFile 走正常 404。
+		if resolved, err := filepath.EvalSymlinks(full); err == nil {
+			if !filepathHasPrefix(resolved, absRootReal) {
+				http.Error(w, "invalid path", http.StatusBadRequest)
+				return
+			}
+			full = resolved
 		}
 		http.ServeFile(w, r, full)
 	})
