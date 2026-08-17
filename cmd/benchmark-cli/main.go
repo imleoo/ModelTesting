@@ -29,18 +29,9 @@ func main() {
 	totalSessions := flag.Int("total-sessions", 20, "总会话数（6.1 节：按目标并发设定）")
 	requestTimeout := flag.Duration("request-timeout", 120*time.Second, "单请求超时")
 	seed := flag.Int64("seed", 1, "随机种子（用于可复现的会话生成与到达调度）")
-	outPath := flag.String("out", "", "结果 JSON 输出路径")
+	outPath := flag.String("out", "", "结果 JSON 输出路径（留空则自动生成一个带时间戳的文件名；6.3 节要求 BENCHMARK_RUN 必须落盘，不允许默认命令行完全不产出结果文件）")
 	logPath := flag.String("log", "", "原始事件日志输出路径（6.3 节 stdout/stderr 全量日志引用；留空则自动生成一个带时间戳的文件名，不允许完全没有落盘引用）")
 	flag.Parse()
-
-	if *baseURL == "" || *modelKey == "" {
-		log.Fatal("必须指定 -base-url 与 -model-key")
-	}
-
-	params, err := benchmark.DefaultParams(*totalSessions)
-	if err != nil {
-		log.Fatalf("构造压测参数失败: %v", err)
-	}
 
 	resolvedLogPath := *logPath
 	if resolvedLogPath == "" {
@@ -51,13 +42,31 @@ func main() {
 		log.Fatalf("创建日志文件失败: %v", err)
 	}
 	defer logFile.Close()
-	// 同时打到 stdout，方便实时看进度；文件本身才是 RawStdoutRef 指向的
-	// 完整留痕（6.3 节要求"stdout/stderr 全量日志引用"，必须是可复核的落盘产物）。
+	// out 同时打到 stdout（方便实时看进度）与日志文件；err 同时打到 stderr
+	// 与同一个日志文件。二者合起来才是 RawStdoutRef 指向的"stdout/stderr
+	// 全量日志"——此前只有内部事件（benchmark.Run 内部 logLine）落盘，CLI
+	// 自己的启动信息/完成摘要/指标表/log.Fatalf 错误都绕过了文件，不满足
+	// 6.3 节"全量"的要求，这里把整个 main 里的输出都统一改走这两个 writer。
 	logWriter := io.MultiWriter(logFile, os.Stdout)
+	log.SetOutput(io.MultiWriter(logFile, os.Stderr))
+
+	if *baseURL == "" || *modelKey == "" {
+		log.Fatal("必须指定 -base-url 与 -model-key")
+	}
+
+	params, err := benchmark.DefaultParams(*totalSessions)
+	if err != nil {
+		log.Fatalf("构造压测参数失败: %v", err)
+	}
+
+	resolvedOutPath := *outPath
+	if resolvedOutPath == "" {
+		resolvedOutPath = fmt.Sprintf("benchmark-result-%d.json", time.Now().Unix())
+	}
 
 	rawCommand := strings.Join(os.Args, " ")
 
-	fmt.Printf("开始压测：total_sessions=%d model=%s base_url=%s（详细进度见日志）\n", *totalSessions, *modelKey, *baseURL)
+	fmt.Fprintf(logWriter, "开始压测：total_sessions=%d model=%s base_url=%s（详细进度见日志）\n", *totalSessions, *modelKey, *baseURL)
 
 	result, err := benchmark.Run(context.Background(), benchmark.RunConfig{
 		Params:         params,
@@ -76,26 +85,26 @@ func main() {
 		log.Fatalf("压测执行失败: %v", err)
 	}
 
-	fmt.Printf("\n=== 压测完成 ===\ntotal_requests=%d duration=%.1fs\n\n", result.Run.TotalRequests, result.Run.DurationS)
+	fmt.Fprintf(logWriter, "\n=== 压测完成 ===\ntotal_requests=%d duration=%.1fs\n\n", result.Run.TotalRequests, result.Run.DurationS)
 	for _, m := range result.Metrics {
 		if m.Scope != "overall" {
 			continue
 		}
-		fmt.Printf("%-26s avg=%-10.3f p50=%-10.3f p95=%-10.3f unit=%-6s verdict=%s\n",
+		fmt.Fprintf(logWriter, "%-26s avg=%-10.3f p50=%-10.3f p95=%-10.3f unit=%-6s verdict=%s\n",
 			m.Name, m.Avg, m.P50, m.P95, m.Unit, m.BaselineVerdict)
 		if m.Note != "" {
-			fmt.Printf("%-26s note: %s\n", "", m.Note)
+			fmt.Fprintf(logWriter, "%-26s note: %s\n", "", m.Note)
 		}
 	}
 
-	if *outPath != "" {
-		out, err := json.MarshalIndent(result, "", "  ")
-		if err != nil {
-			log.Fatalf("序列化结果失败: %v", err)
-		}
-		if err := os.WriteFile(*outPath, out, 0o644); err != nil {
-			log.Fatalf("写入结果文件失败: %v", err)
-		}
-		fmt.Printf("\n完整结果已写入 %s\n", *outPath)
+	// BENCHMARK_RUN 必须落盘（6.3 节），因此结果 JSON 不再是"传了 -out 才写"
+	// 的可选项：未指定时也会写入上面自动生成的 resolvedOutPath。
+	out, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		log.Fatalf("序列化结果失败: %v", err)
 	}
+	if err := os.WriteFile(resolvedOutPath, out, 0o644); err != nil {
+		log.Fatalf("写入结果文件失败: %v", err)
+	}
+	fmt.Fprintf(logWriter, "\n完整结果已写入 %s\n", resolvedOutPath)
 }
