@@ -1,0 +1,14 @@
+[1/6] go build
+[2/6] start server on 127.0.0.1:18453
+[3/6] download image_qa_v1.png
+PASS: image http status (got 200)
+PASS: image sha256 matches source (got 76a84aac1ac56fb541719693c5df6460da264bb2e5a3422e3d16b017310db5c5)
+[4/6] download video_qa_v1.mp4
+PASS: video http status (got 200)
+PASS: video sha256 matches source (got 2c4b59567f77bdef8711ac9ce4f6ba07bd8884016f567a660554f4bf47203e8d)
+[5/6] path traversal must be rejected
+PASS: path traversal rejected (got 404)
+[6/6] unknown suite_id must be rejected
+PASS: unknown suite_id rejected (got 404)
+=== ALL CHECKS PASSED ===
+suites/kimi-k3/materials/verify_hosting.sh: line 75: 53269 Terminated: 15          "$BIN" -addr ":${PORT}" -root suites > /tmp/verify_hosting_server.log 2>&1

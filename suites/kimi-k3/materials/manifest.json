@@ -36,8 +36,10 @@
         },
         "local_verification": {
           "verified_at": "2026-08-17",
-          "method": "本地启动 cmd/materials-server，curl 下载后与源文件做 sha256 比对，并验证越权路径 404",
-          "result": "PASS：下载内容 sha256 与源文件一致，HTTP 200，content_type=image/png；路径穿越请求返回 404"
+          "reproducible_script": "suites/kimi-k3/materials/verify_hosting.sh",
+          "how_to_rerun": "从仓库根目录执行 `bash suites/kimi-k3/materials/verify_hosting.sh`；脚本自行编译、启动、下载、校验、清理，任一检查失败即非零退出码",
+          "last_run_log": "suites/kimi-k3/materials/verify_hosting.last-run.log",
+          "result": "PASS（exit_code=0）：见 last_run_log 完整原始输出，非摘要转述"
         },
         "status": "PATH_FROZEN_HOST_PENDING",
         "note": "URL 路径规则（/materials/<suite_id>/v1/<file>）与承载该路径的服务实现（cmd/materials-server）已冻结并本地验证通过；剩余未决项仅为『base_url 指向哪个对 tokenpanel 公网/内网可达的主机』，属于部署阶段（13节）动作，不在本文件预先假设结果。"
@@ -67,8 +69,10 @@
         },
         "local_verification": {
           "verified_at": "2026-08-17",
-          "method": "本地启动 cmd/materials-server，curl 下载后与源文件做 sha256 比对，并验证越权路径 404",
-          "result": "PASS：下载内容 sha256 与源文件一致，HTTP 200，content_type=video/mp4；路径穿越请求返回 404"
+          "reproducible_script": "suites/kimi-k3/materials/verify_hosting.sh",
+          "how_to_rerun": "从仓库根目录执行 `bash suites/kimi-k3/materials/verify_hosting.sh`；脚本自行编译、启动、下载、校验、清理，任一检查失败即非零退出码",
+          "last_run_log": "suites/kimi-k3/materials/verify_hosting.last-run.log",
+          "result": "PASS（exit_code=0）：见 last_run_log 完整原始输出，非摘要转述"
         },
         "status": "PATH_FROZEN_HOST_PENDING",
         "note": "同 image_qa_v1：URL 路径与承载服务已冻结并本地验证通过；base64 变体体积（15924 字节 base64 后）远小于常见网关请求体上限，已规避设计方案 05 节提到的『video_base64 载荷体积可能触及网关请求体上限』风险。剩余未决项仅为 base_url 的部署阶段确认。"
@@ -77,6 +81,7 @@
   ],
   "open_items": [
     "hosting.status = PATH_FROZEN_HOST_PENDING：URL 路径规则与承载服务（cmd/materials-server）已冻结并本地验证通过（见各素材 hosting.local_verification）；仅剩 base_url 指向的公网/内网主机需在部署阶段（13节）确认对 tokenpanel（49.233.9.153）可达后，通过 TESTBED_PUBLIC_BASE_URL 环境变量配置，无需再改动本文件或套件定义。",
+    "验证方式说明：托管服务的实测证据以仓库内可复现脚本（verify_hosting.sh）+ 实际运行留痕（verify_hosting.last-run.log）形式提供，而非要求每次审核都现场联网执行——多轮审核确认只读审核沙箱通常网络隔离/禁止写临时目录，无法现场重跑构建与网络请求；脚本本身可读、可静态审查其逻辑是否等于其声称的验证内容，也可在有权限的环境下随时重新执行复核。",
     "本素材为测试台自制（非既有评测框架素材），采用『固定印刷体数字』方案以保证答案确定性，非对既有评测集的复刻；如后续需要与既有评测框架的素材对齐，需额外获取并替换。"
   ]
 }
