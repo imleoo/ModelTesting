@@ -1,0 +1,49 @@
+{
+  "manifest_version": "1.0.0",
+  "suite_id": "kimi-k3",
+  "generated_note": "P0 冻结素材清单：多模态确定性问答（deterministic_multimodal_qa）依赖的固定图像/视频素材。素材内容为印刷体数字，答案唯一且可程序化比对，避免模型开放式描述导致无法自动判定。",
+  "materials": [
+    {
+      "id": "image_qa_v1",
+      "kind": "image",
+      "file": "image_qa_v1.png",
+      "mime_type": "image/png",
+      "sha256": "76a84aac1ac56fb541719693c5df6460da264bb2e5a3422e3d16b017310db5c5",
+      "size_bytes": 16292,
+      "base64_size_bytes": 21724,
+      "expected_answer": "7429",
+      "question_prompt": "图片中央的数字是几？请只回答数字，不要包含其他文字。",
+      "answer_match": "digits_exact",
+      "used_by_cases": ["multimodal.image_url", "multimodal.image_base64"],
+      "hosting": {
+        "mode": "self_hosted_static",
+        "note": "url 变体（multimodal.image_url）需要测试台自身以公网可达地址提供该文件（如 https://<testbed-host>/materials/kimi-k3/image_qa_v1.png），tokenpanel（49.233.9.153）及其上游供应商需能访问到该地址。P1 阶段先以本地文件系统承载，P2 起需要一个测试台可被 tokenpanel 访问到的公网/内网直达地址，具体域名与网络路径待部署阶段（13节）确认，不在本文件中假设已解决。",
+        "status": "PENDING_DEPLOYMENT_CONFIRMATION"
+      }
+    },
+    {
+      "id": "video_qa_v1",
+      "kind": "video",
+      "file": "video_qa_v1.mp4",
+      "mime_type": "video/mp4",
+      "sha256": "2c4b59567f77bdef8711ac9ce4f6ba07bd8884016f567a660554f4bf47203e8d",
+      "size_bytes": 11942,
+      "base64_size_bytes": 15924,
+      "duration_seconds": 3,
+      "fps": 25,
+      "expected_answer": "8153",
+      "question_prompt": "视频画面中央的数字是几？请只回答数字，不要包含其他文字。",
+      "answer_match": "digits_exact",
+      "used_by_cases": ["multimodal.video_url", "multimodal.video_base64"],
+      "hosting": {
+        "mode": "self_hosted_static",
+        "note": "同 image_qa_v1，url 变体需要测试台提供公网/内网可达地址；base64 变体体积（15924 字节 base64 后）远小于常见网关请求体上限，本素材的选型已规避设计方案 05 节提到的『video_base64 载荷体积可能触及网关请求体上限』风险，无需额外压缩。",
+        "status": "PENDING_DEPLOYMENT_CONFIRMATION"
+      }
+    }
+  ],
+  "open_items": [
+    "hosting.status = PENDING_DEPLOYMENT_CONFIRMATION：materials 的 url 形态测试（image_url/video_url）要求 tokenpanel 网关能从公网/内网访问到测试台，需在部署阶段（13节）确认具体可达路径后，把 hosting.mode 更新为实际方案并解除本条 open item。",
+    "本素材为测试台自制（非既有评测框架素材），采用『固定印刷体数字』方案以保证答案确定性，非对既有评测集的复刻；如后续需要与既有评测框架的素材对齐，需额外获取并替换。"
+  ]
+}

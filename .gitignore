@@ -1,0 +1,23 @@
+# Go
+/bin/
+*.test
+*.out
+
+# Node
+node_modules/
+.next/
+out/
+
+# Local env / secrets
+.server.env
+*.env
+!*.env.example
+
+# DB / artifacts
+*.db
+*.sqlite
+/data/
+/artifacts/
+
+# OS
+.DS_Store

@@ -1,0 +1,584 @@
+{
+  "suite_id": "kimi-k3",
+  "suite_version": "1.0.0",
+  "source_doc": "docs/Kimi-K3供应商接入自测指导.pdf",
+  "design_doc": "docs/模型自测台设计方案.md",
+  "design_doc_version": "v0.3",
+  "description": "Kimi-K3 供应商接入自测指导对应的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删（07节 SOP）。",
+  "protocol": {
+    "base_path": "/v1/chat/completions",
+    "auth_header": "Authorization: Bearer {{api_key}}",
+    "content_type": "application/json"
+  },
+  "defaults": {
+    "timeout_seconds": 30,
+    "category_timeout_overrides": {
+      "多模态图像": 90,
+      "多模态视频": 90,
+      "reasoning_effort": 60
+    }
+  },
+  "fixtures": {
+    "tools": {
+      "get_weather": {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "查询指定城市的当前天气",
+          "parameters": {
+            "type": "object",
+            "properties": { "city": { "type": "string" } },
+            "required": ["city"]
+          }
+        }
+      }
+    },
+    "prompts": {
+      "generic_short": "请用中文写一句关于春天的话。",
+      "weather_query": "北京今天天气怎么样？",
+      "reasoning_prompt": "请计算 37 乘以 48 等于多少，并简要给出计算过程。",
+      "reasoning_effort_prompt": "用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。",
+      "structured_weather_question": "请给出北京当前的天气状况，用结构化数据回答，字段包含城市名 city 与摄氏温度 temperature_c。"
+    }
+  },
+  "materials_manifest": "suites/kimi-k3/materials/manifest.json",
+  "cases": [
+    {
+      "id": "protocol.stream_integrity",
+      "category": "协议完整性",
+      "name": "Stream 完整性",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2 样例请求（Stream 完整性）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_nonstream",
+      "category": "协议完整性",
+      "name": "Usage 字段 · 非流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_nonstream",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_stream",
+      "category": "协议完整性",
+      "name": "Usage 字段 · 流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_stream",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "两段式尝试：任一变体末包（[DONE] 前最后一包）自带合法 usage 即通过（04节修订，避免强制要求 stream_options.include_usage 生效）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "stream": true
+        }
+      },
+      "variants": [
+        { "variant_label": "no_include_usage", "request_overrides": {} },
+        { "variant_label": "with_include_usage", "request_overrides": { "stream_options": { "include_usage": true } } }
+      ]
+    },
+    {
+      "id": "multimodal.image_url",
+      "category": "多模态图像",
+      "name": "Image_url",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "image_url",
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "material_ref": { "material_id": "image_qa_v1", "form": "url" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:image_qa_v1:question_prompt}}" },
+                { "type": "image_url", "image_url": { "url": "{{material:image_qa_v1:url}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.image_base64",
+      "category": "多模态图像",
+      "name": "Image_base64",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF『最少支持 Image_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）",
+      "material_ref": { "material_id": "image_qa_v1", "form": "base64" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:image_qa_v1:question_prompt}}" },
+                { "type": "image_url", "image_url": { "url": "data:image/png;base64,{{material:image_qa_v1:base64}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_url",
+      "category": "多模态视频",
+      "name": "Video_url",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "video_url",
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF 未给出视频输入的具体 content part schema，本模板假设供应商采用与 image_url 对称的 video_url content part（type:\"video_url\", video_url:{url:...}）；若实际供应商 schema 不同，需在克隆套件时按 07 节 SOP 调整此用例的 request_template，不属于全局断言口径变化。",
+      "material_ref": { "material_id": "video_qa_v1", "form": "url" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:video_qa_v1:question_prompt}}" },
+                { "type": "video_url", "video_url": { "url": "{{material:video_qa_v1:url}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_base64",
+      "category": "多模态视频",
+      "name": "Video_base64",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF『最少支持 Video_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）；video content part schema 假设同 multimodal.video_url",
+      "material_ref": { "material_id": "video_qa_v1", "form": "base64" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:video_qa_v1:question_prompt}}" },
+                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_qa_v1:base64}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.call_capability",
+      "category": "工具调用支持",
+      "name": "Tool Call 能力",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "与 tool.choice_required 共用 tool_choice:required 触发方式，两者均必过；本用例代表 PDF 总览表『工具调用支持 1 项』的独立计数项，与『工具调用检测』的 6 项分别计数（合计 7 项工具相关用例）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_default",
+      "category": "工具调用检测",
+      "name": "Default（不传）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_auto",
+      "category": "工具调用检测",
+      "name": "auto",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": "auto",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_required",
+      "category": "工具调用检测",
+      "name": "required",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_none",
+      "category": "工具调用检测",
+      "name": "none",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_forbidden",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": "none",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_function",
+      "category": "工具调用检测",
+      "name": "function（强制指定）",
+      "required_rule": "exempt_allowed",
+      "counts_in_base22": true,
+      "capability_tag": "tool_choice_function",
+      "assertion_type": "tool_call_named",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4 样例请求（Tool Choice Function）",
+      "notes": "PDF『Function 可不过（官方不支持）』；能力声明未标记支持时记 NOT_DECLARED，不计入 22 项分母",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": { "type": "function", "function": { "name": "get_weather" } },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_allowed_tools",
+      "category": "工具调用检测",
+      "name": "allowed_tools",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_subset",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）；allowed_tools 请求 schema 假设为 OpenAI 现行草案格式 {type:allowed_tools, allowed_tools:{mode, tools}}，需在 P1 联调时对照供应商实际 schema 核实",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": {
+            "type": "allowed_tools",
+            "allowed_tools": { "mode": "auto", "tools": [{ "type": "function", "function": { "name": "get_weather" } }] }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.enable_thinking",
+      "category": "思考行为",
+      "name": "enable_thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:enable_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "on", "request_overrides": { "enable_thinking": true } },
+        { "variant_label": "off", "request_overrides": { "enable_thinking": false } }
+      ]
+    },
+    {
+      "id": "thinking.thinking_type",
+      "category": "思考行为",
+      "name": "thinking.type（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "on", "request_overrides": { "thinking": { "type": "enabled" } } },
+        { "variant_label": "off", "request_overrides": { "thinking": { "type": "disabled" } } }
+      ]
+    },
+    {
+      "id": "thinking.chat_template_kwargs_enable_thinking",
+      "category": "思考行为",
+      "name": "chat_template_kwargs.enable_thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:chat_template_kwargs_enable_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "on", "request_overrides": { "chat_template_kwargs": { "enable_thinking": true } } },
+        { "variant_label": "off", "request_overrides": { "chat_template_kwargs": { "enable_thinking": false } } }
+      ]
+    },
+    {
+      "id": "thinking.chat_template_kwargs_thinking",
+      "category": "思考行为",
+      "name": "chat_template_kwargs.thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:chat_template_kwargs_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "on", "request_overrides": { "chat_template_kwargs": { "thinking": true } } },
+        { "variant_label": "off", "request_overrides": { "chat_template_kwargs": { "thinking": false } } }
+      ]
+    },
+    {
+      "id": "thinking.default_behavior",
+      "category": "思考行为",
+      "name": "默认思考行为",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "default_thinking_matches_declaration",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "notes": "断言对比对象为 CAPABILITY_PROFILE.default_thinking_behavior 声明值，与思考开关的能力声明规则相互独立",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_schema",
+      "category": "结构化输出",
+      "name": "JSON Schema",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_schema_valid",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}" }],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "weather_answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": { "city": { "type": "string" }, "temperature_c": { "type": "number" } },
+                "required": ["city", "temperature_c"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_object",
+      "category": "结构化输出",
+      "name": "JSON Object",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_parseable",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。" }],
+          "response_format": { "type": "json_object" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "connectivity.basic",
+      "category": "连通性",
+      "name": "基础单轮请求",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "content_nonempty",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.7",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "reasoning_effort.scaling",
+      "category": "reasoning_effort",
+      "name": "low / high / max 综合判定",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "reasoning_effort",
+      "assertion_type": "reasoning_effort_scaling",
+      "repeat_attempts": 3,
+      "pdf_ref": "2.8",
+      "notes": "附加用例，不计入 22 项分母；repeat_attempts 为每档重复采样次数，聚合取多数结果比较 reasoning_tokens，至少 low 与 high 需有可观测差异（04节）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_effort_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "low", "request_overrides": { "reasoning_effort": "low" } },
+        { "variant_label": "high", "request_overrides": { "reasoning_effort": "high" } },
+        { "variant_label": "max", "request_overrides": { "reasoning_effort": "max" } }
+      ]
+    }
+  ]
+}
