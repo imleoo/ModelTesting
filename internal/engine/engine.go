@@ -38,7 +38,19 @@ func (e *Engine) capabilityGate(c suitedef.Case) (bool, string) {
 		}
 		return false, ""
 	default:
-		return false, ""
+		// 非法的 required_rule（套件定义损坏/拼写错误）不能悄悄按“必须执行”处理，
+		// 必须在 RunCase 里被当作用例定义错误直接判 FAIL，而不是走到这里被放行。
+		panic(fmt.Sprintf("capabilityGate: 非法的 required_rule %q，调用方应在此之前拦截", c.RequiredRule))
+	}
+}
+
+// validRequiredRule 校验 required_rule 是否是四个已知取值之一。
+func validRequiredRule(r suitedef.RequiredRule) bool {
+	switch r {
+	case suitedef.FixedRequired, suitedef.DeclaredRequired, suitedef.ExemptAllowed, suitedef.Additional:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -63,7 +75,13 @@ func (e *Engine) isCapabilityDeclared(tag string) bool {
 
 // RunCase 执行单条用例，返回 CaseResult（含全部 CaseAttempt 留痕）。
 func (e *Engine) RunCase(ctx context.Context, c suitedef.Case) model.CaseResult {
-	result := model.CaseResult{CaseID: c.ID, ID: c.ID}
+	result := model.CaseResult{CaseID: c.ID, ID: c.ID, CountsInBase22: c.CountsInBase22}
+
+	if !validRequiredRule(c.RequiredRule) {
+		result.Status = model.StatusFail
+		result.FailReason = fmt.Sprintf("套件定义非法：required_rule %q 不是已知取值", c.RequiredRule)
+		return result
+	}
 
 	if skip, reason := e.capabilityGate(c); skip {
 		result.Status = model.StatusNotDeclared
@@ -288,7 +306,8 @@ func (e *Engine) scoreToolCallNamed(c suitedef.Case, cr client.CallResult, attem
 		attempt.Passed, attempt.FailReason = false, "用例定义缺少 tool_choice.function.name，无法比对"
 		return
 	}
-	v := assertion.ToolCallNamed(resp, name)
+	schema, _ := extractToolParametersSchema(e.Suite.Fixtures, c, name)
+	v := assertion.ToolCallNamed(resp, name, schema)
 	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
 }
 
@@ -353,8 +372,9 @@ func (e *Engine) runUsageFieldsStream(ctx context.Context, c suitedef.Case, resu
 		default:
 			if ok, reason := validateStreamSchema(cr); !ok {
 				attempt.Passed, attempt.FailReason = false, "openai_schema_valid 未通过: "+reason
+			} else if lastUsage, ok := lastChunkUsage(cr); !ok {
+				attempt.Passed, attempt.FailReason = false, "未收到 [DONE] 或末包缺失/无法解析，无法确认末包是否携带 usage"
 			} else {
-				lastUsage := lastChunkUsage(cr)
 				v := assertion.UsageFieldsStreamAttempt(lastUsage)
 				attempt.Passed, attempt.FailReason = v.Passed, v.Reason
 			}
@@ -371,25 +391,33 @@ func (e *Engine) runUsageFieldsStream(ctx context.Context, c suitedef.Case, resu
 	// 两次尝试均失败才 FAIL（04 节两段式逻辑）。
 }
 
-func lastChunkUsage(cr client.CallResult) *openaiapi.Usage {
-	for i := len(cr.SSEResult.Chunks) - 1; i >= 0; i-- {
-		chunk, err := openaiapi.ParseChunk(cr.SSEResult.Chunks[i])
-		if err != nil {
-			continue
-		}
-		if chunk.Usage != nil {
-			return chunk.Usage
-		}
+// lastChunkUsage 返回 [DONE] 前最后一包携带的 usage（04 节要求的检查对象）。
+// ok=false 表示流未见 [DONE]、没有分片、或末包解析失败——这些情况下不存在
+// 一个可信的“最终分片”，调用方应视为该次尝试失败，而不是继续往前找任意一个
+// 带 usage 的历史分片（那样会把中间分片误判为“末包”）。
+func lastChunkUsage(cr client.CallResult) (*openaiapi.Usage, bool) {
+	if !cr.SSEResult.SawDone || len(cr.SSEResult.Chunks) == 0 {
+		return nil, false
 	}
-	return nil
+	last := cr.SSEResult.Chunks[len(cr.SSEResult.Chunks)-1]
+	chunk, err := openaiapi.ParseChunk(last)
+	if err != nil {
+		return nil, false
+	}
+	return chunk.Usage, true
 }
 
 func (e *Engine) runThinkingTogglePair(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
-	presentByLabel := make(map[string]bool)
+	type outcome struct {
+		idx     int
+		present bool
+		ok      bool // 本次请求本身是否顺利完成到可判定 present 的地步（未被传输层/HTTP/schema 拦下）
+	}
+	outcomes := make(map[string]outcome)
 	for i, variant := range c.Variants {
 		cr, err := e.doCall(ctx, c, variant.RequestOverrides)
 		attempt := newAttempt(i+1, variant.VariantLabel, cr)
-		var present bool
+		var present, ok bool
 		switch {
 		case err != nil:
 			attempt.FailReason = err.Error()
@@ -398,7 +426,7 @@ func (e *Engine) runThinkingTogglePair(ctx context.Context, c suitedef.Case, res
 		case cr.HTTPStatus != 200:
 			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
 		default:
-			if ok, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !ok {
+			if svOK, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !svOK {
 				attempt.FailReason = "openai_schema_valid 未通过: " + joinViolations(violations)
 			} else {
 				resp, perr := openaiapi.ParseResponse([]byte(cr.ResponseBody))
@@ -406,18 +434,33 @@ func (e *Engine) runThinkingTogglePair(ctx context.Context, c suitedef.Case, res
 					attempt.FailReason = "响应体解析失败: " + perr.Error()
 				} else {
 					present = len(resp.Choices) > 0 && resp.Choices[0].Message != nil && assertion.ThinkingPresent(resp.Choices[0].Message.ReasoningContent)
+					ok = true
 				}
 			}
 		}
-		presentByLabel[variant.VariantLabel] = present
 		result.CaseAttempts = append(result.CaseAttempts, attempt)
+		outcomes[variant.VariantLabel] = outcome{idx: len(result.CaseAttempts) - 1, present: present, ok: ok}
 	}
-	v := assertion.ThinkingTogglePair(presentByLabel["on"], presentByLabel["off"])
-	for i := range result.CaseAttempts {
-		result.CaseAttempts[i].Passed = v.Passed
-		if !v.Passed && result.CaseAttempts[i].FailReason == "" {
-			result.CaseAttempts[i].FailReason = v.Reason
-		}
+
+	onO, hasOn := outcomes["on"]
+	offO, hasOff := outcomes["off"]
+	if !hasOn || !hasOff {
+		result.Status = model.StatusFail
+		result.FailReason = "用例定义缺少 on/off 变体"
+		return
+	}
+	if !onO.ok || !offO.ok {
+		// 任一次请求本身失败（传输/HTTP/schema）：各自留痕保持 Passed=false + 各自的
+		// 失败原因，绝不能因为另一侧的组合判定结果而被覆盖成 PASS。整体交给
+		// finalizeAggregate 按“全部 attempt 都通过才 PASS”的规则汇总。
+		return
+	}
+	v := assertion.ThinkingTogglePair(onO.present, offO.present)
+	result.CaseAttempts[onO.idx].Passed = v.Passed
+	result.CaseAttempts[offO.idx].Passed = v.Passed
+	if !v.Passed {
+		result.CaseAttempts[onO.idx].FailReason = v.Reason
+		result.CaseAttempts[offO.idx].FailReason = v.Reason
 	}
 }
 
@@ -477,6 +520,8 @@ func (e *Engine) runDeterministicMultimodalQA(ctx context.Context, c suitedef.Ca
 func (e *Engine) runReasoningEffortScaling(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
 	tierTokens := make(map[string][]int)
 	idx := 0
+	allAttemptsOK := true
+	firstFailure := ""
 	for _, variant := range c.Variants {
 		for rep := 0; rep < c.RepeatAttempts; rep++ {
 			idx++
@@ -506,26 +551,59 @@ func (e *Engine) runReasoningEffortScaling(ctx context.Context, c suitedef.Case,
 					}
 				}
 			}
+			if !attempt.Passed {
+				allAttemptsOK = false
+				if firstFailure == "" {
+					firstFailure = fmt.Sprintf("%s 第 %d 次采样: %s", variant.VariantLabel, rep+1, attempt.FailReason)
+				}
+			}
 			result.CaseAttempts = append(result.CaseAttempts, attempt)
 		}
 	}
 
-	lowAgg, lowOK := majority(tierTokens["low"])
-	highAgg, highOK := majority(tierTokens["high"])
-	if !lowOK || !highOK {
+	// 先按实际留痕填好 attempts/passed_attempts/pass_rate（无论后面判 PASS 还是
+	// FAIL，都不能出现「9 次采样全跑完但 attempts=0」这种与实际留痕脱节的汇总）。
+	result.Attempts = len(result.CaseAttempts)
+	for _, a := range result.CaseAttempts {
+		if a.Passed {
+			result.PassedAttempts++
+		}
+	}
+	if result.Attempts > 0 {
+		result.PassRate = float64(result.PassedAttempts) / float64(result.Attempts)
+	}
+
+	if !allAttemptsOK {
+		// openai_schema_valid 全局基线叠加在每一条用例之上、不可跳过：任何一次
+		// 采样（含 max 档）传输/HTTP/schema 失败，都不能被其余采样的“凑巧算出多数”
+		// 掩盖过去，必须整体判 FAIL。
 		result.Status = model.StatusFail
-		result.FailReason = "low/high 档位未能取得足够的有效采样，无法聚合比较"
+		result.FailReason = "存在采样请求未成功（传输/HTTP/schema 失败），无法可靠聚合 reasoning_tokens: " + firstFailure
+		return
+	}
+
+	lowAgg, lowOK := majority(tierTokens["low"])
+	if !lowOK {
+		result.Status = model.StatusFail
+		result.FailReason = "low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数）"
+		return
+	}
+	highAgg, highOK := majority(tierTokens["high"])
+	if !highOK {
+		result.Status = model.StatusFail
+		result.FailReason = "high 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数）"
 		return
 	}
 	if lowAgg == highAgg {
 		result.Status = model.StatusFail
-		result.FailReason = fmt.Sprintf("low 档与 high 档的 reasoning_tokens 聚合值均为 %d，无可观测差异", lowAgg)
+		result.FailReason = fmt.Sprintf("low 档与 high 档的 reasoning_tokens 多数结果均为 %d，无可观测差异", lowAgg)
 		return
 	}
 	result.Status = model.StatusPass
 }
 
-// majority 取众数（出现次数最多的值）；并列时取数值较小者，保证确定性。
+// majority 取严格多数（出现次数 > N/2 的取值）。不足半数的最高频值不算“多数结果”，
+// 返回 ok=false，交给调用方判定为聚合失败，而不是在并列/分散时静默挑一个值充数。
 func majority(values []int) (int, bool) {
 	if len(values) == 0 {
 		return 0, false
@@ -534,18 +612,18 @@ func majority(values []int) (int, bool) {
 	for _, v := range values {
 		counts[v]++
 	}
-	best, bestCount := 0, -1
+	threshold := len(values)/2 + 1
 	keys := make([]int, 0, len(counts))
 	for k := range counts {
 		keys = append(keys, k)
 	}
 	sort.Ints(keys)
 	for _, k := range keys {
-		if counts[k] > bestCount {
-			best, bestCount = k, counts[k]
+		if counts[k] >= threshold {
+			return k, true
 		}
 	}
-	return best, true
+	return 0, false
 }
 
 func extractToolChoiceFunctionName(c suitedef.Case) (string, bool) {
@@ -589,6 +667,42 @@ func extractAllowedToolNames(c suitedef.Case) []string {
 		}
 	}
 	return names
+}
+
+// extractToolParametersSchema 找到函数名匹配的工具定义，返回其声明的
+// function.parameters（用作 tool_call_named 断言的参数 schema）。优先查字面
+// tools 数组（用例未借助 fixtures 占位符定义工具的情况），因为 tools 通常是
+// 通过 {{fixtures.tools.xxx}} 占位符引用的（渲染前仍是字符串），再回退到
+// fixtures.tools 按函数名匹配查找。
+func extractToolParametersSchema(fixtures suitedef.Fixtures, c suitedef.Case, fnName string) (map[string]any, bool) {
+	if tools, ok := c.RequestTemplate.Body["tools"].([]any); ok {
+		for _, t := range tools {
+			tm, ok := t.(map[string]any)
+			if !ok {
+				continue
+			}
+			fn, ok := tm["function"].(map[string]any)
+			if !ok {
+				continue
+			}
+			if name, _ := fn["name"].(string); name == fnName {
+				schema, ok := fn["parameters"].(map[string]any)
+				return schema, ok
+			}
+		}
+	}
+	for _, tool := range fixtures.Tools {
+		fn, ok := tool["function"].(map[string]any)
+		if !ok {
+			continue
+		}
+		if name, _ := fn["name"].(string); name != fnName {
+			continue
+		}
+		schema, ok := fn["parameters"].(map[string]any)
+		return schema, ok
+	}
+	return nil, false
 }
 
 func extractJSONSchema(c suitedef.Case) (map[string]any, bool) {

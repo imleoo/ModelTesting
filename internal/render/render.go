@@ -95,11 +95,28 @@ func renderString(s string, ctx Context) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Fprintf(&sb, "%v", val)
+		scalar, ok := asScalarString(val)
+		if !ok {
+			return nil, fmt.Errorf("占位符 %q 解析出的值不是标量（%T），不能与其他文本拼接在同一字符串里；"+
+				"该占位符只能作为整节点单独出现（见 SCHEMA.md 请求模板占位符一节）", token, val)
+		}
+		sb.WriteString(scalar)
 		last = m[1]
 	}
 	sb.WriteString(s[last:])
 	return sb.String(), nil
+}
+
+// asScalarString 把标量值（string/数字/布尔/nil）转成字符串用于拼接；
+// map/slice 等复合值返回 ok=false，调用方应当报错而不是用 %v 生成 "map[...]" 这种
+// 对下游请求体毫无意义的字符串。
+func asScalarString(v any) (string, bool) {
+	switch v.(type) {
+	case map[string]any, []any:
+		return "", false
+	default:
+		return fmt.Sprintf("%v", v), true
+	}
 }
 
 func resolveToken(token string, ctx Context) (any, error) {

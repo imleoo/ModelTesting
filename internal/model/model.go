@@ -1,7 +1,10 @@
 // Package model 定义设计方案 03 节数据模型对应的 Go 结构体，供 P1 用例引擎使用。
 package model
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 // CaseStatus 对应设计方案 03 节 CASE_RESULT.status 枚举。
 type CaseStatus string
@@ -33,6 +36,19 @@ func (c CapabilityProfile) HasThinkingMethod(methodKey string) bool {
 	return slices.Contains(c.ThinkingToggleMethods, methodKey)
 }
 
+// ValidateCapabilityProfile 校验能力声明本身是否合法（不是测试用例执行时才发现
+// 声明有问题）。设计方案 04 节明确约束：thinking_toggle_methods 声明列表至少
+// 包含一种方式，否则视为能力声明本身不合法，应在加载时拒绝。
+func ValidateCapabilityProfile(c CapabilityProfile) error {
+	if len(c.ThinkingToggleMethods) == 0 {
+		return fmt.Errorf("thinking_toggle_methods 至少需要声明一种支持的思考开关方式（设计方案 04 节约束）")
+	}
+	if c.DefaultThinkingBehavior != "thinks_by_default" && c.DefaultThinkingBehavior != "no_thinking_by_default" {
+		return fmt.Errorf("default_thinking_behavior 取值非法: %q，必须是 thinks_by_default 或 no_thinking_by_default", c.DefaultThinkingBehavior)
+	}
+	return nil
+}
+
 // CaseAttempt 对应 03 节 CASE_ATTEMPT 实体：请求级明细。
 type CaseAttempt struct {
 	ID              string `json:"id"`
@@ -58,4 +74,7 @@ type CaseResult struct {
 	PassRate       float64       `json:"pass_rate"`
 	FailReason     string        `json:"fail_reason,omitempty"`
 	CaseAttempts   []CaseAttempt `json:"case_attempts"`
+	// CountsInBase22 冗余保存用例定义里的 counts_in_base22（05 节口径：附加用例
+	// 如 reasoning_effort 不计入 22 项分母），供报告/CLI 汇总时无需回查套件定义。
+	CountsInBase22 bool `json:"counts_in_base22"`
 }

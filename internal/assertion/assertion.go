@@ -106,18 +106,29 @@ func ToolCallRequired(resp openaiapi.Response) Verdict {
 	return validToolCallArgs(msg.ToolCalls)
 }
 
+// ToolCallForbidden: 响应不含 tool_calls，仅文本（04节：既不发起工具调用，
+// 也要求确实以文本形式给出了回答，不是既无调用也无内容的空响应）。
 func ToolCallForbidden(resp openaiapi.Response) Verdict {
 	if len(resp.Choices) == 0 {
 		return fail("choices 为空")
 	}
 	msg := resp.Choices[0].Message
-	if msg != nil && len(msg.ToolCalls) > 0 {
+	if msg == nil {
+		return fail("缺少 message")
+	}
+	if len(msg.ToolCalls) > 0 {
 		return fail("tool_choice=none 时不应发起工具调用")
+	}
+	if msg.Content == nil || strings.TrimSpace(*msg.Content) == "" {
+		return fail("tool_choice=none 时应仅以文本作答，但响应内容为空")
 	}
 	return pass()
 }
 
-func ToolCallNamed(resp openaiapi.Response, expectedFnName string) Verdict {
+// ToolCallNamed: 调用的函数名与指定一致，且该次调用的参数为合法 JSON 并满足
+// 声明的 parameters schema（04 节原文三项要求都要满足，不能只查函数名和 JSON 语法）。
+// paramsSchema 为 nil 时跳过 schema 校验（用例定义未提供 parameters 时的降级行为）。
+func ToolCallNamed(resp openaiapi.Response, expectedFnName string, paramsSchema map[string]any) Verdict {
 	if len(resp.Choices) == 0 {
 		return fail("choices 为空")
 	}
@@ -130,7 +141,22 @@ func ToolCallNamed(resp openaiapi.Response, expectedFnName string) Verdict {
 			return fail(fmt.Sprintf("调用了非指定函数 %s，期望 %s", tc.Function.Name, expectedFnName))
 		}
 	}
-	return validToolCallArgs(msg.ToolCalls)
+	if v := validToolCallArgs(msg.ToolCalls); !v.Passed {
+		return v
+	}
+	if paramsSchema == nil {
+		return pass()
+	}
+	for _, tc := range msg.ToolCalls {
+		var args any
+		if err := json.Unmarshal([]byte(tc.Function.Arguments), &args); err != nil {
+			return fail(fmt.Sprintf("tool_call %s 的 arguments 不是合法 JSON: %v", tc.Function.Name, err))
+		}
+		if violations := ValidateJSONSchema(paramsSchema, args); len(violations) > 0 {
+			return fail(fmt.Sprintf("tool_call %s 的参数不满足声明的 parameters schema: %s", tc.Function.Name, strings.Join(violations, "; ")))
+		}
+	}
+	return pass()
 }
 
 // ToolCallSubset: 调用次数≥1且全部函数名⊆allowed（04节从严解释：零次调用不视为通过）。

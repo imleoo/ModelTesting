@@ -51,6 +51,9 @@ func main() {
 		if err := json.Unmarshal(raw, &capability); err != nil {
 			log.Fatalf("解析能力声明文件失败: %v", err)
 		}
+		if err := model.ValidateCapabilityProfile(capability); err != nil {
+			log.Fatalf("能力声明不合法: %v", err)
+		}
 	}
 
 	e := &engine.Engine{
@@ -102,15 +105,24 @@ func summarize(r model.CaseResult) string {
 }
 
 func printSummary(results []model.CaseResult) {
-	base22Total, base22Pass := 0, 0
+	base22Total, base22Pass, manualReview := 0, 0, 0
 	for _, r := range results {
-		if r.Status == model.StatusNotDeclared {
+		// 05 节口径：22 项分母只统计 counts_in_base22 的用例，reasoning_effort
+		// 等附加用例单独展示，不掺进这个分母；NOT_DECLARED 也不计入分母。
+		if !r.CountsInBase22 || r.Status == model.StatusNotDeclared {
 			continue
 		}
 		base22Total++
-		if r.Status == model.StatusPass {
+		switch r.Status {
+		case model.StatusPass:
 			base22Pass++
+		case model.StatusManualReview:
+			manualReview++
 		}
 	}
-	fmt.Printf("\n=== 汇总: %d/%d 计入分母的用例通过 ===\n", base22Pass, base22Total)
+	fmt.Printf("\n=== 汇总: 22 项基础用例 %d/%d 通过", base22Pass, base22Total)
+	if manualReview > 0 {
+		fmt.Printf("，另有 %d 项待人工复核（MANUAL_REVIEW，未计入通过数）", manualReview)
+	}
+	fmt.Println(" ===")
 }
