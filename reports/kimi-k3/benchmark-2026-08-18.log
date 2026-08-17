@@ -1,0 +1,86 @@
+开始压测：total_sessions=3 model=kimi-k3 base_url=https://jiwu.wtgo.com.cn/（详细进度见日志）
+benchmark run start: total_sessions=3 model=kimi-k3 base_url=https://jiwu.wtgo.com.cn/
+[request] session=1 round=0 ok ttft=0.000s latency=2.870s output_tokens=15 cached_tokens=0/8986
+[request] session=0 round=0 ok ttft=11.541s latency=15.694s output_tokens=716 cached_tokens=0/33889
+[request] session=1 round=1 ok ttft=0.000s latency=1.514s output_tokens=2 cached_tokens=8985/9292
+[request] session=0 round=1 ok ttft=0.000s latency=3.009s output_tokens=36 cached_tokens=33888/34247
+[request] session=1 round=2 ok ttft=1.649s latency=2.055s output_tokens=23 cached_tokens=9291/9579
+[request] session=1 round=3 ok ttft=0.000s latency=1.938s output_tokens=5 cached_tokens=9578/9806
+[request] session=2 round=0 ok ttft=0.000s latency=1.745s output_tokens=18 cached_tokens=0/122
+[request] session=1 round=4 ok ttft=0.000s latency=1.608s output_tokens=3 cached_tokens=9805/10106
+[request] session=1 round=5 ok ttft=2.069s latency=2.210s output_tokens=16 cached_tokens=10105/10212
+[request] session=0 round=2 ok ttft=0.000s latency=2.070s output_tokens=4 cached_tokens=34246/34291
+[request] session=0 round=3 ok ttft=0.000s latency=3.472s output_tokens=76 cached_tokens=34290/34361
+[request] session=1 round=6 ok ttft=1.677s latency=1.764s output_tokens=16 cached_tokens=10211/10423
+[request] session=1 round=7 ok ttft=0.000s latency=1.597s output_tokens=1 cached_tokens=10422/11170
+[request] session=0 round=4 ok ttft=3.076s latency=3.076s output_tokens=16 cached_tokens=34360/34415
+[request] session=0 round=5 ok ttft=0.000s latency=2.781s output_tokens=11 cached_tokens=34414/34564
+[request] session=1 round=8 ok ttft=2.069s latency=2.197s output_tokens=16 cached_tokens=11169/11272
+[request] session=0 round=6 ok ttft=0.000s latency=3.048s output_tokens=6 cached_tokens=34563/34942
+[request] session=0 round=7 ok ttft=2.078s latency=2.255s output_tokens=16 cached_tokens=34941/35029
+[request] session=2 round=1 ok ttft=6.390s latency=10.293s output_tokens=382 cached_tokens=121/185
+[request] session=1 round=9 ok ttft=0.000s latency=1.695s output_tokens=1 cached_tokens=11271/11385
+[request] session=1 round=10 ok ttft=1.948s latency=2.442s output_tokens=26 cached_tokens=11384/11430
+[request] session=2 round=2 ok ttft=0.000s latency=4.360s output_tokens=162 cached_tokens=184/816
+[request] session=1 round=11 ok ttft=1.777s latency=1.854s output_tokens=16 cached_tokens=11429/11652
+[request] session=2 round=3 ok ttft=2.589s latency=6.848s output_tokens=198 cached_tokens=815/862
+[request] session=0 round=8 ok ttft=3.533s latency=3.597s output_tokens=12 cached_tokens=35028/35102
+[request] session=0 round=9 ok ttft=2.252s latency=2.405s output_tokens=16 cached_tokens=35101/35153
+[request] session=1 round=12 ok ttft=1.752s latency=1.914s output_tokens=16 cached_tokens=11651/11791
+[request] session=1 round=13 ok ttft=2.309s latency=2.309s output_tokens=8 cached_tokens=11790/12602
+[request] session=2 round=4 ok ttft=1.513s latency=1.650s output_tokens=16 cached_tokens=861/2994
+[request] session=0 round=10 ok ttft=0.000s latency=1.953s output_tokens=1 cached_tokens=35152/35347
+[request] session=1 round=14 ok ttft=0.000s latency=27.626s output_tokens=4 cached_tokens=60/12658
+[request] session=0 round=11 ok ttft=33.351s latency=33.469s output_tokens=15 cached_tokens=60/35613
+[request] session=1 round=15 ok ttft=1.646s latency=1.783s output_tokens=16 cached_tokens=12601/13367
+[request] session=0 round=12 ok ttft=0.000s latency=2.684s output_tokens=2 cached_tokens=35580/35873
+[request] session=2 round=5 ok ttft=14.217s latency=21.330s output_tokens=755 cached_tokens=60/3051
+[request] session=1 round=16 ok ttft=1.945s latency=2.590s output_tokens=16 cached_tokens=13366/13567
+[request] session=2 round=6 ok ttft=1.465s latency=1.713s output_tokens=19 cached_tokens=2993/4053
+[request] session=0 round=13 ok ttft=0.000s latency=2.163s output_tokens=4 cached_tokens=35868/35938
+[request] session=1 round=17 ok ttft=2.273s latency=2.413s output_tokens=15 cached_tokens=12636/13633
+[request] session=1 round=18 ok ttft=8.108s latency=8.278s output_tokens=15 cached_tokens=13628/13715
+[request] session=0 round=14 ok ttft=8.483s latency=8.492s output_tokens=10 cached_tokens=35932/36155
+[request] session=1 round=19 ok ttft=1.831s latency=1.963s output_tokens=15 cached_tokens=13692/14010
+[request] session=2 round=7 ok ttft=0.000s latency=13.223s output_tokens=2 cached_tokens=3036/4357
+[request] session=0 round=15 ok ttft=6.068s latency=6.068s output_tokens=8 cached_tokens=36124/36357
+[request] session=2 round=8 ok ttft=0.000s latency=7.515s output_tokens=2 cached_tokens=4348/4596
+[request] session=1 round=20 ok ttft=9.578s latency=9.721s output_tokens=15 cached_tokens=13980/14056
+[request] session=0 round=16 ok ttft=59.942s latency=59.996s output_tokens=16 cached_tokens=35346/36965
+[request] session=1 round=21 FAILED status=0 err="http call: Post \"https://jiwu.wtgo.com.cn/v1/chat/completions\": context deadline exceeded"
+[request] session=0 round=17 ok ttft=66.166s latency=66.293s output_tokens=16 cached_tokens=36964/37033
+[request] session=0 round=18 ok ttft=0.000s latency=2.767s output_tokens=2 cached_tokens=37020/38999
+[request] session=0 round=19 ok ttft=65.105s latency=65.107s output_tokens=8 cached_tokens=37032/39381
+[request] session=0 round=20 ok ttft=2.651s latency=2.816s output_tokens=15 cached_tokens=39356/40603
+[request] session=0 round=21 ok ttft=0.000s latency=10.360s output_tokens=5 cached_tokens=40572/41053
+[request] session=2 round=9 FAILED status=200 err="read stream: context deadline exceeded"
+[request] session=0 round=22 ok ttft=41.798s latency=41.922s output_tokens=16 cached_tokens=39380/42099
+[request] session=0 round=23 ok ttft=0.000s latency=103.964s output_tokens=2 cached_tokens=42098/43233
+[request] session=0 round=24 ok ttft=31.175s latency=31.175s output_tokens=15 cached_tokens=43228/44426
+[request] session=0 round=25 ok ttft=11.279s latency=11.320s output_tokens=15 cached_tokens=44412/44816
+[request] session=0 round=26 ok ttft=15.102s latency=15.204s output_tokens=15 cached_tokens=44796/45145
+[request] session=0 round=27 ok ttft=0.000s latency=12.014s output_tokens=3 cached_tokens=45116/45254
+benchmark run end: duration=817.6s total_requests=60
+
+=== 压测完成 ===
+total_requests=60 duration=817.6s
+
+total_requests             avg=60.000     p50=0.000      p95=0.000      unit=count  verdict=NOT_APPLICABLE
+duration                   avg=817.637    p50=0.000      p95=0.000      unit=s      verdict=NOT_APPLICABLE
+throughput_req_s           avg=0.071      p50=0.000      p95=0.000      unit=req/s  verdict=FAIL
+throughput_input_tok_s     avg=1621.785   p50=0.000      p95=0.000      unit=tok/s  verdict=NOT_APPLICABLE
+                           note: PDF 未给该分项独立基线，随 throughput_req_s 一并参考
+throughput_output_tok_s    avg=3.536      p50=0.000      p95=0.000      unit=tok/s  verdict=NOT_APPLICABLE
+                           note: PDF 未给该分项独立基线，随 throughput_req_s 一并参考
+ttft                       avg=12.297     p50=2.651      p95=65.105     unit=s      verdict=OK
+                           note: 判定仅看 P50，其余分位仅记录（06 节 6.2 表）
+tpot                       avg=9.194      p50=9.152      p95=21.618     unit=ms     verdict=OK
+                           note: 判定仅看 P50，其余分位仅记录（06 节 6.2 表）
+latency                    avg=11.555     p50=2.816      p95=65.107     unit=s      verdict=MANUAL_REVIEW
+                           note: 无 PDF 基线，首版仅记录，待历史对比能力上线后启用趋势比较（06 节）
+itl                        avg=30.596     p50=15.060     p95=117.912    unit=ms     verdict=MANUAL_REVIEW
+                           note: 无 PDF 基线，首版仅记录，待历史对比能力上线后启用趋势比较（06 节）
+cache_hit_rate             avg=0.939      p50=0.000      p95=0.000      unit=ratio  verdict=OK
+                           note: 剔除首轮（Round 0）后，对各稳态轮次的命中率取算术平均
+
+完整结果已写入 reports/kimi-k3/benchmark-2026-08-18.json
