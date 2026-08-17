@@ -11,8 +11,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+// suiteID 只允许字母数字下划线连字符，明确拒绝 "."、".."、"/" 等路径元字符，
+// 防止 suiteID 本身被用来构造穿越路径（suiteID 会同时参与拼接目标路径和越权校验的前缀，
+// 若不在此处收紧，两者会一起偏移，越权检查形同虚设）。
+var suiteIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
 func main() {
 	addr := flag.String("addr", ":8080", "监听地址")
@@ -41,8 +47,17 @@ func main() {
 			http.NotFound(w, r)
 			return
 		}
-		full := filepath.Join(absRoot, suiteID, "materials", file)
-		if !filepathHasPrefix(full, filepath.Join(absRoot, suiteID, "materials")) {
+		if !suiteIDPattern.MatchString(suiteID) {
+			http.Error(w, "invalid suite id", http.StatusBadRequest)
+			return
+		}
+		suiteDir := filepath.Join(absRoot, suiteID, "materials")
+		full := filepath.Join(suiteDir, file)
+		// 双重边界校验：suiteID 已被 suiteIDPattern 限制为不含 "."/".."/"/"，
+		// suiteDir 因此保证是 absRoot 下的真实子目录；这里再分别校验 full 未逃出
+		// suiteDir（挡住 file 里的穿越片段）和未逃出 absRoot（纵深防御，不单独信任
+		// 由用户输入 suiteID 参与构造的 suiteDir 作为唯一边界）。
+		if !filepathHasPrefix(full, suiteDir) || !filepathHasPrefix(full, absRoot) {
 			http.Error(w, "invalid path", http.StatusBadRequest)
 			return
 		}

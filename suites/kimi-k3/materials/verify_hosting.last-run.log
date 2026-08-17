@@ -1,20 +1,22 @@
-run_at_utc=2026-08-17T09:15:18Z
-repo_head=01c04cb2b52aac9834cf77844f07d54f4636d299
+run_at_utc=2026-08-17T09:28:08Z
+repo_head=44dc85bf0dc99cd1d6a0874ac53b24926afaca02
 curl_version=curl 8.13.0 (aarch64-apple-darwin24.2.0) libcurl/8.13.0 OpenSSL/3.6.1 (SecureTransport) zlib/1.2.12 brotli/1.1.0 zstd/1.5.7 AppleIDN libssh2/1.11.1 nghttp2/1.65.0 librtmp/2.3
 go_version=go version go1.26.3 darwin/arm64
 ---
-[1/6] go build
-[2/6] start server on 127.0.0.1:18453
-[3/6] download image_qa_v1.png
+[1/7] go build
+[2/7] start server on 127.0.0.1:18453
+[3/7] download image_qa_v1.png
 PASS: image http status (got 200)
 PASS: image sha256 matches source (got 76a84aac1ac56fb541719693c5df6460da264bb2e5a3422e3d16b017310db5c5)
-[4/6] download video_qa_v1.mp4
+[4/7] download video_qa_v1.mp4
 PASS: video http status (got 200)
 PASS: video sha256 matches source (got 2c4b59567f77bdef8711ac9ce4f6ba07bd8884016f567a660554f4bf47203e8d)
-[5/6] path traversal must be rejected (end-to-end, following redirects)
-PASS: path traversal rejected end-to-end (final status 404)
-[6/6] unknown suite_id must be rejected
-PASS: unknown suite_id rejected (got 404)
+[5/7] path traversal (plain '..') must be rejected end-to-end
+PASS: plain traversal ../../go.mod (got 404, no content leak)
+[6/7] path traversal via percent-encoded '..' (suiteID=%2e%2e) must be rejected
+PASS: percent-encoded suiteID=.. traversal (got 404, no content leak)
+[7/7] unknown suite_id must be rejected
+PASS: unknown suite_id (got 404, no content leak)
 === ALL CHECKS PASSED ===
 ---
 script_exit_code=0
