@@ -11,6 +11,14 @@ cd "$REPO_ROOT"
 
 PORT="${VERIFY_PORT:-18453}"
 BIN="$(mktemp -t materials-server-verify.XXXXXX 2>/dev/null || echo "/tmp/materials-server-verify.$$")"
+SERVER_PID=""
+
+cleanup() {
+  [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true
+  [ -n "$SERVER_PID" ] && wait "$SERVER_PID" 2>/dev/null || true
+  rm -f "$BIN" /tmp/verify_dl_image.png /tmp/verify_dl_video.mp4 /tmp/verify_hosting_server.log /tmp/verify_traversal_body.txt
+}
+trap cleanup EXIT
 
 echo "[1/6] go build"
 go build -o "$BIN" ./cmd/materials-server
@@ -18,7 +26,6 @@ go build -o "$BIN" ./cmd/materials-server
 echo "[2/6] start server on 127.0.0.1:${PORT}"
 "$BIN" -addr ":${PORT}" -root suites >/tmp/verify_hosting_server.log 2>&1 &
 SERVER_PID=$!
-trap 'kill "$SERVER_PID" 2>/dev/null || true; rm -f "$BIN"' EXIT
 sleep 1
 
 fail=0
@@ -47,13 +54,17 @@ VID_SHA_DL=$(shasum -a 256 /tmp/verify_dl_video.mp4 | awk '{print $1}')
 VID_SHA_SRC=$(shasum -a 256 suites/kimi-k3/materials/video_qa_v1.mp4 | awk '{print $1}')
 check "video sha256 matches source" "$VID_SHA_SRC" "$VID_SHA_DL"
 
-echo "[5/6] path traversal must be rejected"
-TRAVERSAL_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PORT}/materials/kimi-k3/v1/../../../go.mod")
+echo "[5/6] path traversal must be rejected (end-to-end, following redirects)"
+# --path-as-is：禁止 curl 客户端在发送前折叠 URL 中的 ".." 片段，确保穿越 payload
+# 真的原样发到服务端。-L：跟随服务端可能返回的重定向（net/http.ServeMux 会对含
+# ".." 的路径先做一次 307 重定向到清理后的路径），验证的是端到端最终结果是否
+# 泄露了仓库文件内容，而不是只看第一跳的状态码。
+TRAVERSAL_STATUS=$(curl -sS --path-as-is -L -o /tmp/verify_traversal_body.txt -w "%{http_code}" "http://127.0.0.1:${PORT}/materials/kimi-k3/v1/../../../go.mod")
 if [ "$TRAVERSAL_STATUS" = "200" ]; then
-  echo "FAIL: path traversal request returned 200 (should be rejected)"
+  echo "FAIL: path traversal request ultimately returned 200 (should be rejected)"
   fail=1
 else
-  echo "PASS: path traversal rejected (got $TRAVERSAL_STATUS)"
+  echo "PASS: path traversal rejected end-to-end (final status $TRAVERSAL_STATUS)"
 fi
 
 echo "[6/6] unknown suite_id must be rejected"
@@ -64,8 +75,6 @@ if [ "$UNKNOWN_STATUS" = "200" ]; then
 else
   echo "PASS: unknown suite_id rejected (got $UNKNOWN_STATUS)"
 fi
-
-rm -f /tmp/verify_dl_image.png /tmp/verify_dl_video.mp4
 
 if [ "$fail" -eq 0 ]; then
   echo "=== ALL CHECKS PASSED ==="
