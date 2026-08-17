@@ -16,20 +16,25 @@ import (
 // P1 阶段 internal/sse 包（只关心是否合规、不关心时序）之外单独实现的原因：
 // 压测需要逐分片的到达时间戳，P1 的用例引擎不需要。
 type ChunkEvent struct {
-	At  time.Time
-	Raw string
+	At      time.Time
+	Raw     string
+	Content string // 该分片 delta.content 的文本（可能为空——控制分片没有文本）
 }
 
 // StreamCallResult 是一次流式请求的完整时序留痕。
 type StreamCallResult struct {
-	HTTPStatus      int
-	SentAt          time.Time
-	FirstByteAt     time.Time // 首个 SSE 分片到达时刻（TTFT 锚点）
-	DoneAt          time.Time
-	Chunks          []ChunkEvent
-	PromptTokens    int
-	OutputTokens    int
-	CachedTokens    int
+	HTTPStatus     int
+	SentAt         time.Time
+	FirstByteAt    time.Time // 首个 SSE 分片到达时刻（可能是只带 role 的控制分片，仅供诊断参考）
+	FirstContentAt time.Time // 首个携带非空 delta.content 的分片到达时刻——TTFT 的正确锚点
+	DoneAt         time.Time
+	Chunks         []ChunkEvent
+	PromptTokens   int
+	OutputTokens   int // 来自 usage.completion_tokens，是"输出了多少 token"的权威计数
+	// CachedTokens 为 nil 表示响应从未携带 usage.prompt_tokens_details.cached_tokens
+	// 字段（不可观测，6.2 节兜底规则要求区分"未观测到"与"明确为 0"，不能混为一谈）；
+	// 非 nil 时是网关回传的真实缓存命中 token 数。
+	CachedTokens    *int
 	Err             error
 	RawRequestBody  string
 	RawResponseHead string // 首个/末个分片，用于失败排查留痕（不留全量，避免日志过大）
@@ -96,7 +101,11 @@ func StreamCall(ctx context.Context, httpClient *http.Client, baseURL, apiKey st
 		if data == "[DONE]" {
 			break
 		}
-		result.Chunks = append(result.Chunks, ChunkEvent{At: now, Raw: data})
+		content := extractDeltaContent(data)
+		if content != "" && result.FirstContentAt.IsZero() {
+			result.FirstContentAt = now
+		}
+		result.Chunks = append(result.Chunks, ChunkEvent{At: now, Raw: data, Content: content})
 		extractUsageFromChunk(data, &result)
 	}
 	if err := scanner.Err(); err != nil && result.Err == nil {
@@ -121,6 +130,29 @@ type chunkUsagePeek struct {
 	} `json:"usage"`
 }
 
+func extractDeltaContent(raw string) string {
+	var c chunkUsagePeek
+	if err := json.Unmarshal([]byte(raw), &c); err != nil {
+		return ""
+	}
+	if len(c.Choices) > 0 {
+		return c.Choices[0].Delta.Content
+	}
+	return ""
+}
+
+// ConcatenatedContent 拼出这次响应的完整正文（把所有分片的 delta.content
+// 顺序拼接），供压测多轮会话把"模型这轮真实说了什么"接入历史上下文——
+// 而不是用空字符串占位，那样会让后续轮次的上下文长度、Prefix Cache 命中
+// 情况都失真，脱离真实多轮会话的样子。
+func (r StreamCallResult) ConcatenatedContent() string {
+	var sb []byte
+	for _, ch := range r.Chunks {
+		sb = append(sb, ch.Content...)
+	}
+	return string(sb)
+}
+
 func extractUsageFromChunk(raw string, result *StreamCallResult) {
 	var c chunkUsagePeek
 	if err := json.Unmarshal([]byte(raw), &c); err != nil {
@@ -130,24 +162,8 @@ func extractUsageFromChunk(raw string, result *StreamCallResult) {
 		result.PromptTokens = c.Usage.PromptTokens
 		result.OutputTokens = c.Usage.CompletionTokens
 		if c.Usage.PromptTokensDetails != nil {
-			result.CachedTokens = c.Usage.PromptTokensDetails.CachedTokens
+			cached := c.Usage.PromptTokensDetails.CachedTokens
+			result.CachedTokens = &cached
 		}
 	}
-}
-
-// ContentChunkTimestamps 返回携带非空 delta.content 的分片到达时间，用于计算
-// TPOT/ITL（跳过只带 role/空 delta/仅 usage 的控制分片，避免把它们当成"输出了
-// 一个 token"）。
-func (r StreamCallResult) ContentChunkTimestamps() []time.Time {
-	var ts []time.Time
-	for _, ch := range r.Chunks {
-		var c chunkUsagePeek
-		if err := json.Unmarshal([]byte(ch.Raw), &c); err != nil {
-			continue
-		}
-		if len(c.Choices) > 0 && c.Choices[0].Delta.Content != "" {
-			ts = append(ts, ch.At)
-		}
-	}
-	return ts
 }

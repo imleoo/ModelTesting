@@ -7,6 +7,8 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"regexp"
+	"sync"
 	"time"
 
 	"github.com/leoobai/modeltestbed/internal/model"
@@ -23,6 +25,7 @@ type RunConfig struct {
 	DatasetVersion string
 	Seed           int64
 	LogWriter      io.Writer // 逐行写入原始事件留痕（对应 6.3 节 stdout/stderr 全量日志引用）
+	LogRef         string    // LogWriter 对应的可读引用（如文件路径），写入 BenchmarkRun.RawStdoutRef
 }
 
 type RunResult struct {
@@ -31,9 +34,27 @@ type RunResult struct {
 	Outcomes []RequestOutcome
 }
 
+// runMu 保证同一进程内同一时刻只有一次 Run 在执行（设计方案 6.3 节：
+// "首版压测任务用互斥锁保证同一时刻只有一个压测在执行"），避免两次压测
+// 并发抢占导致 TTFT 等时序指标失真。这只覆盖单进程内的并发调用；跨进程/
+// 跨机器的互斥不在本版范围内（首版单进程部署，见设计方案 10.1 节）。
+var runMu sync.Mutex
+
+// apiKeyRedactRe 匹配常见的 -api-key <value> / -api-key=<value> 命令行参数写法，
+// 用于从 raw_command 留痕里去掉真实密钥——BenchmarkRun.RawParamsJSON/RawCommand
+// 会被写进结果文件和报告，绝不能把 API Key 明文留在这些产物里。
+var apiKeyRedactRe = regexp.MustCompile(`(-{1,2}api-key[= ])(\S+)`)
+
+func RedactCommand(cmd string) string {
+	return apiKeyRedactRe.ReplaceAllString(cmd, "${1}***REDACTED***")
+}
+
 // Run 执行一次完整压测：生成会话 → 按爬坡到达率并发执行 → 汇总指标 → 按 6.2
 // 节规则判定 → 产出 BenchmarkRun + []BenchmarkMetric。
 func Run(ctx context.Context, cfg RunConfig) (RunResult, error) {
+	runMu.Lock()
+	defer runMu.Unlock()
+
 	rng := rand.New(rand.NewSource(cfg.Seed))
 	sessions := GenerateSessions(cfg.Params, rng)
 
@@ -61,9 +82,13 @@ func Run(ctx context.Context, cfg RunConfig) (RunResult, error) {
 
 	startedAt, endedAt := RunLoadTest(ctx, loadCfg, sessions, rng, func(o RequestOutcome) {
 		outcomes = append(outcomes, o)
+		cachedStr := "n/a"
+		if o.CachedTokens != nil {
+			cachedStr = fmt.Sprintf("%d", *o.CachedTokens)
+		}
 		if o.Success {
-			logLine("[request] session=%d round=%d ok ttft=%.3fs latency=%.3fs output_tokens=%d cached_tokens=%d/%d",
-				o.SessionID, o.RoundIndex, o.TTFTSeconds, o.LatencySeconds, o.OutputTokens, o.CachedTokens, o.PromptTokens)
+			logLine("[request] session=%d round=%d ok ttft=%.3fs latency=%.3fs output_tokens=%d cached_tokens=%s/%d",
+				o.SessionID, o.RoundIndex, o.TTFTSeconds, o.LatencySeconds, o.OutputTokens, cachedStr, o.PromptTokens)
 		} else {
 			logLine("[request] session=%d round=%d FAILED status=%d err=%q", o.SessionID, o.RoundIndex, o.HTTPStatus, o.Err)
 		}
@@ -74,10 +99,11 @@ func Run(ctx context.Context, cfg RunConfig) (RunResult, error) {
 
 	run := model.BenchmarkRun{
 		ID:             fmt.Sprintf("bench-%d", startedAt.Unix()),
-		RawCommand:     cfg.RawCommand,
+		RawCommand:     RedactCommand(cfg.RawCommand),
 		RawParamsJSON:  string(paramsJSON),
 		ToolVersion:    cfg.ToolVersion,
 		DatasetVersion: cfg.DatasetVersion,
+		RawStdoutRef:   cfg.LogRef,
 		TotalRequests:  len(outcomes),
 		DurationS:      duration,
 	}
@@ -157,7 +183,7 @@ func computeMetrics(outcomes []RequestOutcome, durationS float64) []model.Benchm
 	metrics = append(metrics, model.BenchmarkMetric{
 		Name: "tpot", Scope: "overall", Unit: "ms",
 		Avg: tpotP.Avg, P50: tpotP.P50, P75: tpotP.P75, P90: tpotP.P90, P95: tpotP.P95, P99: tpotP.P99,
-		BaselineVerdict: judgeLowerIsBetter(tpotP.P50, baselineTPOTP50Millis),
+		BaselineVerdict: judgeLowerIsBetterStrict(tpotP.P50, baselineTPOTP50Millis),
 		Note:            "判定仅看 P50，其余分位仅记录（06 节 6.2 表）",
 	})
 
@@ -193,35 +219,45 @@ func computeMetrics(outcomes []RequestOutcome, durationS float64) []model.Benchm
 	return metrics
 }
 
+// cacheHitMetrics 计算整体（稳态均值）与分轮次缓存命中率。只使用真正观测到
+// usage.prompt_tokens_details.cached_tokens 字段的样本（CachedTokens != nil）；
+// 该字段完全未出现时不能当作"命中率为 0%"，必须走 6.2 节的 NOT_OBSERVABLE
+// 兜底规则，否则会把"没测到"误判成"确实没命中"进而误判 FAIL。
 func cacheHitMetrics(successful []RequestOutcome) []model.BenchmarkMetric {
 	var metrics []model.BenchmarkMetric
 
 	byRound := map[int][]RequestOutcome{}
 	maxRound := -1
+	observedAny := false
 	for _, o := range successful {
-		if o.PromptTokens <= 0 {
-			continue // 无法计算命中率的样本（如 usage 未回传）不计入
+		if o.CachedTokens == nil || o.PromptTokens <= 0 {
+			continue // 未观测到该字段，或 prompt_tokens 缺失导致无法算比率
 		}
+		observedAny = true
 		byRound[o.RoundNumber] = append(byRound[o.RoundNumber], o)
 		if o.RoundNumber > maxRound {
 			maxRound = o.RoundNumber
 		}
 	}
 
-	if maxRound < 0 {
+	if !observedAny {
 		metrics = append(metrics, model.BenchmarkMetric{
 			Name: "cache_hit_rate", Scope: "overall", Unit: "ratio",
 			BaselineVerdict: model.BaselineNotObservable,
-			Note:            "未在响应 usage 中观测到 prompt_tokens_details.cached_tokens 字段，按 6.2 节兜底规则移出验收门禁",
+			Note:            "未在任何响应的 usage 中观测到 prompt_tokens_details.cached_tokens 字段，按 6.2 节兜底规则移出验收门禁",
 		})
 		return metrics
 	}
 
-	rateOf := func(rows []RequestOutcome) float64 {
+	// 单轮内取 token 加权比率（同一轮次多个请求汇总看命中情况是合理的），
+	// 但"稳态整体"按设计方案原文"取稳态轮次均值"，是对多个轮次各自的比率
+	// 取算术平均，不是把所有轮次的 token 数混在一起再算一个比率——后者会让
+	// token 量特别大的轮次主导结果，掩盖其他轮次命中率异常的信号。
+	rateOfRound := func(rows []RequestOutcome) float64 {
 		sumPrompt, sumCached := 0, 0
 		for _, o := range rows {
 			sumPrompt += o.PromptTokens
-			sumCached += o.CachedTokens
+			sumCached += *o.CachedTokens
 		}
 		if sumPrompt == 0 {
 			return 0
@@ -229,31 +265,39 @@ func cacheHitMetrics(successful []RequestOutcome) []model.BenchmarkMetric {
 		return float64(sumCached) / float64(sumPrompt)
 	}
 
-	// 稳态：剔除 Round 0。
-	var steady []RequestOutcome
+	perRoundRate := make(map[int]float64, len(byRound))
 	for round, rows := range byRound {
+		perRoundRate[round] = rateOfRound(rows)
+	}
+
+	var steadyRates []float64
+	for round, rate := range perRoundRate {
 		if round > 0 {
-			steady = append(steady, rows...)
+			steadyRates = append(steadyRates, rate)
 		}
 	}
-	steadyRate := rateOf(steady)
+	steadyAvg := 0.0
 	verdict := model.BaselineNotObservable
 	note := "首轮（Round 0）无历史，已剔除；稳态轮次为空，无法判定"
-	if len(steady) > 0 {
-		verdict = judgeHigherIsBetter(steadyRate, baselineCacheHitRate)
-		note = "剔除首轮（Round 0）后取稳态轮次均值"
+	if len(steadyRates) > 0 {
+		sum := 0.0
+		for _, r := range steadyRates {
+			sum += r
+		}
+		steadyAvg = sum / float64(len(steadyRates))
+		verdict = judgeHigherIsBetter(steadyAvg, baselineCacheHitRate)
+		note = "剔除首轮（Round 0）后，对各稳态轮次的命中率取算术平均"
 	}
 	metrics = append(metrics, model.BenchmarkMetric{
-		Name: "cache_hit_rate", Scope: "overall", Avg: steadyRate, Unit: "ratio",
+		Name: "cache_hit_rate", Scope: "overall", Avg: steadyAvg, Unit: "ratio",
 		BaselineVerdict: verdict, Note: note,
 	})
 
 	for round := 0; round <= maxRound; round++ {
-		rows, ok := byRound[round]
+		rate, ok := perRoundRate[round]
 		if !ok {
 			continue
 		}
-		rate := rateOf(rows)
 		v := model.BaselineNotApplicable
 		n := "仅记录，不参与验收判定（06 节判定基于稳态整体均值，不逐轮次判定）"
 		if round == 0 {

@@ -63,7 +63,12 @@ func DefaultParams(totalSessions int) (*Params, error) {
 	}, nil
 }
 
-// Round 是一轮多轮会话里的一次用户输入。
+// Round 是一轮多轮会话里的一次用户输入。第 0 轮（Index==0）的用户输入长度
+// 由 Session.InitPromptLengthTok 承担（对应 PDF "init-prompt-length"，即首条
+// 消息的长度），InputLengthTok 字段留空（0）不使用；第 1 轮起才用
+// InputLengthTok（对应 PDF "input-length"，后续轮次的输入长度）——这两个是
+// PDF 6.1 节明确区分的两个不同参数，不能把 InputLengthTok 套到首轮头上，
+// 也不能让首轮采样出的 InputLengthTok 白白丢弃不用。
 type Round struct {
 	Index               int
 	InputLengthTok      int
@@ -86,12 +91,14 @@ func GenerateSessions(p *Params, rng *rand.Rand) []Session {
 		rounds := make([]Round, numRounds)
 		for r := range numRounds {
 			interval := 0.0
+			inputLen := 0 // 第 0 轮不用这个字段，见 Round 类型注释
 			if r > 0 {
 				interval = p.TurnIntervalSeconds.Sample(rng)
+				inputLen = p.InputLengthTok.SampleInt(rng)
 			}
 			rounds[r] = Round{
 				Index:               r,
-				InputLengthTok:      p.InputLengthTok.SampleInt(rng),
+				InputLengthTok:      inputLen,
 				OutputLengthTok:     p.OutputLengthTok.SampleInt(rng),
 				TurnIntervalSeconds: interval,
 			}

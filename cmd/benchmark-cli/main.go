@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func main() {
 	requestTimeout := flag.Duration("request-timeout", 120*time.Second, "单请求超时")
 	seed := flag.Int64("seed", 1, "随机种子（用于可复现的会话生成与到达调度）")
 	outPath := flag.String("out", "", "结果 JSON 输出路径")
-	logPath := flag.String("log", "", "原始事件日志输出路径（6.3 节 stdout/stderr 全量日志引用）")
+	logPath := flag.String("log", "", "原始事件日志输出路径（6.3 节 stdout/stderr 全量日志引用；留空则自动生成一个带时间戳的文件名，不允许完全没有落盘引用）")
 	flag.Parse()
 
 	if *baseURL == "" || *modelKey == "" {
@@ -41,16 +42,18 @@ func main() {
 		log.Fatalf("构造压测参数失败: %v", err)
 	}
 
-	var logFile *os.File
-	if *logPath != "" {
-		logFile, err = os.Create(*logPath)
-		if err != nil {
-			log.Fatalf("创建日志文件失败: %v", err)
-		}
-		defer logFile.Close()
-	} else {
-		logFile = os.Stdout
+	resolvedLogPath := *logPath
+	if resolvedLogPath == "" {
+		resolvedLogPath = fmt.Sprintf("benchmark-%d.log", time.Now().Unix())
 	}
+	logFile, err := os.Create(resolvedLogPath)
+	if err != nil {
+		log.Fatalf("创建日志文件失败: %v", err)
+	}
+	defer logFile.Close()
+	// 同时打到 stdout，方便实时看进度；文件本身才是 RawStdoutRef 指向的
+	// 完整留痕（6.3 节要求"stdout/stderr 全量日志引用"，必须是可复核的落盘产物）。
+	logWriter := io.MultiWriter(logFile, os.Stdout)
 
 	rawCommand := strings.Join(os.Args, " ")
 
@@ -66,7 +69,8 @@ func main() {
 		ToolVersion:    toolVersion,
 		DatasetVersion: "synthetic-percentile-reconstruction-v1",
 		Seed:           *seed,
-		LogWriter:      logFile,
+		LogWriter:      logWriter,
+		LogRef:         resolvedLogPath,
 	})
 	if err != nil {
 		log.Fatalf("压测执行失败: %v", err)
