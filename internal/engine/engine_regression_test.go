@@ -286,6 +286,79 @@ func TestRegression_SchemaValid_OmittedContentWithoutToolCallsIsInvalid(t *testi
 	}
 }
 
+// Codex P2 第二轮复审发现：上一条测试只覆盖了 content 字段完全省略的场景，
+// 没有覆盖语义等价的显式 "content":null 场景，导致 {"content":null} 且无
+// tool_calls 的空消息仍能通过 schema 校验。这里补上这个具体边界。
+func TestRegression_SchemaValid_NullContentWithoutToolCallsIsInvalid(t *testing.T) {
+	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{
+			"id":"c1","object":"chat.completion","created":1700000000,"model":"test-model",
+			"choices":[{"index":0,"message":{"role":"assistant","content":null},"finish_reason":"stop"}]
+		}`)
+	})
+	defer closeFn()
+
+	c := simpleCase("content_nonempty", map[string]any{
+		"model": "{{model_key}}", "messages": []any{map[string]any{"role": "user", "content": "hi"}}, "stream": false,
+	})
+	result := e.RunCase(context.Background(), c)
+
+	if result.Status != model.StatusFail {
+		t.Fatalf("expected FAIL (content explicitly null and no tool_calls, should be rejected by openai_schema_valid), got status=%s", result.Status)
+	}
+	if result.CaseAttempts[0].FailReason == "" || !containsAny(result.CaseAttempts[0].FailReason, "openai_schema_valid") {
+		t.Fatalf("expected failure to originate from openai_schema_valid check, got reason=%q", result.CaseAttempts[0].FailReason)
+	}
+}
+
+// 空数组 tool_calls:[] 应等同于"没有 tool_calls"，同样不能免除"消息为空"的判定。
+func TestRegression_SchemaValid_EmptyToolCallsArrayWithoutContentIsInvalid(t *testing.T) {
+	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{
+			"id":"c1","object":"chat.completion","created":1700000000,"model":"test-model",
+			"choices":[{"index":0,"message":{"role":"assistant","tool_calls":[]},"finish_reason":"stop"}]
+		}`)
+	})
+	defer closeFn()
+
+	c := simpleCase("content_nonempty", map[string]any{
+		"model": "{{model_key}}", "messages": []any{map[string]any{"role": "user", "content": "hi"}}, "stream": false,
+	})
+	result := e.RunCase(context.Background(), c)
+
+	if result.Status != model.StatusFail {
+		t.Fatalf("expected FAIL (tool_calls is an empty array and content is omitted), got status=%s", result.Status)
+	}
+}
+
+// 流式 delta 的收尾分片（只有 finish_reason，content 和 tool_calls 都没有）是
+// 正常现象，"消息不能为空"的规则不应套用到流式场景。
+func TestRegression_SchemaValid_StreamedEmptyDeltaIsValid(t *testing.T) {
+	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
+		flusher := w.(http.Flusher)
+		w.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprint(w, "data: {\"id\":\"c1\",\"object\":\"chat.completion.chunk\",\"created\":1700000000,\"model\":\"test-model\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"hi\"},\"finish_reason\":null}]}\n\n")
+		flusher.Flush()
+		fmt.Fprint(w, "data: {\"id\":\"c1\",\"object\":\"chat.completion.chunk\",\"created\":1700000000,\"model\":\"test-model\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n")
+		flusher.Flush()
+		fmt.Fprint(w, "data: [DONE]\n\n")
+		flusher.Flush()
+	})
+	defer closeFn()
+
+	c := simpleCase("stream_integrity", map[string]any{
+		"model": "{{model_key}}", "messages": []any{map[string]any{"role": "user", "content": "hi"}}, "stream": true,
+	})
+	result := e.RunCase(context.Background(), c)
+
+	if result.Status != model.StatusPass {
+		t.Fatalf("expected PASS (empty trailing delta with only finish_reason is normal for streamed responses), got status=%s reason=%s",
+			result.Status, result.CaseAttempts[0].FailReason)
+	}
+}
+
 func containsAny(s string, sub string) bool {
 	return len(s) >= len(sub) && (func() bool {
 		for i := 0; i+len(sub) <= len(s); i++ {
