@@ -98,10 +98,11 @@ func validateMessageBody(bodyMap map[string]any, choiceIdx int, key string, stre
 	if !streamed {
 		// 非流式 message：role 必须存在（delta 允许省略，只有首个分片才带 role）。
 		requireString(bodyMap, "role", violations)
-		// content 键必须存在（可为 null），出现且非 null 时类型必须是 string。
-		if v, has := bodyMap["content"]; !has {
-			*violations = append(*violations, prefix+" 缺少 content 字段")
-		} else if v != nil {
+		// content 键是否存在不强制要求：真实网关在返回 tool_calls 时常见做法是
+		// 直接省略 content 字段，而不是显式写 "content":null（P2 用真实
+		// kimi-k3 网关验证时发现的情况，二者语义等价，都表示"无文本内容"，
+		// 不应因为字段被省略就判结构不合规）。出现时仍要求类型正确。
+		if v, has := bodyMap["content"]; has && v != nil {
 			if _, ok := v.(string); !ok {
 				*violations = append(*violations, prefix+".content 类型应为 string 或 null")
 			}

@@ -15,7 +15,7 @@
     "category_timeout_overrides": {
       "多模态图像": 90,
       "多模态视频": 90,
-      "reasoning_effort": 60
+      "reasoning_effort": 180
     }
   },
   "fixtures": {
@@ -38,7 +38,7 @@
       "weather_query": "北京今天天气怎么样？",
       "reasoning_prompt": "请计算 37 乘以 48 等于多少，并简要给出计算过程。",
       "reasoning_effort_prompt": "用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。",
-      "structured_weather_question": "请给出北京当前的天气状况，用结构化数据回答，字段包含城市名 city 与摄氏温度 temperature_c。"
+      "structured_weather_question": "请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。"
     }
   },
   "materials_manifest": "suites/kimi-k3/materials/manifest.json",

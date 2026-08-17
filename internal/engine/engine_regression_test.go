@@ -227,7 +227,39 @@ func TestRegression_SchemaValid_CatchesMoreStructuralIssues(t *testing.T) {
 	}
 }
 
-// 缺陷 7：非法 required_rule 不能被默认当作“必须执行”悄悄放行。
+// P2 用真实 kimi-k3 网关实测发现：openai_schema_valid 曾要求非流式 message.content
+// 键必须存在（可为 null），但真实网关返回 tool_calls 时会直接省略 content 字段，
+// 而不是显式写 "content":null——这是合法的 OpenAI 兼容行为，不应判 FAIL。
+func TestRegression_SchemaValid_OmittedContentWithToolCallsIsValid(t *testing.T) {
+	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// 注意：message 对象里没有 "content" 键，只有 role/reasoning_content/tool_calls。
+		fmt.Fprint(w, `{
+			"id":"c1","object":"chat.completion","created":1700000000,"model":"test-model",
+			"choices":[{"index":0,"message":{"role":"assistant","reasoning_content":"xiangxiang",
+				"tool_calls":[{"id":"c1","type":"function","function":{"name":"get_weather","arguments":"{\"city\":\"beijing\"}"}}]},
+				"finish_reason":"tool_calls"}]
+		}`)
+	})
+	defer closeFn()
+
+	toolsBody := map[string]any{
+		"model":       "{{model_key}}",
+		"messages":    []any{map[string]any{"role": "user", "content": "hi"}},
+		"tools":       []any{map[string]any{"type": "function", "function": map[string]any{"name": "get_weather"}}},
+		"tool_choice": "required",
+		"stream":      false,
+	}
+	c := simpleCase("tool_call_required", toolsBody)
+	result := e.RunCase(context.Background(), c)
+
+	if result.Status != model.StatusPass {
+		t.Fatalf("expected PASS (content field omitted but tool_calls valid, should not be blocked by schema check), got status=%s reason=%s",
+			result.Status, result.CaseAttempts[0].FailReason)
+	}
+}
+
+// 缺陷 7：非法 required_rule 不能被默认当作”必须执行”悄悄放行。
 func TestRegression_InvalidRequiredRule_FailsInsteadOfSilentlyRunning(t *testing.T) {
 	e, closeFn := newTestEngine(t, func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("非法 required_rule 的用例不应该发起任何网络请求")
