@@ -306,7 +306,12 @@ func (e *Engine) scoreToolCallNamed(c suitedef.Case, cr client.CallResult, attem
 		attempt.Passed, attempt.FailReason = false, "用例定义缺少 tool_choice.function.name，无法比对"
 		return
 	}
-	schema, _ := extractToolParametersSchema(e.Suite.Fixtures, c, name)
+	schema, toolFound := extractToolParametersSchema(e.Suite.Fixtures, c, name)
+	if !toolFound {
+		attempt.Passed, attempt.FailReason = false,
+			fmt.Sprintf("套件定义不一致：tool_choice 指定的函数 %q 未在 tools/fixtures 中声明，无法校验参数", name)
+		return
+	}
 	v := assertion.ToolCallNamed(resp, name, schema)
 	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
 }
@@ -674,7 +679,14 @@ func extractAllowedToolNames(c suitedef.Case) []string {
 // tools 数组（用例未借助 fixtures 占位符定义工具的情况），因为 tools 通常是
 // 通过 {{fixtures.tools.xxx}} 占位符引用的（渲染前仍是字符串），再回退到
 // fixtures.tools 按函数名匹配查找。
-func extractToolParametersSchema(fixtures suitedef.Fixtures, c suitedef.Case, fnName string) (map[string]any, bool) {
+//
+// 返回值区分两种不同情况，调用方不能混为一谈：
+//   - toolFound=false：tools/fixtures 里根本找不到这个函数名，属于套件定义本身
+//     的不一致（tool_choice 指向了未声明的工具），应判 FAIL，不能放行。
+//   - toolFound=true 但 schema==nil：工具存在，只是没有声明 parameters（例如
+//     无参函数），此时"参数满足声明的 schema"没有约束可查，跳过 schema 校验是
+//     合理的，不是套件定义错误。
+func extractToolParametersSchema(fixtures suitedef.Fixtures, c suitedef.Case, fnName string) (schema map[string]any, toolFound bool) {
 	if tools, ok := c.RequestTemplate.Body["tools"].([]any); ok {
 		for _, t := range tools {
 			tm, ok := t.(map[string]any)
@@ -686,8 +698,8 @@ func extractToolParametersSchema(fixtures suitedef.Fixtures, c suitedef.Case, fn
 				continue
 			}
 			if name, _ := fn["name"].(string); name == fnName {
-				schema, ok := fn["parameters"].(map[string]any)
-				return schema, ok
+				schema, _ := fn["parameters"].(map[string]any)
+				return schema, true
 			}
 		}
 	}
@@ -699,8 +711,8 @@ func extractToolParametersSchema(fixtures suitedef.Fixtures, c suitedef.Case, fn
 		if name, _ := fn["name"].(string); name != fnName {
 			continue
 		}
-		schema, ok := fn["parameters"].(map[string]any)
-		return schema, ok
+		schema, _ := fn["parameters"].(map[string]any)
+		return schema, true
 	}
 	return nil, false
 }
