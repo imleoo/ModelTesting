@@ -3,7 +3,15 @@
   "suite_id": "kimi-k3",
   "generated_note": "P0 冻结素材清单：多模态确定性问答（deterministic_multimodal_qa）依赖的固定图像/视频素材。素材内容为印刷体数字，答案唯一且可程序化比对，避免模型开放式描述导致无法自动判定。",
   "answer_match_definitions": {
-    "digits_exact": "从模型响应正文中提取全部『连续数字子串』（正则 \\d+）。若提取结果中恰好存在一个与 expected_answer 完全相等的连续数字串，判定 PASS；若一个都没有，或存在多个不同的连续数字串且都不等于 expected_answer（可能是模型误读或输出了无关数字），判定为『无法程序化确认』，状态置为 MANUAL_REVIEW（不计自动 PASS），不直接判 FAIL——与设计方案 04 节 deterministic_multimodal_qa 断言的 MANUAL_REVIEW 兜底规则一致。比对前对响应做首尾空白裁剪，不做全角/半角数字归一化（素材问题本身要求阿拉伯数字作答）。"
+    "digits_exact": {
+      "description": "从模型响应正文中提取全部『连续数字子串』（正则 \\d+，去重后比较）。比对前对响应做首尾空白裁剪，不做全角/半角数字归一化（素材问题本身要求阿拉伯数字作答）。",
+      "decision_rule": [
+        { "extracted_distinct_digit_runs": 1, "matches_expected_answer": true, "verdict": "PASS", "reason": "唯一可比对答案且正确" },
+        { "extracted_distinct_digit_runs": 1, "matches_expected_answer": false, "verdict": "FAIL", "reason": "唯一可比对答案但错误——能程序化比对时必须判 FAIL，不得置为 MANUAL_REVIEW（与设计方案 04 节 deterministic_multimodal_qa 断言口径一致：只有开放式描述/无法比对才进 MANUAL_REVIEW）" },
+        { "extracted_distinct_digit_runs": 0, "verdict": "MANUAL_REVIEW", "reason": "响应为开放式描述，未给出可比对的数字，无法程序化确认" },
+        { "extracted_distinct_digit_runs": "≥2", "verdict": "MANUAL_REVIEW", "reason": "响应含多个不同数字，无法确定唯一作答，无法程序化确认（不因其中恰好包含正确答案而判 PASS）" }
+      ]
+    }
   },
   "materials": [
     {

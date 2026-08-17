@@ -39,7 +39,7 @@
 
 ## 思考内容 / reasoning_tokens 响应字段路径（P0 冻结默认值，供应商可覆盖）
 
-PDF 4.2 表用「`reasoning_content`（或等价字段）」「`reasoning_tokens`」描述响应字段，未给出穷举 schema。本套件冻结如下默认读取路径，供 `thinking_toggle_pair`、`default_thinking_matches_declaration`、`reasoning_effort_scaling` 三类断言使用：
+设计方案 04 节 4.2 表用「`reasoning_content`（或等价字段）」「`reasoning_tokens`」描述响应字段，未给出穷举 schema。本套件冻结如下默认读取路径，供 `thinking_toggle_pair`、`default_thinking_matches_declaration`、`reasoning_effort_scaling` 三类断言使用：
 
 | 断言用途 | 默认响应字段路径 | 说明 |
 |---|---|---|
@@ -51,7 +51,7 @@ PDF 4.2 表用「`reasoning_content`（或等价字段）」「`reasoning_tokens
 
 ## `answer_match` 匹配器行为
 
-`deterministic_multimodal_qa` 断言使用 `materials/manifest.json` 顶层 `answer_match_definitions` 中登记的具体规则；`digits_exact` 的定义见该文件，核心行为：提取响应中全部连续数字子串，恰好命中一个等于 `expected_answer` 的子串才判 PASS，提取不到或存在歧义（多个不同候选）则置 `MANUAL_REVIEW`，不直接判 FAIL。
+`deterministic_multimodal_qa` 断言使用 `materials/manifest.json` 顶层 `answer_match_definitions` 中登记的具体规则，本文件不重复定义，避免两处描述漂移。`digits_exact` 的判定表以该文件的 `answer_match_definitions.digits_exact.decision_rule` 为唯一权威：能提取出唯一可比对数字时按 PASS/FAIL 判定（唯一且正确→PASS，唯一但错误→FAIL）；提取不到或存在多个不同候选（无法确定唯一作答）时才置 `MANUAL_REVIEW`——与设计方案 04 节 deterministic_multimodal_qa 断言口径一致：只有『开放式描述、无法程序化比对』才进 `MANUAL_REVIEW`，能明确比对出错误答案必须判 FAIL。
 
 ## 尚未解决的假设（需 P1/P2 联调时核实，不代表本文件已默认成立）
 
