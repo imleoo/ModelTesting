@@ -47,21 +47,31 @@ func writeFileAtomic(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
+	// renamed 之前的任何 return 都必须清理掉 tmp——包括 os.Rename 本身失败
+	// 的情况，否则会残留一个占用 tmp 名字的文件，导致下次重试同一路径时
+	// 在 createExclusive(tmp) 处永久失败（O_EXCL 拒绝覆盖已存在文件）。
+	renamed := false
+	defer func() {
+		if !renamed {
+			os.Remove(tmp)
+		}
+	}()
 	if _, err := f.Write(data); err != nil {
 		f.Close()
-		os.Remove(tmp)
 		return err
 	}
 	if err := f.Sync(); err != nil {
 		f.Close()
-		os.Remove(tmp)
 		return err
 	}
 	if err := f.Close(); err != nil {
-		os.Remove(tmp)
 		return err
 	}
-	return os.Rename(tmp, path)
+	if err := os.Rename(tmp, path); err != nil {
+		return err
+	}
+	renamed = true
+	return nil
 }
 
 func main() {
