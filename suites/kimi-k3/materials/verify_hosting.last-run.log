@@ -1,22 +1,24 @@
-run_at_utc=2026-08-17T09:28:08Z
-repo_head=44dc85bf0dc99cd1d6a0874ac53b24926afaca02
+run_at_utc=2026-08-17T09:34:01Z
+repo_head=6b56546db0fd29e9ac12268019211f2b7c7a87ff
 curl_version=curl 8.13.0 (aarch64-apple-darwin24.2.0) libcurl/8.13.0 OpenSSL/3.6.1 (SecureTransport) zlib/1.2.12 brotli/1.1.0 zstd/1.5.7 AppleIDN libssh2/1.11.1 nghttp2/1.65.0 librtmp/2.3
 go_version=go version go1.26.3 darwin/arm64
 ---
-[1/7] go build
-[2/7] start server on 127.0.0.1:18453
-[3/7] download image_qa_v1.png
+[1/8] go build
+[2/8] start server on 127.0.0.1:18453
+[3/8] download image_qa_v1.png
 PASS: image http status (got 200)
 PASS: image sha256 matches source (got 76a84aac1ac56fb541719693c5df6460da264bb2e5a3422e3d16b017310db5c5)
-[4/7] download video_qa_v1.mp4
+[4/8] download video_qa_v1.mp4
 PASS: video http status (got 200)
 PASS: video sha256 matches source (got 2c4b59567f77bdef8711ac9ce4f6ba07bd8884016f567a660554f4bf47203e8d)
-[5/7] path traversal (plain '..') must be rejected end-to-end
+[5/8] path traversal (plain '..') must be rejected end-to-end
 PASS: plain traversal ../../go.mod (got 404, no content leak)
-[6/7] path traversal via percent-encoded '..' (suiteID=%2e%2e) must be rejected
+[6/8] path traversal via percent-encoded '..' (suiteID=%2e%2e) must be rejected
 PASS: percent-encoded suiteID=.. traversal (got 404, no content leak)
-[7/7] unknown suite_id must be rejected
+[7/8] unknown suite_id must be rejected
 PASS: unknown suite_id (got 404, no content leak)
+[8/8] symlink inside materials dir pointing outside absRoot must not be served
+PASS: symlink escape via materials dir (got 400, no content leak)
 === ALL CHECKS PASSED ===
 ---
 script_exit_code=0
