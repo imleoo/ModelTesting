@@ -2,6 +2,11 @@
 /bin/
 *.test
 *.out
+/materials-server
+/testbed
+
+# Claude Code local session metadata
+.claude/
 
 # Node
 node_modules/
