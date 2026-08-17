@@ -1,6 +1,6 @@
 # 套件定义文件格式（suite.v1.json）
 
-供 P1 用例引擎读取执行，字段含义如下。
+供 P1 用例引擎读取执行，字段含义如下。本文件与 `materials/manifest.json` 均为 P0 阶段的数据/规则定义，仓库当前不含判题执行代码（属于 P1 范围）；P1 实现 `deterministic_multimodal_qa` 断言时，必须为 `answer_match_definitions.digits_exact.decision_rule` 的四个分支（唯一且正确/唯一但错误/零个/多个）各写一条单元测试，确保运行时代码真正遵循本文件冻结的判定表，而不只是文档层面正确。
 
 ## 顶层字段
 
@@ -51,7 +51,7 @@
 
 ## `answer_match` 匹配器行为
 
-`deterministic_multimodal_qa` 断言使用 `materials/manifest.json` 顶层 `answer_match_definitions` 中登记的具体规则，本文件不重复定义，避免两处描述漂移。`digits_exact` 的判定表以该文件的 `answer_match_definitions.digits_exact.decision_rule` 为唯一权威：能提取出唯一可比对数字时按 PASS/FAIL 判定（唯一且正确→PASS，唯一但错误→FAIL）；提取不到或存在多个不同候选（无法确定唯一作答）时才置 `MANUAL_REVIEW`——与设计方案 04 节 deterministic_multimodal_qa 断言口径一致：只有『开放式描述、无法程序化比对』才进 `MANUAL_REVIEW`，能明确比对出错误答案必须判 FAIL。
+`deterministic_multimodal_qa` 断言按 `material_ref` 找到对应素材后，取其 `answer_match` 字段（如 `digits_exact`）作为 key，去 `materials/manifest.json` 顶层 `answer_match_definitions.<key>.decision_rule` 查表得到判定结果。**该 `decision_rule` 数组是唯一权威定义，本文件不重复列出具体分支，避免两处描述漂移**；如需查看当前生效的判定规则，直接读 `materials/manifest.json`。
 
 ## 尚未解决的假设（需 P1/P2 联调时核实，不代表本文件已默认成立）
 
