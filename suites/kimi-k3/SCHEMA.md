@@ -31,13 +31,31 @@
 
 - `{{model_key}}` → `MODEL.model_key`
 - `{{api_key}}` → 该模型的测试用 API Key（见设计方案 12 节，运行时注入，不落盘明文）
-- `{{prompts.xxx}}` / `{{fixtures.tools.xxx}}` → `fixtures` 节点对应值
-- `{{material:<material_id>:url}}` / `{{material:<material_id>:base64}}` / `{{material:<material_id>:question_prompt}}` → 从 `materials/manifest.json` 取值；`url` 形态要求素材已通过自托管静态服务对外可达（见 manifest 中 `hosting` 字段的待确认状态）
+- `{{prompts.xxx}}` → 替换为 `fixtures.prompts` 对应字符串值，按普通字符串插值拼接
+- `{{fixtures.tools.xxx}}` → **整节点替换**，不是字符串插值：当某个 JSON 节点的值**完全等于**该占位符字符串（如 `request_template.body.tools` 数组里的元素 `"{{fixtures.tools.get_weather}}"`）时，引擎须用 `fixtures.tools.get_weather` 对应的 JSON 对象**整体替换该数组元素**，产出的 `tools` 字段类型仍是对象数组；禁止先做字符串插值再当作字符串塞入数组（那样会产出字符串数组，破坏 PDF 2.4 要求的 `tools:[{type:"function",...}]` 结构）。本套件目前仅 `tools` 用到此规则，后续新增整节点占位符时同样适用。
+- `{{material:<material_id>:url}}` / `{{material:<material_id>:base64}}` / `{{material:<material_id>:question_prompt}}` → 从 `materials/manifest.json` 取值；`url` 形态由 `hosting.base_url_resolution` + `hosting.frozen_url_path` 拼接得出（本地开发用 `local_dev_default`，生产由 `TESTBED_PUBLIC_BASE_URL` 环境变量提供），承载服务实现见 `cmd/materials-server`
 
 `variants[].request_overrides` 与 `request_template.body` 做浅合并（顶层键覆盖），产出该变体的最终请求体。
+
+## 思考内容 / reasoning_tokens 响应字段路径（P0 冻结默认值，供应商可覆盖）
+
+PDF 4.2 表用「`reasoning_content`（或等价字段）」「`reasoning_tokens`」描述响应字段，未给出穷举 schema。本套件冻结如下默认读取路径，供 `thinking_toggle_pair`、`default_thinking_matches_declaration`、`reasoning_effort_scaling` 三类断言使用：
+
+| 断言用途 | 默认响应字段路径 | 说明 |
+|---|---|---|
+| 判断思考内容是否存在（非流式） | `choices[0].message.reasoning_content` | 与 `choices[0].message.content` 同级 |
+| 判断思考内容是否存在（流式） | 各 `chunk.choices[0].delta.reasoning_content` 拼接后是否非空 | 与 `delta.content` 同级增量字段 |
+| `reasoning_tokens` 取值 | `usage.completion_tokens_details.reasoning_tokens` | 对齐 OpenAI o-系列模型的 usage 扩展路径 |
+
+若某供应商使用不同字段名（如非 `reasoning_content` 的等价字段），须在克隆套件时于该模型的 `CAPABILITY_PROFILE` 旁新增供应商级覆盖配置（字段路径本身不属于 `CAPABILITY_PROFILE` 已定义的能力布尔量，覆盖机制留待 P1 实现时按需扩展，不在本文件预先假设具体形态），并在克隆出的 `suite.vN.json` 中记录该差异，不修改本默认值。
+
+## `answer_match` 匹配器行为
+
+`deterministic_multimodal_qa` 断言使用 `materials/manifest.json` 顶层 `answer_match_definitions` 中登记的具体规则；`digits_exact` 的定义见该文件，核心行为：提取响应中全部连续数字子串，恰好命中一个等于 `expected_answer` 的子串才判 PASS，提取不到或存在歧义（多个不同候选）则置 `MANUAL_REVIEW`，不直接判 FAIL。
 
 ## 尚未解决的假设（需 P1/P2 联调时核实，不代表本文件已默认成立）
 
 1. `multimodal.video_url` / `multimodal.video_base64` 的 `video_url` content part 是本方案假设的 schema，PDF 原文未给出具体字段名。
 2. `tool.choice_allowed_tools` 的请求体假设为 OpenAI 现行草案格式 `{type:allowed_tools, allowed_tools:{mode, tools}}`。
-3. 素材 `url` 形态依赖测试台自托管静态文件对 tokenpanel（49.233.9.153）公网/内网可达，具体路径待部署阶段（设计方案 13 节）确认。
+3. 素材 `url` 形态的路径规则与承载服务（`cmd/materials-server`）已冻结并本地验证通过，仅 `base_url` 指向的公网/内网主机待部署阶段（设计方案 13 节）确认，见 `materials/manifest.json` 各素材的 `hosting` 字段。
+4. `reasoning_content` / `reasoning_tokens` 的响应字段路径为本文件冻结的默认假设（见上一节表格），非 PDF 逐字指定，供应商差异需在克隆套件时另行覆盖。

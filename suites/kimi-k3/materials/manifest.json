@@ -2,6 +2,9 @@
   "manifest_version": "1.0.0",
   "suite_id": "kimi-k3",
   "generated_note": "P0 冻结素材清单：多模态确定性问答（deterministic_multimodal_qa）依赖的固定图像/视频素材。素材内容为印刷体数字，答案唯一且可程序化比对，避免模型开放式描述导致无法自动判定。",
+  "answer_match_definitions": {
+    "digits_exact": "从模型响应正文中提取全部『连续数字子串』（正则 \\d+）。若提取结果中恰好存在一个与 expected_answer 完全相等的连续数字串，判定 PASS；若一个都没有，或存在多个不同的连续数字串且都不等于 expected_answer（可能是模型误读或输出了无关数字），判定为『无法程序化确认』，状态置为 MANUAL_REVIEW（不计自动 PASS），不直接判 FAIL——与设计方案 04 节 deterministic_multimodal_qa 断言的 MANUAL_REVIEW 兜底规则一致。比对前对响应做首尾空白裁剪，不做全角/半角数字归一化（素材问题本身要求阿拉伯数字作答）。"
+  },
   "materials": [
     {
       "id": "image_qa_v1",
@@ -17,8 +20,19 @@
       "used_by_cases": ["multimodal.image_url", "multimodal.image_base64"],
       "hosting": {
         "mode": "self_hosted_static",
-        "note": "url 变体（multimodal.image_url）需要测试台自身以公网可达地址提供该文件（如 https://<testbed-host>/materials/kimi-k3/image_qa_v1.png），tokenpanel（49.233.9.153）及其上游供应商需能访问到该地址。P1 阶段先以本地文件系统承载，P2 起需要一个测试台可被 tokenpanel 访问到的公网/内网直达地址，具体域名与网络路径待部署阶段（13节）确认，不在本文件中假设已解决。",
-        "status": "PENDING_DEPLOYMENT_CONFIRMATION"
+        "server_binary": "cmd/materials-server",
+        "frozen_url_path": "/materials/kimi-k3/v1/image_qa_v1.png",
+        "base_url_resolution": {
+          "local_dev_default": "http://127.0.0.1:8080",
+          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证 tokenpanel（49.233.9.153）网络可达"
+        },
+        "local_verification": {
+          "verified_at": "2026-08-17",
+          "method": "本地启动 cmd/materials-server，curl 下载后与源文件做 sha256 比对，并验证越权路径 404",
+          "result": "PASS：下载内容 sha256 与源文件一致，HTTP 200，content_type=image/png；路径穿越请求返回 404"
+        },
+        "status": "PATH_FROZEN_HOST_PENDING",
+        "note": "URL 路径规则（/materials/<suite_id>/v1/<file>）与承载该路径的服务实现（cmd/materials-server）已冻结并本地验证通过；剩余未决项仅为『base_url 指向哪个对 tokenpanel 公网/内网可达的主机』，属于部署阶段（13节）动作，不在本文件预先假设结果。"
       }
     },
     {
@@ -37,13 +51,24 @@
       "used_by_cases": ["multimodal.video_url", "multimodal.video_base64"],
       "hosting": {
         "mode": "self_hosted_static",
-        "note": "同 image_qa_v1，url 变体需要测试台提供公网/内网可达地址；base64 变体体积（15924 字节 base64 后）远小于常见网关请求体上限，本素材的选型已规避设计方案 05 节提到的『video_base64 载荷体积可能触及网关请求体上限』风险，无需额外压缩。",
-        "status": "PENDING_DEPLOYMENT_CONFIRMATION"
+        "server_binary": "cmd/materials-server",
+        "frozen_url_path": "/materials/kimi-k3/v1/video_qa_v1.mp4",
+        "base_url_resolution": {
+          "local_dev_default": "http://127.0.0.1:8080",
+          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证 tokenpanel（49.233.9.153）网络可达"
+        },
+        "local_verification": {
+          "verified_at": "2026-08-17",
+          "method": "本地启动 cmd/materials-server，curl 下载后与源文件做 sha256 比对，并验证越权路径 404",
+          "result": "PASS：下载内容 sha256 与源文件一致，HTTP 200，content_type=video/mp4；路径穿越请求返回 404"
+        },
+        "status": "PATH_FROZEN_HOST_PENDING",
+        "note": "同 image_qa_v1：URL 路径与承载服务已冻结并本地验证通过；base64 变体体积（15924 字节 base64 后）远小于常见网关请求体上限，已规避设计方案 05 节提到的『video_base64 载荷体积可能触及网关请求体上限』风险。剩余未决项仅为 base_url 的部署阶段确认。"
       }
     }
   ],
   "open_items": [
-    "hosting.status = PENDING_DEPLOYMENT_CONFIRMATION：materials 的 url 形态测试（image_url/video_url）要求 tokenpanel 网关能从公网/内网访问到测试台，需在部署阶段（13节）确认具体可达路径后，把 hosting.mode 更新为实际方案并解除本条 open item。",
+    "hosting.status = PATH_FROZEN_HOST_PENDING：URL 路径规则与承载服务（cmd/materials-server）已冻结并本地验证通过（见各素材 hosting.local_verification）；仅剩 base_url 指向的公网/内网主机需在部署阶段（13节）确认对 tokenpanel（49.233.9.153）可达后，通过 TESTBED_PUBLIC_BASE_URL 环境变量配置，无需再改动本文件或套件定义。",
     "本素材为测试台自制（非既有评测框架素材），采用『固定印刷体数字』方案以保证答案确定性，非对既有评测集的复刻；如后续需要与既有评测框架的素材对齐，需额外获取并替换。"
   ]
 }
