@@ -122,10 +122,13 @@ type chunkUsagePeek struct {
 		} `json:"delta"`
 	} `json:"choices"`
 	Usage *struct {
-		PromptTokens        int `json:"prompt_tokens"`
-		CompletionTokens    int `json:"completion_tokens"`
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		// CachedTokens 用 *int：网关可能回传 prompt_tokens_details:{}（没有
+		// cached_tokens 键），这种情况下必须视为"未观测到"而不是"观测到且
+		// 为 0"，否则 6.2 节的 NOT_OBSERVABLE 兜底规则会被这类响应悄悄绕过。
 		PromptTokensDetails *struct {
-			CachedTokens int `json:"cached_tokens"`
+			CachedTokens *int `json:"cached_tokens"`
 		} `json:"prompt_tokens_details"`
 	} `json:"usage"`
 }
@@ -161,8 +164,8 @@ func extractUsageFromChunk(raw string, result *StreamCallResult) {
 	if c.Usage != nil {
 		result.PromptTokens = c.Usage.PromptTokens
 		result.OutputTokens = c.Usage.CompletionTokens
-		if c.Usage.PromptTokensDetails != nil {
-			cached := c.Usage.PromptTokensDetails.CachedTokens
+		if c.Usage.PromptTokensDetails != nil && c.Usage.PromptTokensDetails.CachedTokens != nil {
+			cached := *c.Usage.PromptTokensDetails.CachedTokens
 			result.CachedTokens = &cached
 		}
 	}

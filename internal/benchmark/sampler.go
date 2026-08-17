@@ -3,10 +3,18 @@
 // 判定回传指标。
 //
 // PDF/设计方案只给出了各参数的分位数摘要（avg/p50/p75/p90/p95），没有给出
-// 原始 ShareGPT 数据集本身，因此本包用 PercentileSampler 把这些分位点重建成
+// 原始 ShareGPT 数据集本身，因此本包用 PercentileSampler 把已知分位点重建成
 // 一个可采样的分布（分段对数线性插值），而不是凭空捏造或要求外部数据集——
 // 这是"固化参数字面复现"与"可执行"之间能做到的最接近实现，重建方法本身
 // 在 BenchmarkRun.raw_params_json 里完整留痕，可审计、可复现。
+//
+// 重要限制：本采样器只精确复现已知的分位点（p50/p75/p90/p95）本身，不对
+// 采样得到的经验均值做单独校准。PDF 给出的 avg 通常明显高于 p50（右偏长尾
+// 分布），而尾部外推又被 tailCapMultiplier 硬性限幅（见下方常量注释）——
+// 这两个因素叠加，会让本采样器的经验均值系统性低于 PDF 的 avg（实测偏差可
+// 达 20% 量级）。这是"可执行、不失控"与"逐项数值精确复现"之间的明确取舍，
+// 不是需要修复的 bug；如果未来需要经验均值也贴合 PDF，需要改成更复杂的
+// 分布拟合方法（如样条+矩匹配），当前版本未做这个投入。
 package benchmark
 
 import (
@@ -22,8 +30,9 @@ type PercentilePoint struct {
 	Value float64
 }
 
-// PercentileSampler 用分段对数线性插值在给定分位点之间采样，
-// 复现 PDF 6.1 节给出的 avg/p50/p75/p90/p95 分布摘要。
+// PercentileSampler 用分段对数线性插值在给定分位点之间采样，精确复现
+// PDF 6.1 节给出的 p50/p75/p90/p95 分位点；不单独校准经验均值，与 PDF
+// 给出的 avg 可能有系统性偏差，见包注释。
 type PercentileSampler struct {
 	points []PercentilePoint // 按 P 升序排列，floor 与 tail 已补齐
 	name   string
