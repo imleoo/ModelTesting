@@ -21,12 +21,27 @@ func judgeHigherIsBetter(actual, baseline float64) model.BaselineVerdict {
 	return model.BaselineFail
 }
 
-// judgeLowerIsBetter 用于"越低越好"的指标（TTFT、TPOT）：
+// judgeLowerIsBetter 用于"越低越好"、基线是"≤"关系的指标（TTFT P50 ≤ 15s）：
 // 达到或优于基线直接 OK；劣化时看 actual/baseline 是否在 MaxDegradeRatio 内。
 func judgeLowerIsBetter(actual, baseline float64) model.BaselineVerdict {
 	if actual <= baseline {
 		return model.BaselineOK
 	}
+	return degradeVerdictLower(actual, baseline)
+}
+
+// judgeLowerIsBetterStrict 用于基线是"<"严格小于关系的指标（TPOT P50 <35ms，
+// PDF 原文明确写的是严格小于，等于基线本身不算达标，只是劣化很轻微，
+// 仍归入 SAME_ORDER 而不是直接 OK——不能和 judgeLowerIsBetter 共用同一个
+// "<="判定，否则恰好等于 35ms 会被误判 OK）。
+func judgeLowerIsBetterStrict(actual, baseline float64) model.BaselineVerdict {
+	if actual < baseline {
+		return model.BaselineOK
+	}
+	return degradeVerdictLower(actual, baseline)
+}
+
+func degradeVerdictLower(actual, baseline float64) model.BaselineVerdict {
 	if baseline <= 0 {
 		return model.BaselineFail
 	}

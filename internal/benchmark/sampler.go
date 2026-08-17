@@ -35,11 +35,24 @@ type PercentileSampler struct {
 // tailP999 是外推的 P=0.999 处的值（用于承载长尾，避免采样值被最大分位硬截断）。
 // known 必须按 P 升序传入，且不含 P=0 或 P=0.999。
 func NewPercentileSampler(name string, floor float64, known []PercentilePoint, tailP999 float64) (*PercentileSampler, error) {
+	if floor <= 0 {
+		return nil, fmt.Errorf("sampler %q: floor 必须为正数，实际为 %v", name, floor)
+	}
+	if math.IsNaN(tailP999) || math.IsInf(tailP999, 0) {
+		return nil, fmt.Errorf("sampler %q: tailP999 必须是有限值，实际为 %v", name, tailP999)
+	}
 	points := make([]PercentilePoint, 0, len(known)+2)
 	points = append(points, PercentilePoint{P: 0.0, Value: floor})
 	points = append(points, known...)
 	points = append(points, PercentilePoint{P: 0.999, Value: tailP999})
 	for i := 1; i < len(points); i++ {
+		if points[i].P <= points[i-1].P {
+			return nil, fmt.Errorf("sampler %q: 分位 P 必须严格递增，points[%d].P=%v <= points[%d].P=%v",
+				name, i, points[i].P, i-1, points[i-1].P)
+		}
+		if points[i].P > 1 || points[i].P < 0 {
+			return nil, fmt.Errorf("sampler %q: 分位 P 必须落在 [0,1] 区间，points[%d].P=%v", name, i, points[i].P)
+		}
 		if points[i].Value < points[i-1].Value {
 			return nil, fmt.Errorf("sampler %q: 分位点必须单调不减，points[%d]=%v < points[%d]=%v",
 				name, i, points[i].Value, i-1, points[i-1].Value)
@@ -87,21 +100,36 @@ func (s *PercentileSampler) SampleInt(rng *rand.Rand) int {
 	return max(v, 0)
 }
 
+// tailCapMultiplier 是尾部外推的硬上限倍数：外推结果不允许超过最后一个已知
+// 分位点（通常是 p95）的这个倍数。
+//
+// 早期实现直接把帕累托幂律外推到 P=0.999，在 turn-interval 这类"尾部很陡"
+// 的参数上（p90=35s 到 p95=86s，仅 5 个百分点就翻了 2.46 倍）会指数级发散，
+// 实测外推出约 13741 秒（近 3.8 小时）的会话轮次间隔——这种值会直接拖垮一次
+// 压测的可执行性，也早已偏离"长尾但合理"的范畴。用仅两个相邻经验分位点去
+// 外推一个离它们很远的分位（0.999）本身就是数值不稳定的，因此改为"有上限的
+// 长尾"：仍用帕累托公式估计形状，但结果裁剪到不超过 p95 的 tailCapMultiplier
+// 倍——牺牲了尾部的理论精确性，换取一个不会让压测失控的可执行近似，这个
+// 取舍在此明确记录，不是精确复现原始分布。
+const tailCapMultiplier = 2.0
+
 // extrapolateParetoTail 用最后两个已知分位点做帕累托尾部外推，估计 targetP
-// （如 0.999）处的值：假设 1-CDF(v) ∝ v^(-alpha)（标准重尾分布尾部近似），
-// 用 (pA,vA)、(pB,vB) 两点解出 alpha，再外推到 targetP。用于给
-// NewPercentileSampler 提供 P=0.999 长尾点，避免采样值被 PDF 给出的最大分位
-// （p95 或 p99）硬截断——真实 ShareGPT 数据分布存在比 p95 更长的尾部。
+// （如 0.999）处的值，再裁剪到不超过 vB*tailCapMultiplier（见上方注释）。
 func extrapolateParetoTail(pA, vA, pB, vB, targetP float64) float64 {
+	capValue := vB * tailCapMultiplier
 	if vA <= 0 || vB <= vA || pB <= pA || pB >= 1 {
-		return vB * 2 // 输入不满足外推前提时的保守兜底：直接翻倍
+		return capValue // 输入不满足外推前提时的保守兜底：直接用上限
 	}
 	// (1-pA)/(1-pB) = (vB/vA)^alpha  =>  alpha = ln((1-pA)/(1-pB)) / ln(vB/vA)
 	alpha := math.Log((1-pA)/(1-pB)) / math.Log(vB/vA)
 	if alpha <= 0 || math.IsInf(alpha, 0) || math.IsNaN(alpha) {
-		return vB * 2
+		return capValue
 	}
 	// vTarget/vB = ((1-pB)/(1-targetP))^(1/alpha)
 	ratio := math.Pow((1-pB)/(1-targetP), 1/alpha)
-	return vB * ratio
+	raw := vB * ratio
+	if raw > capValue || math.IsInf(raw, 0) || math.IsNaN(raw) {
+		return capValue
+	}
+	return raw
 }

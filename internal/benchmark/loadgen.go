@@ -105,9 +105,15 @@ func runSession(ctx context.Context, cfg LoadGenConfig, sess Session, onOutcome 
 		onOutcome(DeriveOutcome(sess.ID, round.Index, result))
 
 		if result.Err == nil && result.HTTPStatus == 200 {
+			content := result.ConcatenatedContent()
+			if content == "" {
+				// 极端情况下模型可能真的没输出文本（比如立刻触发某种截断）；
+				// 用占位符而不是空字符串，规避部分网关拒绝空 content 的历史消息。
+				content = "(empty response)"
+			}
 			history = append(history, map[string]any{
 				"role":    "assistant",
-				"content": "", // 压测不追踪真实回复文本，只按计划长度制造下一轮的独立输入
+				"content": content,
 			})
 		} else {
 			return // 本轮失败，会话提前终止（真实场景里客户端通常也会中断该会话）
