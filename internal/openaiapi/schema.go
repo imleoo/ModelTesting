@@ -131,16 +131,17 @@ func validateMessageBody(bodyMap map[string]any, choiceIdx int, key string, stre
 		}
 	}
 
-	// content 键可以省略，但只有在真的存在合法 tool_calls 时才算"这条消息有实质
-	// 内容"——真实网关返回 tool_calls 时常见做法是直接省略 content 字段而不是
-	// 显式写 "content":null（P2 用真实 kimi-k3 网关验证时发现的情况，二者语义
-	// 等价）。但不能反过来放宽到"content 和 tool_calls 都没有也算合规"，那种
-	// 响应本质上是空消息，必须判违规，不能被这条兼容规则掩盖过去。
-	// 只对非流式 message 做这条约束：流式 delta 天然会拆成多个分片，单个分片
-	// （例如只带 finish_reason 的收尾分片）既没有 content 也没有 tool_calls 是
-	// 正常现象，不能套用同一条"消息不能为空"的规则。
-	if !streamed && !hasContentKey && !hasValidToolCalls {
-		*violations = append(*violations, prefix+" 既没有 content 字段也没有合法 tool_calls，消息内容为空")
+	// content 键省略与显式写 "content":null 语义等价（真实网关返回 tool_calls
+	// 时常见做法是直接省略字段，P2 用真实 kimi-k3 网关验证时发现的情况）——
+	// 两种写法都表示"没有文本内容"，判定"消息是否有实质载荷"时必须一视同仁：
+	// 只有 content 是非 null 字符串，或者存在合法非空 tool_calls，才算有载荷；
+	// 二者都没有（不管 content 是完全省略还是显式 null）都必须判违规，不能被
+	// 这条兼容规则掩盖过去。只对非流式 message 做这条约束：流式 delta 天然会
+	// 拆成多个分片，单个分片（例如只带 finish_reason 的收尾分片）content 和
+	// tool_calls 都没有是正常现象，不能套用同一条规则。
+	hasNonNullContent := hasContentKey && contentVal != nil
+	if !streamed && !hasNonNullContent && !hasValidToolCalls {
+		*violations = append(*violations, prefix+" 既没有非 null 的 content 也没有合法 tool_calls，消息内容为空")
 	}
 }
 
