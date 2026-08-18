@@ -102,12 +102,43 @@ func caseGroupOf(cases []suitedef.Case) map[string]bool {
 	return m
 }
 
+// validateSuiteCases 校验套件定义本身的完整性：Case ID 不能为空、不能重复。
+// caseGroupOf 用 map 构造分组依据，空/重复 ID 会被后一条定义静默覆盖前一条，
+// 使期望的用例集合在悄无声息间被压缩——哪怕调用方按规范传入了"非空"的
+// cases，22 项/附加能力用例的完整性校验也会因此形同虚设。必须在分组之前
+// 单独堵住，而不是指望"非空校验"顺带覆盖。
+func validateSuiteCases(cases []suitedef.Case) []string {
+	var problems []string
+	seen := make(map[string]int, len(cases))
+	for i, c := range cases {
+		if c.ID == "" {
+			problems = append(problems, fmt.Sprintf("第 %d 个用例定义的 id 为空", i))
+			continue
+		}
+		seen[c.ID]++
+	}
+	for id, n := range seen {
+		if n > 1 {
+			problems = append(problems, fmt.Sprintf("用例 id %q 在套件定义中重复出现 %d 次", id, n))
+		}
+	}
+	return problems
+}
+
 func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (RuleResult, RuleResult) {
 	if len(cases) == 0 {
 		noSuite := RuleResult{State: RulePending, Reasons: []string{
 			"未提供套件定义（cases 为空），无法校验 22 项基础用例是否完整，不能默认判 OK",
 		}}
 		return noSuite, noSuite
+	}
+
+	if problems := validateSuiteCases(cases); len(problems) > 0 {
+		invalid := RuleResult{
+			State:   RuleFail,
+			Reasons: append([]string{"套件定义本身不合法（存在空/重复的用例 id），无法据此校验用例完整性："}, problems...),
+		}
+		return invalid, invalid
 	}
 
 	groupOf := caseGroupOf(cases)
@@ -124,18 +155,25 @@ func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (Rule
 	// 一致性校验（下面），不用来决定这条结果归到哪个 byID 桶——避免两处数据
 	// 来源在分组上产生分歧。
 	byID := map[string][]model.CaseResult{}
-	var integrityReasons []string
-	integrityFail := false
+	var unknownReasons, base22MismatchReasons, nonBase22MismatchReasons []string
 	for _, r := range caseResults {
 		want, known := groupOf[r.CaseID]
 		if !known {
-			integrityReasons = append(integrityReasons, fmt.Sprintf("%s: 不在当前套件的用例列表中，套件定义可能已变更", r.CaseID))
+			// 套件里完全找不到这个 CaseID，按定义它不属于任何一个分组，
+			// 归到规则 1 报告（22 项完整性是设计方案里最主要的度量维度）。
+			unknownReasons = append(unknownReasons, fmt.Sprintf("%s: 不在当前套件的用例列表中，套件定义可能已变更", r.CaseID))
 			continue
 		}
 		if r.CountsInBase22 != want {
-			integrityFail = true
-			integrityReasons = append(integrityReasons, fmt.Sprintf(
-				"%s: 结果自带的分组标记（counts_in_base22=%v）与套件定义（%v）不一致，数据不一致", r.CaseID, r.CountsInBase22, want))
+			// 归到套件定义所声明的那个分组，而不是无条件挂在规则 1 下——否则
+			// 一个附加能力用例（套件定义 CountsInBase22=false）的不一致会被
+			// 误报成"22 项基础用例"的问题，误导报告读者去错误的地方定位。
+			reason := fmt.Sprintf("%s: 结果自带的分组标记（counts_in_base22=%v）与套件定义（%v）不一致，数据不一致", r.CaseID, r.CountsInBase22, want)
+			if want {
+				base22MismatchReasons = append(base22MismatchReasons, reason)
+			} else {
+				nonBase22MismatchReasons = append(nonBase22MismatchReasons, reason)
+			}
 		}
 		byID[r.CaseID] = append(byID[r.CaseID], r)
 	}
@@ -143,17 +181,14 @@ func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (Rule
 	rule1 := evalCaseGroup(expectedBase22, byID)
 	rule2 := evalCaseGroup(expectedNonBase22, byID)
 
-	// 套件外用例、分组标记不一致这类数据完整性问题统一归到规则 1（22 项完整性
-	// 是设计方案里最主要的度量维度），避免同一条原因在两条规则里各出现一次。
-	if len(integrityReasons) > 0 {
-		state := RulePending
-		if integrityFail {
-			state = RuleFail
-		}
-		rule1 = RuleResult{
-			State:   combine(rule1.State, state),
-			Reasons: append(rule1.Reasons, integrityReasons...),
-		}
+	if len(unknownReasons) > 0 {
+		rule1 = RuleResult{State: combine(rule1.State, RulePending), Reasons: append(rule1.Reasons, unknownReasons...)}
+	}
+	if len(base22MismatchReasons) > 0 {
+		rule1 = RuleResult{State: combine(rule1.State, RuleFail), Reasons: append(rule1.Reasons, base22MismatchReasons...)}
+	}
+	if len(nonBase22MismatchReasons) > 0 {
+		rule2 = RuleResult{State: combine(rule2.State, RuleFail), Reasons: append(rule2.Reasons, nonBase22MismatchReasons...)}
 	}
 
 	return rule1, rule2

@@ -304,3 +304,57 @@ func TestCompute_MismatchedCountsInBase22IsFail(t *testing.T) {
 		t.Errorf("expected Rule1 FAIL on CountsInBase22 mismatch, got %s (reasons=%v)", s.Rule1.State, s.Rule1.Reasons)
 	}
 }
+
+// TestCompute_AdditionalCaseMismatchAttributedToRule2 防止 P4 review
+// round-3 发现的问题：套件说某用例是附加能力用例（CountsInBase22=false），
+// 结果却标了 true——不一致本身仍应判 FAIL，但报告必须把原因归到 Rule2，
+// 不能无条件挂在 Rule1 下误导读者去检查 22 项基础用例。
+func TestCompute_AdditionalCaseMismatchAttributedToRule2(t *testing.T) {
+	cases := casesFor(nil, []string{"reasoning_effort"})
+	results := []model.CaseResult{
+		// 套件说这是附加能力用例，结果自己却标了 true——数据不一致。
+		{CaseID: "reasoning_effort", Status: model.StatusPass, CountsInBase22: true},
+	}
+	s := Compute(cases, results, nil)
+	if s.Rule2.State != RuleFail {
+		t.Errorf("expected Rule2 FAIL on CountsInBase22 mismatch for an additional case, got %s (reasons=%v)", s.Rule2.State, s.Rule2.Reasons)
+	}
+	if s.Rule1.State != RuleOK {
+		t.Errorf("expected Rule1 to stay OK (the mismatch belongs to Rule2, not Rule1), got %s (reasons=%v)", s.Rule1.State, s.Rule1.Reasons)
+	}
+}
+
+// --- P4 review round 3 发现的阻塞性问题的回归测试 ---
+
+// TestCompute_DuplicateCaseIDInSuiteIsFail 防止套件定义本身含重复 Case ID
+// 时被 map 构造静默压缩成一个期望用例，让完整性校验形同虚设——即便套件
+// 整体"非空"。
+func TestCompute_DuplicateCaseIDInSuiteIsFail(t *testing.T) {
+	cases := []suitedef.Case{
+		{ID: "stream_integrity", CountsInBase22: true},
+		{ID: "stream_integrity", CountsInBase22: true}, // 重复定义
+	}
+	results := []model.CaseResult{
+		{CaseID: "stream_integrity", Status: model.StatusPass, CountsInBase22: true},
+	}
+	s := Compute(cases, results, nil)
+	if s.Rule1.State != RuleFail {
+		t.Errorf("expected Rule1 FAIL on duplicate case id in suite definition, got %s (reasons=%v)", s.Rule1.State, s.Rule1.Reasons)
+	}
+	if s.Rule2.State != RuleFail {
+		t.Errorf("expected Rule2 FAIL too (invalid suite blocks both rules), got %s", s.Rule2.State)
+	}
+}
+
+// TestCompute_EmptyCaseIDInSuiteIsFail 防止套件定义里出现空 id 的用例被
+// 悄悄放过。
+func TestCompute_EmptyCaseIDInSuiteIsFail(t *testing.T) {
+	cases := []suitedef.Case{
+		{ID: "stream_integrity", CountsInBase22: true},
+		{ID: "", CountsInBase22: true},
+	}
+	s := Compute(cases, nil, nil)
+	if s.Rule1.State != RuleFail {
+		t.Errorf("expected Rule1 FAIL on empty case id in suite definition, got %s (reasons=%v)", s.Rule1.State, s.Rule1.Reasons)
+	}
+}
