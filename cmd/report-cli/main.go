@@ -52,6 +52,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载能力声明失败: %v", err)
 	}
+	if err := model.ValidateCapabilityProfile(capability); err != nil {
+		log.Fatalf("能力声明不合法: %v", err)
+	}
 
 	var benchmarkRun *model.BenchmarkRun
 	var benchmarkMetrics []model.BenchmarkMetric

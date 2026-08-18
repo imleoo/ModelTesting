@@ -38,11 +38,16 @@ type caseView struct {
 }
 
 type renderData struct {
-	Env              Environment
-	Capability       model.CapabilityProfile
-	Base22           []caseView
-	NotDeclared      []caseView
-	ReasoningEffort  *caseView
+	Env         Environment
+	Capability  model.CapabilityProfile
+	Base22      []caseView
+	NotDeclared []caseView
+	// Additional 是「已声明但不计入 22 分母」的能力用例（当前套件里是
+	// reasoning_effort.scaling）。按 CountsInBase22==false 分组，不按具体
+	// case_id 字符串匹配——套件定义里这类用例的 ID 可能不是 "reasoning_effort"
+	// 这个猜测出来的名字（真实套件里是 "reasoning_effort.scaling"），按 ID
+	// 硬编码曾经导致这类用例被静默漏掉，不出现在报告任何一个可见分桶里。
+	Additional       []caseView
 	AllCaseResults   []caseView
 	Base22Total      int
 	Base22Pass       int
@@ -84,8 +89,7 @@ func Render(in Input) (string, error) {
 		return v
 	}
 
-	var base22, notDeclared, all []caseView
-	var reasoningEffort *caseView
+	var base22, notDeclared, additional, all []caseView
 	base22Total, base22Pass := 0, 0
 	for _, r := range in.CaseResults {
 		v := toView(r)
@@ -93,10 +97,9 @@ func Render(in Input) (string, error) {
 		switch {
 		case r.Status == model.StatusNotDeclared:
 			notDeclared = append(notDeclared, v)
-		case r.CaseID == "reasoning_effort":
-			ve := v
-			reasoningEffort = &ve
-		case r.CountsInBase22:
+		case !r.CountsInBase22:
+			additional = append(additional, v)
+		default:
 			base22 = append(base22, v)
 			base22Total++
 			if r.Status == model.StatusPass {
@@ -114,14 +117,14 @@ func Render(in Input) (string, error) {
 		}
 	}
 
-	summary := Compute(in.CaseResults, in.BenchmarkMetrics)
+	summary := Compute(in.Cases, in.CaseResults, in.BenchmarkMetrics)
 
 	data := renderData{
 		Env:              in.Environment,
 		Capability:       in.Capability,
 		Base22:           base22,
 		NotDeclared:      notDeclared,
-		ReasoningEffort:  reasoningEffort,
+		Additional:       additional,
 		AllCaseResults:   all,
 		Base22Total:      base22Total,
 		Base22Pass:       base22Pass,
