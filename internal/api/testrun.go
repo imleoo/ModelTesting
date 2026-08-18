@@ -110,7 +110,7 @@ func (cfg *Config) orchestrate(ctx context.Context, run model.TestRun, m model.M
 		return
 	}
 
-	suitePath, err := safeJoin(cfg.SuitesRoot, run.SuiteID)
+	suitePath, err := safeJoinResolved(cfg.SuitesRoot, run.SuiteID)
 	if err != nil {
 		fail(fmt.Errorf("非法的 suite_id: %w", err))
 		return
@@ -146,9 +146,19 @@ func (cfg *Config) orchestrate(ctx context.Context, run model.TestRun, m model.M
 		caseResults = append(caseResults, e.RunCase(ctx, c))
 	}
 
+	// m.ModelKey 已经在 store.CreateModel 里被 modelKeyPattern 白名单校验过
+	// （不含 "/" 或 ".."），字符串层面天然无法逃出 ReportsRoot；但如果
+	// ReportsRoot 内部本身存在一个名字恰好匹配某个合法 model_key 的符号
+	// 链接（不是通过这个 API 能直接制造的场景，但属于运维/部署层面可能
+	// 引入的风险），modelDir 实际指向的真实路径仍可能在 ReportsRoot 之外，
+	// 所以创建后仍要做一次 resolveWithinRoot 校验，不能只靠白名单单点防御。
 	modelDir := filepath.Join(cfg.ReportsRoot, m.ModelKey)
 	if err := os.MkdirAll(modelDir, 0o755); err != nil {
 		fail(fmt.Errorf("创建结果目录失败: %w", err))
+		return
+	}
+	if err := resolveWithinRoot(cfg.ReportsRoot, modelDir); err != nil {
+		fail(fmt.Errorf("结果目录校验失败: %w", err))
 		return
 	}
 
