@@ -120,6 +120,8 @@ func (e *Engine) RunCase(ctx context.Context, c suitedef.Case) model.CaseResult 
 		e.runDeterministicMultimodalQA(ctx, c, &result)
 	case "reasoning_effort_scaling":
 		e.runReasoningEffortScaling(ctx, c, &result)
+	case "rejects_invalid_request":
+		e.runRejectsInvalidRequest(ctx, c, &result)
 	default:
 		result.Status = model.StatusFail
 		result.FailReason = fmt.Sprintf("未知断言类型 %q", c.AssertionType)
@@ -222,6 +224,35 @@ func (e *Engine) runSingleStream(ctx context.Context, c suitedef.Case, result *m
 		attempt.FailReason = "openai_schema_valid 未通过: " + reason
 	} else {
 		score(c, cr, &attempt)
+	}
+	result.CaseAttempts = append(result.CaseAttempts, attempt)
+}
+
+// runRejectsInvalidRequest 承载"网关应对非法输入做校验，返回 4xx 而不是
+// 把非法输入透传给后端触发 500"这类用例（非 PDF 原文，07 节 SOP 允许的
+// 供应商专属补充用例，见 suites/kimi-k3/suite.v1.json 里对应用例的 notes）。
+// 这类用例的成功响应本身就不是一个合法的 chat completion 对象（网关应该
+// 直接拒绝、根本不会产出可 openai_schema_valid 校验的内容），所以不能像
+// runSingleNonStream 那样先跑全局 schema 基线——这里的判定标准是 HTTP
+// 状态码本身，不是响应体结构。
+func (e *Engine) runRejectsInvalidRequest(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
+	cr, err := e.doCall(ctx, c, nil)
+	attempt := newAttempt(1, "", cr)
+	switch {
+	case err != nil:
+		attempt.Passed, attempt.FailReason = false, err.Error()
+	case cr.TransportErr != nil:
+		attempt.Passed, attempt.FailReason = false, cr.TransportErr.Error()
+	case cr.HTTPStatus >= 500:
+		attempt.Passed = false
+		attempt.FailReason = fmt.Sprintf(
+			"HTTP 状态码 %d：网关把非法输入透传给了后端并触发服务端错误，应在网关层完成输入校验并返回 4xx", cr.HTTPStatus)
+	case cr.HTTPStatus >= 400 && cr.HTTPStatus < 500:
+		attempt.Passed = true
+	default:
+		attempt.Passed = false
+		attempt.FailReason = fmt.Sprintf(
+			"HTTP 状态码 %d：网关未对非法输入做校验，直接当作合法请求处理了", cr.HTTPStatus)
 	}
 	result.CaseAttempts = append(result.CaseAttempts, attempt)
 }
