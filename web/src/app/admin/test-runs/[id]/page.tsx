@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
+  ApiError,
   CaseResult,
   Model,
   TestRun,
@@ -196,10 +197,13 @@ function RunDetail({ runId }: { runId: string }) {
       } catch (e: any) {
         if (cancelled) return;
         setError(e.message || String(e));
-        // 网络抖动等临时性错误不应该让页面永久停在错误态、需要用户手动
-        // 刷新——只要任务本身还没到终态，就继续按原节奏重试，下一轮成功
-        // 时 setError('') 会自动清空这条错误提示。
-        timer = setTimeout(poll, 2000);
+        // 404（TestRun 根本不存在）是永久性错误，重试没有意义、只会一直
+        // 显示同一个错误；网络抖动/5xx 这类临时性错误才值得继续按原节奏
+        // 重试——只要任务本身还没到终态，下一轮成功时 setError('') 会
+        // 自动清空这条错误提示。
+        if (!(e instanceof ApiError && e.status === 404)) {
+          timer = setTimeout(poll, 2000);
+        }
       }
     }
     poll();
