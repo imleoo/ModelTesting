@@ -118,3 +118,61 @@ type BenchmarkMetric struct {
 	BaselineVerdict BaselineVerdict `json:"baseline_verdict"`
 	Note            string          `json:"note,omitempty"`
 }
+
+// Provider 对应 03 节 PROVIDER 实体：供应商登记信息（P4 Web 控制台「模型登记」
+// 页面的顶层记录）。
+type Provider struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Contact string `json:"contact,omitempty"`
+}
+
+// Model 对应 03 节 MODEL 实体：某供应商在 tokenpanel 上开通的一个被测模型端点。
+// EndpointViaTokenpanel 是 tokenpanel 暴露的 OpenAI 兼容 base URL（不是供应商
+// 自己的上游地址——本系统只消费 tokenpanel 已开通的端点，见 01 节范围边界）。
+type Model struct {
+	ID                    string            `json:"id"`
+	ProviderID            string            `json:"provider_id"`
+	ModelKey              string            `json:"model_key"`
+	EndpointViaTokenpanel string            `json:"endpoint_via_tokenpanel"`
+	Capability            CapabilityProfile `json:"capability"`
+}
+
+// TestRunStatus 是 TEST_RUN.status 的枚举取值，对应 09 节执行时序：功能测试
+// 先跑，全部必过用例通过且无未清空的 MANUAL_REVIEW 才解锁压测；任一环节失败
+// 都会提前终止，不会静默卡在中间状态。
+type TestRunStatus string
+
+const (
+	RunPending           TestRunStatus = "PENDING"
+	RunRunningFunctional TestRunStatus = "RUNNING_FUNCTIONAL"
+	RunFunctionalBlocked TestRunStatus = "FUNCTIONAL_BLOCKED" // 必过用例未 100% 通过或存在未清空 MANUAL_REVIEW，压测被阻断（09 节 alt 分支）
+	RunRunningBenchmark  TestRunStatus = "RUNNING_BENCHMARK"
+	RunCompleted         TestRunStatus = "COMPLETED"
+	RunFailed            TestRunStatus = "FAILED" // 执行过程本身出错（网络/引擎异常），不是业务判定失败
+)
+
+// TestRun 对应 03 节 TEST_RUN 实体：一次完整测试执行的生命周期记录。
+// CaseResultsPath/BenchmarkResultPath 指向本地文件系统上的详细产物（10.1 节：
+// SQLite 只存协调元数据，请求/响应体与压测原始日志走本地文件系统），不在
+// SQLite 里重复存一份，避免同一份数据两个真相来源。
+type TestRun struct {
+	ID                  string        `json:"id"`
+	ModelID             string        `json:"model_id"`
+	SuiteID             string        `json:"suite_id"`
+	Status              TestRunStatus `json:"status"`
+	StartedAt           string        `json:"started_at"`
+	FinishedAt          string        `json:"finished_at,omitempty"`
+	CaseResultsPath     string        `json:"case_results_path,omitempty"`
+	BenchmarkResultPath string        `json:"benchmark_result_path,omitempty"`
+	ErrorMessage        string        `json:"error_message,omitempty"`
+}
+
+// Report 对应 03 节 REPORT 实体：某次 TEST_RUN 生成的报告产物指针。
+type Report struct {
+	ID          string `json:"id"`
+	TestRunID   string `json:"test_run_id"`
+	GeneratedAt string `json:"generated_at"`
+	Verdict     string `json:"verdict"`
+	HTMLRef     string `json:"html_ref"`
+}
