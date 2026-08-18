@@ -1,0 +1,43 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+/node_modules
+yarn.lock
+/.pnp
+.pnp.js
+# package-lock.json 需要提交（应用仓库，不是库），保证团队/CI 装出同一份
+# 依赖树，不跟随模板原有的忽略规则
+
+# testing
+/coverage
+
+# production
+/build
+build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.pem
+.pnpm-debug.log*
+
+# nextjs
+/.next/
+/out/
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.idea
