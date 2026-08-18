@@ -112,7 +112,7 @@ func validateSuiteCases(cases []suitedef.Case) []string {
 	seen := make(map[string]int, len(cases))
 	for i, c := range cases {
 		if c.ID == "" {
-			problems = append(problems, fmt.Sprintf("第 %d 个用例定义的 id 为空", i))
+			problems = append(problems, fmt.Sprintf("第 %d 个用例定义的 id 为空", i+1))
 			continue
 		}
 		seen[c.ID]++
