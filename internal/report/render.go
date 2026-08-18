@@ -89,6 +89,20 @@ func Render(in Input) (string, error) {
 		return v
 	}
 
+	// 分桶依据套件定义（groupOf），不是 CaseResult 自带的同名字段——两者
+	// 应该一致，但套件定义是唯一权威来源（与 Compute 内部的分组逻辑一致，
+	// 见 verdict.go 的 evalRules1And2），避免两处数据来源分歧时报告页面
+	// 展示和验收结论判定各说各话。套件里找不到的用例（groupOf 未知）没有
+	// 权威来源，只能退回结果自带的字段，仍然会被 Compute 标记为「不在套件
+	// 里」的完整性问题。
+	groupOf := caseGroupOf(in.Cases)
+	inBase22 := func(r model.CaseResult) bool {
+		if want, ok := groupOf[r.CaseID]; ok {
+			return want
+		}
+		return r.CountsInBase22
+	}
+
 	var base22, notDeclared, additional, all []caseView
 	base22Total, base22Pass := 0, 0
 	for _, r := range in.CaseResults {
@@ -97,7 +111,7 @@ func Render(in Input) (string, error) {
 		switch {
 		case r.Status == model.StatusNotDeclared:
 			notDeclared = append(notDeclared, v)
-		case !r.CountsInBase22:
+		case !inBase22(r):
 			additional = append(additional, v)
 		default:
 			base22 = append(base22, v)

@@ -28,7 +28,7 @@
   <tr><th>API 端点</th><td>https://jiwu.wtgo.com.cn/</td></tr>
   <tr><th>测试套件</th><td>kimi-k3 · 1.0.0</td></tr>
   <tr><th>测试日期</th><td>2026-08-18</td></tr>
-  <tr><th>报告生成时间</th><td>2026-08-18T09:09:03&#43;08:00</td></tr>
+  <tr><th>报告生成时间</th><td>2026-08-18T09:19:08&#43;08:00</td></tr>
 </table>
 
 <h2>二、功能测试结果表</h2>
@@ -1007,7 +1007,7 @@ data: [DONE]
 <div class="verdict-box">
   <p><strong>总体结论：<span class="badge badge-FAIL">未通过（FAIL）</span></strong></p>
   <p>规则 1（22 项基础用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
-  <ul class="reasons"><li>thinking.enable_thinking: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.thinking_type: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.chat_template_kwargs_enable_thinking: FAIL（HTTP 状态码 400，期望 200）</li><li>thinking.chat_template_kwargs_thinking: FAIL（HTTP 状态码 400，期望 200）</li></ul>
+  <ul class="reasons"><li>thinking.thinking_type: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.chat_template_kwargs_enable_thinking: FAIL（HTTP 状态码 400，期望 200）</li><li>thinking.enable_thinking: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.chat_template_kwargs_thinking: FAIL（HTTP 状态码 400，期望 200）</li></ul>
   <p>规则 2（已声明且不计入 22 项基础分母的附加能力用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
   <ul class="reasons"><li>reasoning_effort.scaling: FAIL（low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数））</li></ul>
   <p>规则 3（有 PDF 基线且可观测的性能指标满足判定）：<span class="badge badge-FAIL">FAIL</span></p>
