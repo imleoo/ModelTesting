@@ -1,0 +1,9 @@
+.git
+reports
+materials-server
+*.db
+web/node_modules
+web/.next
+web/.env.local
+.server.env
+docs

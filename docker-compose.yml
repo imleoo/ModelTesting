@@ -1,0 +1,14 @@
+services:
+  modeltestbed:
+    build: .
+    image: modeltestbed:latest
+    ports:
+      - "28082:28082"
+    volumes:
+      - modeltestbed_data:/data
+    environment:
+      AUTH_TOKEN: ""
+    restart: unless-stopped
+
+volumes:
+  modeltestbed_data:
