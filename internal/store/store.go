@@ -19,11 +19,13 @@ import (
 )
 
 // modelKeyPattern 限制 ModelKey 只能是字母/数字开头，其余允许字母数字和
-// . _ : -——internal/api 的编排逻辑会直接拿 ModelKey 当文件系统目录名用
+// . _ -——internal/api 的编排逻辑会直接拿 ModelKey 当文件系统目录名用
 // （ReportsRoot/<model_key>/...），不加这道白名单校验的话，注册一个形如
 // "../../etc" 的 model_key 就能让后续所有该模型的测试结果文件写到
-// ReportsRoot 之外的任意路径（路径穿越），不是防御性的过度设计。
-var modelKeyPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]*$`)
+// ReportsRoot 之外的任意路径（路径穿越），不是防御性的过度设计。不允许
+// ":"：即便本项目目前只跑在 Unix 上，Windows 路径语义里 "a:b" 可能被解释
+// 成盘符，没必要为了容纳一个真实套件用不到的字符去承担这个歧义。
+var modelKeyPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
 
 const schema = `
 CREATE TABLE IF NOT EXISTS providers (
@@ -157,7 +159,7 @@ func (s *Store) CreateModel(m model.Model) (model.Model, error) {
 		return model.Model{}, fmt.Errorf("provider_id/model_key/endpoint_via_tokenpanel 均不能为空")
 	}
 	if !modelKeyPattern.MatchString(m.ModelKey) {
-		return model.Model{}, fmt.Errorf("model_key %q 不合法：只能以字母/数字开头，其余字符限于字母、数字、'.'、'_'、':'、'-'", m.ModelKey)
+		return model.Model{}, fmt.Errorf("model_key %q 不合法：只能以字母/数字开头，其余字符限于字母、数字、'.'、'_'、'-'", m.ModelKey)
 	}
 	if _, err := s.GetProvider(m.ProviderID); err != nil {
 		return model.Model{}, fmt.Errorf("provider_id %q 不存在: %w", m.ProviderID, err)

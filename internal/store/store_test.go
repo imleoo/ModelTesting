@@ -120,7 +120,7 @@ func TestStore_CreateModel_RejectsPathTraversalModelKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateProvider: %v", err)
 	}
-	for _, bad := range []string{"../evil", "../../etc/passwd", "/absolute", "a/b", ".hidden"} {
+	for _, bad := range []string{"../evil", "../../etc/passwd", "/absolute", "a/b", ".hidden", "a:b"} {
 		_, err := s.CreateModel(model.Model{ProviderID: p.ID, ModelKey: bad, EndpointViaTokenpanel: "e", Capability: validCapability()})
 		if err == nil {
 			t.Errorf("expected CreateModel to reject model_key %q", bad)

@@ -103,3 +103,55 @@ func safeJoin(root, userPath string) (string, error) {
 	}
 	return joined, nil
 }
+
+// resolveWithinRoot 在 safeJoin 的字符串级校验之后再做一层基于真实文件
+// 系统的校验：candidate（或者它最近一个已存在的祖先目录）解析符号链接
+// 之后，必须仍然落在 root 解析符号链接之后的真实路径之内。字符串级校验
+// 只能挡住 ".."/绝对路径这类语法层面的逃逸——如果 root 目录内部本身放了
+// 一个指向外部的符号链接（比如运维为了图方便建的一个 alias），字符串
+// 校验完全看不出来，必须真正 resolve 文件系统才能发现。
+//
+// candidate 指向的文件可能还不存在（比如即将要写入的报告文件），所以从
+// candidate 本身开始往上找第一个已存在的祖先目录来做 EvalSymlinks——
+// 不存在的路径段不可能是符号链接（没法对一个还没创建出来的东西建软链），
+// 所以只要"最近的已存在祖先"落在真实 root 内，candidate 剩余的、字符串
+// 校验已经通过的部分就是安全的。
+func resolveWithinRoot(root, candidate string) error {
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return fmt.Errorf("解析 root 真实路径失败: %w", err)
+	}
+
+	probe := candidate
+	for {
+		realProbe, err := filepath.EvalSymlinks(probe)
+		if err == nil {
+			rel, err := filepath.Rel(realRoot, realProbe)
+			if err != nil {
+				return fmt.Errorf("解析相对路径失败: %w", err)
+			}
+			if rel != "." && (rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
+				return fmt.Errorf("path 解析符号链接后的真实路径越出允许的根目录")
+			}
+			return nil
+		}
+		parent := filepath.Dir(probe)
+		if parent == probe {
+			return fmt.Errorf("无法定位 path 的任何已存在的祖先目录: %w", err)
+		}
+		probe = parent
+	}
+}
+
+// safeJoinResolved 是 safeJoin + resolveWithinRoot 的组合：既做字符串级
+// 校验，也做符号链接感知的真实路径校验，两层防御互补，不能只依赖其中一层。
+func safeJoinResolved(root, userPath string) (string, error) {
+	joined, err := safeJoin(root, userPath)
+	if err != nil {
+		return "", err
+	}
+	if err := resolveWithinRoot(root, joined); err != nil {
+		return "", err
+	}
+	return joined, nil
+}
