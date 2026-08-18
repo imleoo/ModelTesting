@@ -348,6 +348,87 @@ func TestLaunchTestRun_RejectsConcurrentLaunch(t *testing.T) {
 	pollUntilTerminal(t, s, run.ID, 20*time.Second) // 等第一个任务跑完，释放锁，避免污染后续测试
 }
 
+// --- P4 API 服务 review round-1 发现的三处阻塞性问题的回归测试 ---
+
+// TestOrchestrate_PathTraversalSuiteIDFailsInsteadOfEscaping 防止
+// review round-1 发现的回归：suite_id 是用户可控的请求体字段，
+// filepath.Join(SuitesRoot, suite_id) 不会拒绝 "../" 之类的输入——必须在
+// orchestrate 内部（safeJoin）挡住，而不是读到 SuitesRoot 之外的任意文件。
+func TestOrchestrate_PathTraversalSuiteIDFailsInsteadOfEscaping(t *testing.T) {
+	gw := httptest.NewServer(mockGateway())
+	defer gw.Close()
+
+	cfg, s := newTestConfig(t, gw.URL)
+	m := createProviderAndModel(t, s, gw.URL)
+	r := api.NewRouter(cfg)
+
+	body, _ := json.Marshal(map[string]any{"model_id": m.ID, "suite_id": "../../../../../../etc/passwd"})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/test-runs", bytes.NewReader(body)))
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("expected 202 (validation happens async in orchestrate), got %d: %s", w.Code, w.Body.String())
+	}
+	var run model.TestRun
+	if err := json.Unmarshal(w.Body.Bytes(), &run); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	final := pollUntilTerminal(t, s, run.ID, 10*time.Second)
+	if final.Status != model.RunFailed {
+		t.Fatalf("expected FAILED for a path-traversal suite_id, got %s", final.Status)
+	}
+	if final.ErrorMessage == "" {
+		t.Error("expected a non-empty ErrorMessage explaining the rejected suite_id")
+	}
+}
+
+// TestOrchestrate_PanicInBenchmarkStageIsRecoveredAsFailed 防止 review
+// round-1 发现的回归：orchestrate 跑在独立的后台 goroutine 里，Gin 的
+// Recovery 中间件管不到它——不加 defer recover() 的话，任何一次 panic
+// 都会直接崩溃整个 goroutine（甚至整个进程），任务永远卡在
+// RUNNING_FUNCTIONAL/RUNNING_BENCHMARK，不会被标记 FAILED。这里借
+// Config.NewBenchmarkParams 这个测试专用注入点制造一次确定性的 panic，
+// 验证 orchestrate 顶层的 recover 真的生效。
+func TestOrchestrate_PanicInBenchmarkStageIsRecoveredAsFailed(t *testing.T) {
+	gw := httptest.NewServer(mockGateway())
+	defer gw.Close()
+
+	cfg, s := newTestConfig(t, gw.URL)
+	cfg.NewBenchmarkParams = func(int) (*benchmark.Params, error) {
+		panic("boom: injected panic for recover() test")
+	}
+	suiteID := writeFixtureSuite(t, cfg.SuitesRoot, "mini", miniSuiteJSON)
+	m := createProviderAndModel(t, s, gw.URL)
+	r := api.NewRouter(cfg)
+
+	body, _ := json.Marshal(map[string]any{"model_id": m.ID, "suite_id": suiteID, "api_key": "test-key", "total_sessions": 1})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/test-runs", bytes.NewReader(body)))
+	if w.Code != http.StatusAccepted {
+		t.Fatalf("expected 202, got %d: %s", w.Code, w.Body.String())
+	}
+	var run model.TestRun
+	if err := json.Unmarshal(w.Body.Bytes(), &run); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	final := pollUntilTerminal(t, s, run.ID, 10*time.Second)
+	if final.Status != model.RunFailed {
+		t.Fatalf("expected the panic to be recovered as FAILED (not crash the test binary), got %s", final.Status)
+	}
+	if !bytes.Contains([]byte(final.ErrorMessage), []byte("panic")) {
+		t.Errorf("expected ErrorMessage to mention the panic, got %q", final.ErrorMessage)
+	}
+
+	// 进程（这个测试二进制）本身必须还活着，能继续正常发起下一个任务——
+	// 这本身就是 recover() 生效、而不是让 panic 一路冒泡的证明。
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, httptest.NewRequest(http.MethodGet, "/api/test-runs/"+run.ID, nil))
+	if w2.Code != http.StatusOK {
+		t.Errorf("expected the api-server to still be responsive after a recovered panic, got %d", w2.Code)
+	}
+}
+
 func TestLaunchTestRun_UnknownModelReturns404(t *testing.T) {
 	cfg, _ := newTestConfig(t, "http://example.invalid")
 	r := api.NewRouter(cfg)

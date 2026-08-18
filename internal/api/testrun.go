@@ -92,13 +92,29 @@ func (cfg *Config) orchestrate(ctx context.Context, run model.TestRun, m model.M
 		}
 	}
 
+	// orchestrate 跑在独立的后台 goroutine 里（LaunchTestRun 用 go func()
+	// 启动），Gin 的 Recovery 中间件只保护 HTTP 请求处理那条 goroutine，管不
+	// 到这里——不加这个 recover，engine.RunCase 内部任何一次 panic（比如某个
+	// 断言函数对畸形响应做了不安全的类型断言）都会直接崩溃整个 goroutine，
+	// 严重时能拖垮整个 api-server 进程，任务永远卡在 RUNNING_FUNCTIONAL，
+	// 而不是像文档承诺的那样被标记 FAILED。
+	defer func() {
+		if r := recover(); r != nil {
+			fail(fmt.Errorf("panic: %v", r))
+		}
+	}()
+
 	run.Status = model.RunRunningFunctional
 	if err := cfg.Store.UpdateTestRun(run); err != nil {
 		log.Printf("api: test_run %s: 更新为 RUNNING_FUNCTIONAL 失败: %v", run.ID, err)
 		return
 	}
 
-	suitePath := filepath.Join(cfg.SuitesRoot, run.SuiteID)
+	suitePath, err := safeJoin(cfg.SuitesRoot, run.SuiteID)
+	if err != nil {
+		fail(fmt.Errorf("非法的 suite_id: %w", err))
+		return
+	}
 	suite, err := suitedef.LoadSuite(suitePath)
 	if err != nil {
 		fail(fmt.Errorf("加载套件定义失败: %w", err))
