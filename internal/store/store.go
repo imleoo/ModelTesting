@@ -62,29 +62,25 @@ type Store struct {
 
 // Open 打开（必要时创建）path 处的 SQLite 数据库文件，并确保表结构存在。
 // path 传 ":memory:" 可用于测试。
+//
+// foreign_keys/busy_timeout 通过 DSN 查询参数设置，而不是 Open 之后单独
+// db.Exec 一次 PRAGMA——modernc.org/sqlite（本项目用的纯 Go、无 CGO 驱动）
+// 这两个 PRAGMA 是逐连接（per-connection）生效的，写进 DSN 才能保证
+// database/sql 在连接池里创建任何新连接时都自动重新应用，不会出现"连接
+// 失效被重建后 PRAGMA 悄悄失效"的边界情况。
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	dsn := path + "?_foreign_keys=on&_busy_timeout=5000"
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite db: %w", err)
 	}
 	// SQLite 对并发写入的支持有限，本系统首版本来就是单进程内串行执行任务
 	// （见设计方案 6.3 节压测互斥锁、10.1 节"不引入任务队列"），限制单连接
-	// 让本进程内的读写天然串行，降低 "database is locked" 出现的概率——但
-	// 这只覆盖本进程，不能防止另一个进程同时打开同一个数据库文件写入；
-	// busy_timeout 让确实撞上锁时等待重试而不是立刻报错，作为额外一层保护。
+	// 让本进程内的读写天然串行，降低（而非杜绝）"database is locked"
+	// 出现的概率——这只覆盖本进程，不能防止另一个进程同时打开同一个数据库
+	// 文件写入；busy_timeout 让确实撞上锁时等待重试而不是立刻报错，作为
+	// 额外一层保护。
 	db.SetMaxOpenConns(1)
-	if _, err := db.Exec(`PRAGMA busy_timeout = 5000`); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("set busy_timeout: %w", err)
-	}
-	// SQLite 默认不强制 REFERENCES 声明的外键约束，必须显式开启，否则 DDL
-	// 里的 REFERENCES 只是文档、不会真的拦住悬空外键——应用层前置校验
-	// （GetProvider/GetModel/GetTestRun）是主要防线，这里作为数据库层的
-	// 兜底，双保险防止应用层校验有遗漏的路径。
-	if _, err := db.Exec(`PRAGMA foreign_keys = ON`); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("enable foreign_keys: %w", err)
-	}
 	if _, err := db.Exec(schema); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("create schema: %w", err)
