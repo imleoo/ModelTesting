@@ -160,3 +160,103 @@ func TestStore_GetReportForTestRun_NotFound(t *testing.T) {
 		t.Errorf("expected ErrNotFound, got %v", err)
 	}
 }
+
+// --- P4 store review round 1 发现的阻塞性问题的回归测试 ---
+
+// TestStore_CreateReport_RejectsUnknownTestRun 防止 review round-1 发现的
+// 回归：SQLite 默认不强制 REFERENCES 外键，CreateReport 必须在应用层自己
+// 校验 test_run_id 存在，否则会产出悬空外键的 Report 记录。
+func TestStore_CreateReport_RejectsUnknownTestRun(t *testing.T) {
+	s := openTestStore(t)
+	_, err := s.CreateReport(model.Report{TestRunID: "does-not-exist", GeneratedAt: "t", Verdict: "PASS", HTMLRef: "r.html"})
+	if err == nil {
+		t.Fatal("expected error for unknown test_run_id")
+	}
+}
+
+func setupModel(t *testing.T, s *store.Store) model.Model {
+	t.Helper()
+	p, err := s.CreateProvider(model.Provider{Name: "X"})
+	if err != nil {
+		t.Fatalf("CreateProvider: %v", err)
+	}
+	m, err := s.CreateModel(model.Model{ProviderID: p.ID, ModelKey: "k", EndpointViaTokenpanel: "e", Capability: validCapability()})
+	if err != nil {
+		t.Fatalf("CreateModel: %v", err)
+	}
+	return m
+}
+
+// TestStore_CreateTestRun_RejectsInvalidStatus 防止非法状态字符串（不在
+// model.TestRunStatus 枚举内）被静默写入，破坏后续状态机分支判断。
+func TestStore_CreateTestRun_RejectsInvalidStatus(t *testing.T) {
+	s := openTestStore(t)
+	m := setupModel(t, s)
+	_, err := s.CreateTestRun(model.TestRun{ModelID: m.ID, SuiteID: "s", StartedAt: "t", Status: model.TestRunStatus("SOMETHING_WEIRD")})
+	if err == nil {
+		t.Fatal("expected error for invalid TestRunStatus")
+	}
+}
+
+// TestStore_UpdateTestRun_RejectsInvalidStatus 同上，覆盖更新路径。
+func TestStore_UpdateTestRun_RejectsInvalidStatus(t *testing.T) {
+	s := openTestStore(t)
+	m := setupModel(t, s)
+	run, err := s.CreateTestRun(model.TestRun{ModelID: m.ID, SuiteID: "s", StartedAt: "t"})
+	if err != nil {
+		t.Fatalf("CreateTestRun: %v", err)
+	}
+	run.Status = model.TestRunStatus("SOMETHING_WEIRD")
+	if err := s.UpdateTestRun(run); err == nil {
+		t.Fatal("expected error for invalid TestRunStatus")
+	}
+}
+
+// TestStore_ListProviders_EmptyIsEmptyNotError 确认空库场景返回空切片而不是
+// 报错，调用方（未来的 API handler）不需要为"从未注册过供应商"单独处理错误。
+func TestStore_ListProviders_EmptyIsEmptyNotError(t *testing.T) {
+	s := openTestStore(t)
+	got, err := s.ListProviders()
+	if err != nil {
+		t.Fatalf("ListProviders: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected empty slice, got %v", got)
+	}
+}
+
+func TestStore_ListModels_EmptyIsEmptyNotError(t *testing.T) {
+	s := openTestStore(t)
+	got, err := s.ListModels()
+	if err != nil {
+		t.Fatalf("ListModels: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected empty slice, got %v", got)
+	}
+}
+
+// TestStore_GetReportForTestRun_ReturnsLatest 确认同一 TestRun 下多条 Report
+// （如重新生成过报告）时取的是最新一条，不是随便一条或最早一条。
+func TestStore_GetReportForTestRun_ReturnsLatest(t *testing.T) {
+	s := openTestStore(t)
+	m := setupModel(t, s)
+	run, err := s.CreateTestRun(model.TestRun{ModelID: m.ID, SuiteID: "s", StartedAt: "t"})
+	if err != nil {
+		t.Fatalf("CreateTestRun: %v", err)
+	}
+	if _, err := s.CreateReport(model.Report{TestRunID: run.ID, GeneratedAt: "2026-08-18T00:00:00Z", Verdict: "FAIL", HTMLRef: "old.html"}); err != nil {
+		t.Fatalf("CreateReport (old): %v", err)
+	}
+	latest, err := s.CreateReport(model.Report{TestRunID: run.ID, GeneratedAt: "2026-08-18T01:00:00Z", Verdict: "PASS", HTMLRef: "new.html"})
+	if err != nil {
+		t.Fatalf("CreateReport (latest): %v", err)
+	}
+	got, err := s.GetReportForTestRun(run.ID)
+	if err != nil {
+		t.Fatalf("GetReportForTestRun: %v", err)
+	}
+	if got.ID != latest.ID || got.HTMLRef != "new.html" {
+		t.Errorf("expected the most recently generated report, got %+v", got)
+	}
+}
