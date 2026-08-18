@@ -1,10 +1,9 @@
 {
   "suite_id": "kimi-k3",
   "suite_version": "1.1.0",
-  "source_doc": "docs/Kimi-K3供应商接入自测指导.pdf",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "Kimi-K3 供应商接入自测指导对应的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例 + 5 项『输入校验』附加用例（v1.1.0 新增，非 PDF 原文，来自真实测试中发现的网关输入校验缺口，见 07 节 SOP『若供应商有专属指导文档，人工新增/调整差异用例』）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
+  "description": "Kimi-K3 套件的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例 + 5 项『输入校验』附加用例（v1.1.0 新增，不在最初套件范围内，来自真实测试中发现的网关输入校验缺口，见 07 节 SOP『若供应商有专属指导文档，人工新增/调整差异用例』）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
