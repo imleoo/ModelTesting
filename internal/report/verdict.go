@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/leoobai/modeltestbed/internal/model"
+	"github.com/leoobai/modeltestbed/internal/suitedef"
 )
 
 // Verdict 是报告「验收结论」章节的三态结果（08 节表格：全自动判定，但
@@ -40,11 +41,13 @@ type RuleResult struct {
 
 // Summary 是「验收结论」章节的完整判定结果。
 type Summary struct {
-	// Rule1：22 项基础用例（CountsInBase22==true 且已声明/固定必过）100% 通过，
-	// MANUAL_REVIEW 视为未通过（08 节规则 1）。
+	// Rule1：22 项基础用例（CountsInBase22==true 且已声明/固定必过）100% 通过、
+	// 且这 22 项本身必须完整出现（不能因为缺失结果而被默默放过），MANUAL_REVIEW
+	// 视为未通过（08 节规则 1）。
 	Rule1 RuleResult
-	// Rule2：已声明但不计入 22 分母的能力用例（当前套件里只有 reasoning_effort）
-	// 100% 通过（08 节规则 2；v0.2 曾遗漏这条，声明能力失败时不拖累总体结论）。
+	// Rule2：已声明但不计入 22 分母的能力用例（当前套件里只有 reasoning_effort.
+	// scaling）100% 通过（08 节规则 2；v0.2 曾遗漏这条，声明能力失败时不拖累
+	// 总体结论）。
 	Rule2 RuleResult
 	// Rule3：有 PDF 基线且可观测的性能指标（throughput_req_s / ttft P50 /
 	// tpot P50 / cache_hit_rate）满足 6.2 节单向判定规则（08 节规则 3）；
@@ -57,12 +60,29 @@ type Summary struct {
 // Scope=="overall" 的记录。
 var gatedMetricNames = []string{"throughput_req_s", "ttft", "tpot", "cache_hit_rate"}
 
-// Compute 按 08 节验收结论四条规则计算最终判定。caseResults 为空、或
-// metrics 缺失某个门禁指标时，一律不默认判 PASS，落到 PENDING（「不得因缺失
-// 数据直接判 FAIL，也不得默认判 PASS」，见设计方案 6.2 节兜底规则原文）。
-func Compute(caseResults []model.CaseResult, metrics []model.BenchmarkMetric) Summary {
-	rule1 := evalRule1(caseResults)
-	rule2 := evalRule2(caseResults)
+// Compute 按 08 节验收结论四条规则计算最终判定。
+//
+// cases 是当前套件的完整用例定义（通常直接传 suite.Cases），用来校验 22 项
+// 基础用例、附加能力用例是否完整出现在 caseResults 里——不传（nil/空）时退化
+// 为只检查"已出现的结果"，不做完整性校验（供不关心这一层的单元测试使用；
+// cmd/report-cli 等生产入口必须传入真实套件定义，否则漏跑的用例会被静默
+// 放过判 OK，这正是本函数要防止的问题）。
+//
+// caseResults/metrics 缺失、重复、或出现非法枚举值时一律不默认判 PASS
+// （「不得因缺失数据直接判 FAIL，也不得默认判 PASS」，见设计方案 6.2 节
+// 兜底规则原文，这里把同一原则应用到全部四条规则）。
+func Compute(cases []suitedef.Case, caseResults []model.CaseResult, metrics []model.BenchmarkMetric) Summary {
+	var expectedBase22, expectedNonBase22 []string
+	for _, c := range cases {
+		if c.CountsInBase22 {
+			expectedBase22 = append(expectedBase22, c.ID)
+		} else {
+			expectedNonBase22 = append(expectedNonBase22, c.ID)
+		}
+	}
+
+	rule1 := evalCaseGroup(expectedBase22, caseResults, true)
+	rule2 := evalCaseGroup(expectedNonBase22, caseResults, false)
 	rule3 := evalRule3(metrics)
 
 	overall := combine(rule1.State, rule2.State, rule3.State)
@@ -93,51 +113,76 @@ func combine(states ...RuleState) RuleState {
 	return worst
 }
 
-func evalRule1(caseResults []model.CaseResult) RuleResult {
-	var counted []model.CaseResult
+// evalCaseGroup 校验某个 CountsInBase22 分组（true=22 项基础用例，
+// false=附加能力用例）：
+//  1. 完整性——expectedIDs 里的每个用例都必须在 caseResults 里出现且只出现
+//     一次；完全缺失（用例从未产出结果，不是 NOT_DECLARED）判 PENDING；同一
+//     用例出现多条结果判 FAIL（数据不一致，比缺失更严重，可能意味着测试
+//     流水线本身出了 bug，不能悄悄取其中一条了事）。
+//  2. 状态——白名单判定，只有 PASS 算通过；FAIL 判 FAIL；MANUAL_REVIEW/任何
+//     无法识别的状态值一律判 PENDING（不能让非法枚举值落进默认分支被当成
+//     通过，这是此前版本的一个真实漏洞）；NOT_DECLARED 视为已妥善处理，不
+//     参与判定。
+//  3. caseResults 里如果出现了不在 expectedIDs 里、但 CountsInBase22 与本组
+//     一致的用例，说明套件定义和期望列表已经不一致，同样判 PENDING（不能
+//     假装没看见）。
+//
+// expectedIDs 为空时（调用方未传入套件定义）跳过步骤 1/3，只做步骤 2——
+// 见 Compute 文档字符串。
+func evalCaseGroup(expectedIDs []string, caseResults []model.CaseResult, countsInBase22 bool) RuleResult {
+	byID := map[string][]model.CaseResult{}
 	for _, r := range caseResults {
-		if r.CountsInBase22 && r.Status != model.StatusNotDeclared {
-			counted = append(counted, r)
+		if r.CountsInBase22 == countsInBase22 {
+			byID[r.CaseID] = append(byID[r.CaseID], r)
 		}
 	}
-	if len(counted) == 0 {
-		return RuleResult{State: RulePending, Reasons: []string{"未提供 22 项基础用例的结果数据，无法判定"}}
-	}
-	return evalCaseGroup(counted)
-}
 
-// evalRule2 覆盖「已声明但不计入 22 分母」的能力用例（当前套件里只有
-// reasoning_effort）。CountsInBase22==true 的能力用例（image_url/video_url/
-// function/思考开关各方式）已经在 Rule1 里按 base22 分母检查过，这里刻意
-// 只看 CountsInBase22==false 的部分，避免和 Rule1 重复判定同一批用例。
-func evalRule2(caseResults []model.CaseResult) RuleResult {
-	var counted []model.CaseResult
-	for _, r := range caseResults {
-		if !r.CountsInBase22 && r.Status != model.StatusNotDeclared {
-			counted = append(counted, r)
-		}
-	}
-	if len(counted) == 0 {
-		// 没有任何"声明但不计入 22 分母"的能力用例被执行（比如 reasoning_effort
-		// 未声明），这是合法状态，不是数据缺失——直接判 OK。
-		return RuleResult{State: RuleOK}
-	}
-	return evalCaseGroup(counted)
-}
-
-func evalCaseGroup(results []model.CaseResult) RuleResult {
 	var reasons []string
 	hasFail, hasPending := false, false
-	for _, r := range results {
+	fail := func(format string, a ...any) { hasFail = true; reasons = append(reasons, fmt.Sprintf(format, a...)) }
+	pending := func(format string, a ...any) { hasPending = true; reasons = append(reasons, fmt.Sprintf(format, a...)) }
+
+	checkStatus := func(id string, r model.CaseResult) {
 		switch r.Status {
+		case model.StatusPass, model.StatusNotDeclared:
+			// PASS：通过，无需处理；NOT_DECLARED：不计入本组判定。
 		case model.StatusFail:
-			hasFail = true
-			reasons = append(reasons, fmt.Sprintf("%s: FAIL（%s）", r.CaseID, r.FailReason))
+			fail("%s: FAIL（%s）", id, r.FailReason)
 		case model.StatusManualReview:
-			hasPending = true
-			reasons = append(reasons, fmt.Sprintf("%s: MANUAL_REVIEW，待人工确认", r.CaseID))
+			pending("%s: MANUAL_REVIEW，待人工确认", id)
+		default:
+			pending("%s: 状态值 %q 无法识别，无法判定", id, r.Status)
 		}
 	}
+
+	if len(expectedIDs) == 0 {
+		// 未传套件定义：退化为只看已出现的结果，不做完整性校验。
+		for id, rs := range byID {
+			for _, r := range rs {
+				checkStatus(id, r)
+			}
+		}
+	} else {
+		expectedSet := make(map[string]bool, len(expectedIDs))
+		for _, id := range expectedIDs {
+			expectedSet[id] = true
+			rs, ok := byID[id]
+			switch {
+			case !ok:
+				pending("%s: 缺失结果，用例从未执行或未产出记录", id)
+			case len(rs) > 1:
+				fail("%s: 出现 %d 条重复结果，数据不一致", id, len(rs))
+			default:
+				checkStatus(id, rs[0])
+			}
+		}
+		for id := range byID {
+			if !expectedSet[id] {
+				pending("%s: 不在当前套件的用例列表中，套件定义可能已变更", id)
+			}
+		}
+	}
+
 	switch {
 	case hasFail:
 		return RuleResult{State: RuleFail, Reasons: reasons}
@@ -149,29 +194,42 @@ func evalCaseGroup(results []model.CaseResult) RuleResult {
 }
 
 func evalRule3(metrics []model.BenchmarkMetric) RuleResult {
-	byName := map[string]model.BenchmarkMetric{}
+	byName := map[string][]model.BenchmarkMetric{}
 	for _, m := range metrics {
 		if m.Scope == "overall" {
-			byName[m.Name] = m
+			byName[m.Name] = append(byName[m.Name], m)
 		}
 	}
 
 	var reasons []string
 	hasFail, hasPending := false, false
 	for _, name := range gatedMetricNames {
-		m, ok := byName[name]
-		if !ok {
+		ms, ok := byName[name]
+		switch {
+		case !ok:
 			hasPending = true
 			reasons = append(reasons, fmt.Sprintf("%s: 缺失该性能指标数据，无法判定", name))
 			continue
+		case len(ms) > 1:
+			hasFail = true
+			reasons = append(reasons, fmt.Sprintf("%s: 出现 %d 条重复的 overall 指标记录，数据不一致", name, len(ms)))
+			continue
 		}
+		m := ms[0]
+		// 白名单判定：只有明确落在这几个已知取值里的才不阻塞；任何非法/未知
+		// 取值（含空字符串）一律判 PENDING，不能被无动作的 default 分支
+		// 悄悄当成达标。
 		switch m.BaselineVerdict {
+		case model.BaselineOK, model.BaselineSameOrder:
+			// 达标或同一数量级，符合 6.2 节判定。
+		case model.BaselineNotObservable:
+			// 6.2 节兜底规则：确认不可观测时移出验收门禁。
 		case model.BaselineFail:
 			hasFail = true
-			reasons = append(reasons, fmt.Sprintf("%s: FAIL（实测偏离基线超过 %.0fx）", name, 2.0))
-		case model.BaselineNotObservable:
-			// 6.2 节兜底规则：确认不可观测时移出验收门禁，既不算 FAIL 也不算
-			// PENDING（不是"缺数据判不了"，是"已经确认这条指标测不到"）。
+			reasons = append(reasons, fmt.Sprintf("%s: FAIL（实测偏离基线超过 MAX_DEGRADE_RATIO 倍数）", name))
+		default:
+			hasPending = true
+			reasons = append(reasons, fmt.Sprintf("%s: BaselineVerdict 取值 %q 无法识别，无法判定", name, m.BaselineVerdict))
 		}
 	}
 	switch {

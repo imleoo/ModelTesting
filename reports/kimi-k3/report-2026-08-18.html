@@ -28,7 +28,7 @@
   <tr><th>API 端点</th><td>https://jiwu.wtgo.com.cn/</td></tr>
   <tr><th>测试套件</th><td>kimi-k3 · 1.0.0</td></tr>
   <tr><th>测试日期</th><td>2026-08-18</td></tr>
-  <tr><th>报告生成时间</th><td>2026-08-18T09:00:13&#43;08:00</td></tr>
+  <tr><th>报告生成时间</th><td>2026-08-18T09:09:03&#43;08:00</td></tr>
 </table>
 
 <h2>二、功能测试结果表</h2>
@@ -755,6 +755,23 @@ data: [DONE]
 </table>
 
 
+<h3>附加能力用例结果（不计入 22 项分母，如 reasoning_effort）</h3>
+<table>
+  <tr><th>用例 ID</th><th>名称</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>各次采样明细</th></tr>
+  
+  <tr>
+    <td>reasoning_effort.scaling</td>
+    <td>low / high / max 综合判定</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>9/9</td>
+    <td>low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数）</td>
+    <td>
+      low: 398 tokens（第 1 次，✓）<br>low: 1947 tokens（第 2 次，✓）<br>low: 1081 tokens（第 3 次，✓）<br>high: 652 tokens（第 4 次，✓）<br>high: 616 tokens（第 5 次，✓）<br>high: 225 tokens（第 6 次，✓）<br>max: 212 tokens（第 7 次，✓）<br>max: 1357 tokens（第 8 次，✓）<br>max: 161 tokens（第 9 次，✓）<br>
+    </td>
+  </tr>
+  
+</table>
+
 
 <h3>能力声明与豁免说明</h3>
 <table>
@@ -991,10 +1008,10 @@ data: [DONE]
   <p><strong>总体结论：<span class="badge badge-FAIL">未通过（FAIL）</span></strong></p>
   <p>规则 1（22 项基础用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
   <ul class="reasons"><li>thinking.enable_thinking: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.thinking_type: FAIL（关闭思考开关时仍返回了 reasoning_content（或等价字段））</li><li>thinking.chat_template_kwargs_enable_thinking: FAIL（HTTP 状态码 400，期望 200）</li><li>thinking.chat_template_kwargs_thinking: FAIL（HTTP 状态码 400，期望 200）</li></ul>
-  <p>规则 2（已声明的附加能力用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
+  <p>规则 2（已声明且不计入 22 项基础分母的附加能力用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
   <ul class="reasons"><li>reasoning_effort.scaling: FAIL（low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数））</li></ul>
   <p>规则 3（有 PDF 基线且可观测的性能指标满足判定）：<span class="badge badge-FAIL">FAIL</span></p>
-  <ul class="reasons"><li>throughput_req_s: FAIL（实测偏离基线超过 2x）</li></ul>
+  <ul class="reasons"><li>throughput_req_s: FAIL（实测偏离基线超过 MAX_DEGRADE_RATIO 倍数）</li></ul>
   <p class="meta">规则 1、2、3 任一为 FAIL 即总体 FAIL；无 FAIL 但存在 PENDING（含未清空的 MANUAL_REVIEW 或缺失数据）则总体锁定为「待人工确认」，直至人工复核改写。</p>
 </div>
 
