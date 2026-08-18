@@ -7,6 +7,7 @@ import "github.com/gin-gonic/gin"
 // 路由映射）消费。
 func NewRouter(cfg *Config) *gin.Engine {
 	r := gin.Default()
+	r.Use(corsMiddleware())
 
 	api := r.Group("/api")
 	api.Use(authMiddleware(cfg.AuthToken))
