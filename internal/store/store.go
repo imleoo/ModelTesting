@@ -10,12 +10,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 
 	"github.com/leoobai/modeltestbed/internal/model"
 )
+
+// modelKeyPattern 限制 ModelKey 只能是字母/数字开头，其余允许字母数字和
+// . _ : -——internal/api 的编排逻辑会直接拿 ModelKey 当文件系统目录名用
+// （ReportsRoot/<model_key>/...），不加这道白名单校验的话，注册一个形如
+// "../../etc" 的 model_key 就能让后续所有该模型的测试结果文件写到
+// ReportsRoot 之外的任意路径（路径穿越），不是防御性的过度设计。
+var modelKeyPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]*$`)
 
 const schema = `
 CREATE TABLE IF NOT EXISTS providers (
@@ -147,6 +155,9 @@ func (s *Store) GetProvider(id string) (model.Provider, error) {
 func (s *Store) CreateModel(m model.Model) (model.Model, error) {
 	if m.ModelKey == "" || m.EndpointViaTokenpanel == "" || m.ProviderID == "" {
 		return model.Model{}, fmt.Errorf("provider_id/model_key/endpoint_via_tokenpanel 均不能为空")
+	}
+	if !modelKeyPattern.MatchString(m.ModelKey) {
+		return model.Model{}, fmt.Errorf("model_key %q 不合法：只能以字母/数字开头，其余字符限于字母、数字、'.'、'_'、':'、'-'", m.ModelKey)
 	}
 	if _, err := s.GetProvider(m.ProviderID); err != nil {
 		return model.Model{}, fmt.Errorf("provider_id %q 不存在: %w", m.ProviderID, err)

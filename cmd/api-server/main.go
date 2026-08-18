@@ -21,7 +21,12 @@ func main() {
 	repoRoot := flag.String("repo-root", ".", "仓库根目录（用于解析 materials_manifest 相对路径）")
 	requestTimeout := flag.Duration("request-timeout", 120*time.Second, "单请求超时")
 	defaultTotalSessions := flag.Int("default-total-sessions", 20, "发起任务时不传 total_sessions 的默认压测规模")
+	authToken := flag.String("auth-token", "", "固定 Token 鉴权（设计方案 10.1 节首版要求）；留空则不鉴权，仅限本地开发/测试，生产部署必须设置")
 	flag.Parse()
+
+	if *authToken == "" {
+		log.Printf("警告：未设置 -auth-token，API 对任何能访问到 %s 的人完全开放，仅建议在完全受信的本地/内网环境这样运行", *addr)
+	}
 
 	s, err := store.Open(*dbPath)
 	if err != nil {
@@ -37,6 +42,7 @@ func main() {
 		RepoRoot:             *repoRoot,
 		RequestTimeout:       *requestTimeout,
 		DefaultTotalSessions: *defaultTotalSessions,
+		AuthToken:            *authToken,
 	}
 
 	r := api.NewRouter(cfg)

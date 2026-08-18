@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,6 +38,10 @@ type Config struct {
 	// DefaultTotalSessions 是发起测试任务时不传 total_sessions 的默认压测
 	// 规模。
 	DefaultTotalSessions int
+
+	// AuthToken 是 10.1 节要求的首版固定 Token 鉴权；空值表示不鉴权，仅供
+	// 本地开发/测试使用，见 auth.go。
+	AuthToken string
 
 	// NewBenchmarkParams 默认是 benchmark.DefaultParams，测试时可以替换成
 	// 一个更快的合成采样器（同 internal/benchmark 自己的端到端测试），避免
@@ -69,4 +75,31 @@ func writeJSONFile(path string, v any) error {
 
 func nowRFC3339() string {
 	return time.Now().UTC().Format(time.RFC3339)
+}
+
+// safeJoin 把用户可控的 userPath（如 TestRun.SuiteID，来自 POST 请求体）
+// 拼到 root 下，并确认拼接结果没有借助 ".."/绝对路径逃出 root——直接
+// filepath.Join(root, userPath) 不会拒绝 "../../etc/passwd" 这类输入，会
+// 读到 root 之外任意用户有权限访问的文件，这是一个真实的路径穿越漏洞，
+// 不是防御性的过度设计。
+func safeJoin(root, userPath string) (string, error) {
+	if userPath == "" {
+		return "", fmt.Errorf("path 不能为空")
+	}
+	if filepath.IsAbs(userPath) {
+		return "", fmt.Errorf("path 不能是绝对路径: %q", userPath)
+	}
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return "", fmt.Errorf("解析 root 绝对路径失败: %w", err)
+	}
+	joined := filepath.Join(absRoot, userPath)
+	rel, err := filepath.Rel(absRoot, joined)
+	if err != nil {
+		return "", fmt.Errorf("解析相对路径失败: %w", err)
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path %q 越出允许的根目录", userPath)
+	}
+	return joined, nil
 }

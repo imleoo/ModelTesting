@@ -9,6 +9,7 @@ func NewRouter(cfg *Config) *gin.Engine {
 	r := gin.Default()
 
 	api := r.Group("/api")
+	api.Use(authMiddleware(cfg.AuthToken))
 	{
 		api.POST("/providers", cfg.CreateProvider)
 		api.GET("/providers", cfg.ListProviders)

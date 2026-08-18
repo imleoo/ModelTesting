@@ -109,6 +109,25 @@ func TestStore_ProviderModelTestRunReport_HappyPath(t *testing.T) {
 	}
 }
 
+// TestStore_CreateModel_RejectsPathTraversalModelKey 防止 P4 API 服务
+// review round-1 发现的回归：internal/api 会直接拿 ModelKey 当文件系统
+// 目录名用（ReportsRoot/<model_key>/...），CreateModel 必须在数据写入前
+// 就拒绝形如 "../../etc" 的 model_key，不能让污染数据进库后才在别的层去
+// 补救。
+func TestStore_CreateModel_RejectsPathTraversalModelKey(t *testing.T) {
+	s := openTestStore(t)
+	p, err := s.CreateProvider(model.Provider{Name: "X"})
+	if err != nil {
+		t.Fatalf("CreateProvider: %v", err)
+	}
+	for _, bad := range []string{"../evil", "../../etc/passwd", "/absolute", "a/b", ".hidden"} {
+		_, err := s.CreateModel(model.Model{ProviderID: p.ID, ModelKey: bad, EndpointViaTokenpanel: "e", Capability: validCapability()})
+		if err == nil {
+			t.Errorf("expected CreateModel to reject model_key %q", bad)
+		}
+	}
+}
+
 func TestStore_CreateModel_RejectsUnknownProvider(t *testing.T) {
 	s := openTestStore(t)
 	_, err := s.CreateModel(model.Model{ProviderID: "does-not-exist", ModelKey: "k", EndpointViaTokenpanel: "e", Capability: validCapability()})
