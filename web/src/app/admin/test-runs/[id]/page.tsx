@@ -8,12 +8,14 @@ import {
   ApiError,
   CaseResult,
   Model,
+  Provider,
   TestRun,
   getTestRun,
   getTestRunCaseResults,
   isTerminalStatus,
   launchTestRun,
   listModels,
+  listProviders,
 } from 'utils/apiClient';
 
 // 合并了设计方案 10.3 节「发起任务」与「结果详情」两个概念页面：
@@ -49,6 +51,7 @@ function LaunchForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [models, setModels] = useState<Model[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [modelId, setModelId] = useState(searchParams.get('model_id') || '');
   const [suiteId, setSuiteId] = useState('kimi-k3/suite.v1.json');
   const [apiKey, setApiKey] = useState('');
@@ -57,10 +60,21 @@ function LaunchForm() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    listModels()
-      .then(setModels)
+    Promise.all([listModels(), listProviders()])
+      .then(([ms, ps]) => {
+        setModels(ms);
+        setProviders(ps);
+      })
       .catch((e) => setError(e.message || String(e)));
   }, []);
+
+  // 同一个 model_key（如上游真实模型名 "kimi-k3"）可能挂在多个供应商/通道
+  // 下面，只显示 model_key 会分不清选的是哪一条，拼上供应商名字消歧义。
+  const providerNameById = new Map(providers.map((p) => [p.id, p.name]));
+  function modelLabel(m: Model): string {
+    const providerName = providerNameById.get(m.provider_id);
+    return providerName ? `${providerName} · ${m.model_key}` : m.model_key;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,7 +117,7 @@ function LaunchForm() {
             <option value="">请选择</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.model_key}
+                {modelLabel(m)}
               </option>
             ))}
           </select>
