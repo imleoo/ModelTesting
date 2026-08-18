@@ -69,8 +69,22 @@ func Open(path string) (*Store, error) {
 	}
 	// SQLite 对并发写入的支持有限，本系统首版本来就是单进程内串行执行任务
 	// （见设计方案 6.3 节压测互斥锁、10.1 节"不引入任务队列"），限制单连接
-	// 简单直接地避免 "database is locked" 类错误，不需要额外的连接池调优。
+	// 让本进程内的读写天然串行，降低 "database is locked" 出现的概率——但
+	// 这只覆盖本进程，不能防止另一个进程同时打开同一个数据库文件写入；
+	// busy_timeout 让确实撞上锁时等待重试而不是立刻报错，作为额外一层保护。
 	db.SetMaxOpenConns(1)
+	if _, err := db.Exec(`PRAGMA busy_timeout = 5000`); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("set busy_timeout: %w", err)
+	}
+	// SQLite 默认不强制 REFERENCES 声明的外键约束，必须显式开启，否则 DDL
+	// 里的 REFERENCES 只是文档、不会真的拦住悬空外键——应用层前置校验
+	// （GetProvider/GetModel/GetTestRun）是主要防线，这里作为数据库层的
+	// 兜底，双保险防止应用层校验有遗漏的路径。
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON`); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("enable foreign_keys: %w", err)
+	}
 	if _, err := db.Exec(schema); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("create schema: %w", err)
@@ -212,6 +226,9 @@ func (s *Store) CreateTestRun(t model.TestRun) (model.TestRun, error) {
 	if t.Status == "" {
 		t.Status = model.RunPending
 	}
+	if err := model.ValidateTestRunStatus(t.Status); err != nil {
+		return model.TestRun{}, err
+	}
 	t.ID = newID("run")
 	_, err := s.db.Exec(`INSERT INTO test_runs (id, model_id, suite_id, status, started_at) VALUES (?, ?, ?, ?, ?)`,
 		t.ID, t.ModelID, t.SuiteID, string(t.Status), t.StartedAt)
@@ -224,6 +241,9 @@ func (s *Store) CreateTestRun(t model.TestRun) (model.TestRun, error) {
 // UpdateTestRun 用整个 TestRun 覆盖更新（状态机推进、文件路径回填、报错信息
 // 记录都走这一个方法，避免多个"只改一个字段"的方法各自拼 SQL 时漏改字段）。
 func (s *Store) UpdateTestRun(t model.TestRun) error {
+	if err := model.ValidateTestRunStatus(t.Status); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(`UPDATE test_runs SET status=?, finished_at=?, case_results_path=?, benchmark_result_path=?, error_message=? WHERE id=?`,
 		string(t.Status), t.FinishedAt, t.CaseResultsPath, t.BenchmarkResultPath, t.ErrorMessage, t.ID)
 	if err != nil {
@@ -284,6 +304,9 @@ func (s *Store) ListTestRunsForModel(modelID string) ([]model.TestRun, error) {
 func (s *Store) CreateReport(r model.Report) (model.Report, error) {
 	if r.TestRunID == "" || r.HTMLRef == "" {
 		return model.Report{}, fmt.Errorf("test_run_id/html_ref 不能为空")
+	}
+	if _, err := s.GetTestRun(r.TestRunID); err != nil {
+		return model.Report{}, fmt.Errorf("test_run_id %q 不存在: %w", r.TestRunID, err)
 	}
 	r.ID = newID("report")
 	_, err := s.db.Exec(`INSERT INTO reports (id, test_run_id, generated_at, verdict, html_ref) VALUES (?, ?, ?, ?, ?)`,

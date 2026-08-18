@@ -152,6 +152,19 @@ const (
 	RunFailed            TestRunStatus = "FAILED" // 执行过程本身出错（网络/引擎异常），不是业务判定失败
 )
 
+// ValidateTestRunStatus 校验状态值是否落在上面枚举的合法取值内。SQLite 的
+// status 列是普通 TEXT，DDL 层面不会拦住任意字符串，写入前必须在应用层过一
+// 遍白名单，否则一条非法状态会让状态机后续的分支判断（如"是否已完成"）
+// 全部落空。
+func ValidateTestRunStatus(s TestRunStatus) error {
+	switch s {
+	case RunPending, RunRunningFunctional, RunFunctionalBlocked, RunRunningBenchmark, RunCompleted, RunFailed:
+		return nil
+	default:
+		return fmt.Errorf("非法的 TestRunStatus 取值: %q", s)
+	}
+}
+
 // TestRun 对应 03 节 TEST_RUN 实体：一次完整测试执行的生命周期记录。
 // CaseResultsPath/BenchmarkResultPath 指向本地文件系统上的详细产物（10.1 节：
 // SQLite 只存协调元数据，请求/响应体与压测原始日志走本地文件系统），不在
