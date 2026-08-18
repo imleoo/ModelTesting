@@ -4,11 +4,15 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/leoobai/modeltestbed/internal/api"
+	"github.com/leoobai/modeltestbed/internal/model"
 	"github.com/leoobai/modeltestbed/internal/store"
 )
 
@@ -34,6 +38,8 @@ func main() {
 	}
 	defer s.Close()
 
+	seedKimiK3Defaults(s, *suitesRoot)
+
 	cfg := &api.Config{
 		Store:                s,
 		SuitesRoot:           *suitesRoot,
@@ -50,4 +56,64 @@ func main() {
 	if err := r.Run(*addr); err != nil {
 		log.Fatalf("服务启动失败: %v", err)
 	}
+}
+
+// seedKimiK3Defaults 在数据库还没有任何供应商时，把首个套件模板 Kimi-K3
+// 内置为默认供应商/模型（对应真实测试已跑过的两条通道：官方 Moonshot API
+// 与 we2ai 中转），免得每次新建数据库都要在 Web 控制台手动录入一遍。
+// 只在 providers 表为空时执行一次，已有数据时直接跳过，不会覆盖用户的
+// 手动登记。不含 API Key——按 12 节"应用层加密存储"的首版简化处理，Key
+// 始终随发起测试任务的请求传入，不落盘。
+func seedKimiK3Defaults(s *store.Store, suitesRoot string) {
+	providers, err := s.ListProviders()
+	if err != nil {
+		log.Printf("检查默认数据失败，跳过内置 Kimi-K3 供应商/模型: %v", err)
+		return
+	}
+	if len(providers) > 0 {
+		return
+	}
+
+	capPath := filepath.Join(suitesRoot, "kimi-k3", "capability_kimi-k3.real.json")
+	capBytes, err := os.ReadFile(capPath)
+	if err != nil {
+		log.Printf("读取 %s 失败，跳过内置 Kimi-K3 供应商/模型: %v", capPath, err)
+		return
+	}
+	var capability model.CapabilityProfile
+	if err := json.Unmarshal(capBytes, &capability); err != nil {
+		log.Printf("解析 %s 失败，跳过内置 Kimi-K3 供应商/模型: %v", capPath, err)
+		return
+	}
+
+	// 两条真实跑过的通道，见 reports/kimi-k3/P2-功能测试结果表-2026-08-18-*.md。
+	// model_key 必须是上游认识的真实模型名——套件模板用 {{model_key}} 原样
+	// 替换进请求体的 "model" 字段发给上游，两条通道都固定是 "kimi-k3"，靠
+	// 挂在不同 Provider 下 + 不同 endpoint 区分，不能靠改 model_key 本身
+	// 区分（那样上游会因为不认识这个模型名而 404）。endpoint 只填 base
+	// URL，不含 path——internal/client.Call 会自动拼上套件 protocol.base_path
+	// （/v1/chat/completions），带了 path 会拼出 .../v1/chat/completions/v1/chat/completions。
+	defaultProviders := []struct {
+		providerName string
+		endpoint     string
+	}{
+		{"MoonshotAI（官方）", "https://api.moonshot.cn"},
+		{"we2ai（k3 中转）", "https://api.we2ai.com"},
+	}
+	for _, dp := range defaultProviders {
+		provider, err := s.CreateProvider(model.Provider{Name: dp.providerName})
+		if err != nil {
+			log.Printf("内置供应商 %s 创建失败: %v", dp.providerName, err)
+			continue
+		}
+		if _, err := s.CreateModel(model.Model{
+			ProviderID:            provider.ID,
+			ModelKey:              "kimi-k3",
+			EndpointViaTokenpanel: dp.endpoint,
+			Capability:            capability,
+		}); err != nil {
+			log.Printf("内置模型 kimi-k3（供应商 %s）创建失败: %v", dp.providerName, err)
+		}
+	}
+	log.Printf("已内置默认供应商/模型：MoonshotAI（官方）+ we2ai（k3 中转），model_key 均为 kimi-k3")
 }

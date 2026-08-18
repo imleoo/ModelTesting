@@ -6,8 +6,12 @@
 // api-server 配置了固定 Token，这个前端需要相应升级成服务端代理转发
 // （避免把 Token 直接下发到浏览器），属于后续按需引入项，这里不做。
 
+// 用 ?? 而不是 ||：Docker 构建时把该变量显式设为空字符串（表示走同源
+// 相对路径 /api/*，由 next.config.js rewrites 转发），空字符串是合法取
+// 值而非"未设置"，若用 || 会被当成 falsy 兜底回 localhost:8090，导致
+// 浏览器绕过反代直连一个宿主机根本没暴露的端口。
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8090';
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8090';
 
 export type Provider = {
   id: string;
