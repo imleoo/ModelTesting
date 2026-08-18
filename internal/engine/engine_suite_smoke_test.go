@@ -64,6 +64,15 @@ func mockGatewayHandler() http.HandlerFunc {
 			http.Error(w, "bad request json", http.StatusBadRequest)
 			return
 		}
+		// 这个 mock 网关被 TestSmoke_FullSuiteAgainstMockGateway 当作"表现
+		// 良好的被测网关"用来驱动整套 suite.v1.json（含 input_validation.*
+		// 系列 rejects_invalid_request 用例），所以除了正常应答之外，还需要
+		// 正确拒绝那 5 类故意构造的非法输入——一个真正做了输入校验的网关
+		// 应该表现成这样，而不是像真实 tokenpanel 那样 500。
+		if reason := invalidRequestReason(body); reason != "" {
+			http.Error(w, reason, http.StatusBadRequest)
+			return
+		}
 		streamed, _ := body["stream"].(bool)
 		if streamed {
 			serveMockStream(w, body)
@@ -71,6 +80,58 @@ func mockGatewayHandler() http.HandlerFunc {
 		}
 		serveMockNonStream(w, body)
 	}
+}
+
+// invalidRequestReason 识别 suites/kimi-k3/suite.v1.json 里 input_validation.*
+// 系列用例构造的 5 类非法输入，非空字符串表示应该拒绝（400）。
+func invalidRequestReason(body map[string]any) string {
+	if mt, ok := body["max_tokens"].(float64); ok && mt < 0 {
+		return "max_tokens must be positive"
+	}
+	messages, _ := body["messages"].([]any)
+	for _, raw := range messages {
+		msg, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		role, _ := msg["role"].(string)
+		switch role {
+		case "system", "user", "assistant", "tool":
+		default:
+			return fmt.Sprintf("invalid role %q", role)
+		}
+		if role == "tool" {
+			if _, isString := msg["content"].(string); !isString {
+				if _, isMap := msg["content"].(map[string]any); isMap {
+					return "tool message content must be a string"
+				}
+			}
+		}
+		if parts, ok := msg["content"].([]any); ok {
+			seen := map[string]bool{}
+			for _, p := range parts {
+				part, ok := p.(map[string]any)
+				if !ok {
+					continue
+				}
+				if part["type"] == "text" {
+					text, _ := part["text"].(string)
+					if seen[text] {
+						return "duplicate content part"
+					}
+					seen[text] = true
+				}
+				if part["type"] == "image_url" {
+					imgURL, _ := part["image_url"].(map[string]any)
+					url, _ := imgURL["url"].(string)
+					if strings.Contains(url, "not-valid-base64-data") {
+						return "malformed base64 image data"
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
 
 func serveMockNonStream(w http.ResponseWriter, body map[string]any) {

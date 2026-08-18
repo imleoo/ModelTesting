@@ -1,10 +1,10 @@
 {
   "suite_id": "kimi-k3",
-  "suite_version": "1.0.0",
+  "suite_version": "1.1.0",
   "source_doc": "docs/Kimi-K3供应商接入自测指导.pdf",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "Kimi-K3 供应商接入自测指导对应的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删（07节 SOP）。",
+  "description": "Kimi-K3 供应商接入自测指导对应的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例 + 5 项『输入校验』附加用例（v1.1.0 新增，非 PDF 原文，来自真实测试中发现的网关输入校验缺口，见 07 节 SOP『若供应商有专属指导文档，人工新增/调整差异用例』）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -579,6 +579,136 @@
         { "variant_label": "high", "request_overrides": { "reasoning_effort": "high" } },
         { "variant_label": "max", "request_overrides": { "reasoning_effort": "max" } }
       ]
+    },
+    {
+      "id": "input_validation.max_tokens_negative",
+      "category": "输入校验",
+      "name": "max_tokens 为负数",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，07 节 SOP 允许的供应商专属补充：真实测试中发现 tokenpanel 对 max_tokens=-1 未做校验、直接透传后端触发 HTTP 500，应在网关层拦截并返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "max_tokens": -1,
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.tool_result_content_object",
+      "category": "输入校验",
+      "name": "tool 消息 content 为对象而非字符串",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：role=tool 的消息 content 按 OpenAI 协议必须是 string，这里故意传一个 JSON 对象；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": { "name": "get_weather", "arguments": "{\"city\":\"北京\"}" }
+                }
+              ]
+            },
+            {
+              "role": "tool",
+              "tool_call_id": "call_1",
+              "content": { "temperature": 21.5, "unit": "celsius" }
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.duplicate_content_parts",
+      "category": "输入校验",
+      "name": "content 数组含重复 text part",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：content 数组里两个完全相同的 text part；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "重复内容测试" },
+                { "type": "text", "text": "重复内容测试" }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.invalid_role",
+      "category": "输入校验",
+      "name": "非法 role 取值",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：role 传一个不在 system/user/assistant/tool 枚举内的非法值；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "not_a_real_role", "content": "{{prompts.generic_short}}" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.corrupted_image_base64",
+      "category": "输入校验",
+      "name": "非法/损坏的 base64 图片数据",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充。原始需求描述是『能力未声明时仍发送图片，预期网关拒绝』，但 kimi-k3 的 CAPABILITY_PROFILE 已声明 image_base64=true 且该能力按 04 节固定必过、不可标记不支持，这个前提在本套件的真实测试目标上不成立、会产生假阳性失败；改用同一类输入校验缺口的另一种表现形式——base64 数据本身无法解码，网关应在解析阶段就拒绝（400/422），不应把无法解码的数据透传给后端触发 500",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "描述这张图片" },
+                { "type": "image_url", "image_url": { "url": "data:image/png;base64,!!!not-valid-base64-data!!!" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
     }
   ]
 }
