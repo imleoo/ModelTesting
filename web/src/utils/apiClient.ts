@@ -82,6 +82,17 @@ export type CaseResult = {
   counts_in_base22: boolean;
 };
 
+// ApiError 携带 HTTP 状态码，供调用方区分"永久性错误"（如 404，重试没有
+// 意义）和"临时性错误"（网络抖动/5xx，值得重试）——普通 Error 丢了这个
+// 信息，会让轮询逻辑只能对所有错误一视同仁地无限重试或者一律放弃。
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -96,7 +107,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // 响应体不是 JSON（比如 404 页面），保留默认错误信息即可。
     }
-    throw new Error(message);
+    throw new ApiError(res.status, message);
   }
   return res.json() as Promise<T>;
 }
