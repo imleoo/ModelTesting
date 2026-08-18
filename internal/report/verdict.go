@@ -62,27 +62,21 @@ var gatedMetricNames = []string{"throughput_req_s", "ttft", "tpot", "cache_hit_r
 
 // Compute 按 08 节验收结论四条规则计算最终判定。
 //
-// cases 是当前套件的完整用例定义（通常直接传 suite.Cases），用来校验 22 项
-// 基础用例、附加能力用例是否完整出现在 caseResults 里——不传（nil/空）时退化
-// 为只检查"已出现的结果"，不做完整性校验（供不关心这一层的单元测试使用；
-// cmd/report-cli 等生产入口必须传入真实套件定义，否则漏跑的用例会被静默
-// 放过判 OK，这正是本函数要防止的问题）。
+// cases 是当前套件的完整用例定义（通常直接传 suite.Cases），是"某个用例是否
+// 计入 22 项基础分母"的唯一权威来源——caseResults 里同名的 CountsInBase22
+// 字段只用作一致性校验，不参与分组，防止两处数据来源不一致时出现"规则 1
+// 报告缺失、规则 2 报告多余、报告页面又展示在另一个分桶里"的分裂结果。
+//
+// cases 为空（未提供套件定义）时，Rule1/Rule2 直接判 PENDING，不静默退化成
+// 只看已出现结果的宽松检查——没有套件定义就无法确认 22 项是否齐全，绝不能
+// 默认判 OK（这是此前版本的一个真实漏洞：生产入口一旦套件加载出问题、传入
+// 空 cases，完整性校验会被整体绕过）。
 //
 // caseResults/metrics 缺失、重复、或出现非法枚举值时一律不默认判 PASS
 // （「不得因缺失数据直接判 FAIL，也不得默认判 PASS」，见设计方案 6.2 节
 // 兜底规则原文，这里把同一原则应用到全部四条规则）。
 func Compute(cases []suitedef.Case, caseResults []model.CaseResult, metrics []model.BenchmarkMetric) Summary {
-	var expectedBase22, expectedNonBase22 []string
-	for _, c := range cases {
-		if c.CountsInBase22 {
-			expectedBase22 = append(expectedBase22, c.ID)
-		} else {
-			expectedNonBase22 = append(expectedNonBase22, c.ID)
-		}
-	}
-
-	rule1 := evalCaseGroup(expectedBase22, caseResults, true)
-	rule2 := evalCaseGroup(expectedNonBase22, caseResults, false)
+	rule1, rule2 := evalRules1And2(cases, caseResults)
 	rule3 := evalRule3(metrics)
 
 	overall := combine(rule1.State, rule2.State, rule3.State)
@@ -99,6 +93,72 @@ func Compute(cases []suitedef.Case, caseResults []model.CaseResult, metrics []mo
 	return Summary{Rule1: rule1, Rule2: rule2, Rule3: rule3, Verdict: verdict}
 }
 
+// caseGroupOf 从套件定义构造 CaseID -> CountsInBase22 的权威映射。
+func caseGroupOf(cases []suitedef.Case) map[string]bool {
+	m := make(map[string]bool, len(cases))
+	for _, c := range cases {
+		m[c.ID] = c.CountsInBase22
+	}
+	return m
+}
+
+func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (RuleResult, RuleResult) {
+	if len(cases) == 0 {
+		noSuite := RuleResult{State: RulePending, Reasons: []string{
+			"未提供套件定义（cases 为空），无法校验 22 项基础用例是否完整，不能默认判 OK",
+		}}
+		return noSuite, noSuite
+	}
+
+	groupOf := caseGroupOf(cases)
+	var expectedBase22, expectedNonBase22 []string
+	for id, base22 := range groupOf {
+		if base22 {
+			expectedBase22 = append(expectedBase22, id)
+		} else {
+			expectedNonBase22 = append(expectedNonBase22, id)
+		}
+	}
+
+	// byID 按套件权威分组归拢结果；CaseResult 自带的 CountsInBase22 只用来做
+	// 一致性校验（下面），不用来决定这条结果归到哪个 byID 桶——避免两处数据
+	// 来源在分组上产生分歧。
+	byID := map[string][]model.CaseResult{}
+	var integrityReasons []string
+	integrityFail := false
+	for _, r := range caseResults {
+		want, known := groupOf[r.CaseID]
+		if !known {
+			integrityReasons = append(integrityReasons, fmt.Sprintf("%s: 不在当前套件的用例列表中，套件定义可能已变更", r.CaseID))
+			continue
+		}
+		if r.CountsInBase22 != want {
+			integrityFail = true
+			integrityReasons = append(integrityReasons, fmt.Sprintf(
+				"%s: 结果自带的分组标记（counts_in_base22=%v）与套件定义（%v）不一致，数据不一致", r.CaseID, r.CountsInBase22, want))
+		}
+		byID[r.CaseID] = append(byID[r.CaseID], r)
+	}
+
+	rule1 := evalCaseGroup(expectedBase22, byID)
+	rule2 := evalCaseGroup(expectedNonBase22, byID)
+
+	// 套件外用例、分组标记不一致这类数据完整性问题统一归到规则 1（22 项完整性
+	// 是设计方案里最主要的度量维度），避免同一条原因在两条规则里各出现一次。
+	if len(integrityReasons) > 0 {
+		state := RulePending
+		if integrityFail {
+			state = RuleFail
+		}
+		rule1 = RuleResult{
+			State:   combine(rule1.State, state),
+			Reasons: append(rule1.Reasons, integrityReasons...),
+		}
+	}
+
+	return rule1, rule2
+}
+
 // combine 取多条规则里最严重的状态：FAIL > PENDING > OK。
 func combine(states ...RuleState) RuleState {
 	worst := RuleOK
@@ -113,30 +173,21 @@ func combine(states ...RuleState) RuleState {
 	return worst
 }
 
-// evalCaseGroup 校验某个 CountsInBase22 分组（true=22 项基础用例，
-// false=附加能力用例）：
-//  1. 完整性——expectedIDs 里的每个用例都必须在 caseResults 里出现且只出现
-//     一次；完全缺失（用例从未产出结果，不是 NOT_DECLARED）判 PENDING；同一
-//     用例出现多条结果判 FAIL（数据不一致，比缺失更严重，可能意味着测试
-//     流水线本身出了 bug，不能悄悄取其中一条了事）。
+// evalCaseGroup 校验 expectedIDs（某个 CountsInBase22 分组期望包含的全部
+// CaseID，来自套件定义）在 byID（已按套件权威分组归拢好的结果，见
+// evalRules1And2）里是否完整、状态是否全部通过：
+//  1. 完整性——expectedIDs 里的每个用例都必须在 byID 里出现且只出现一次；
+//     完全缺失（用例从未产出结果，不是 NOT_DECLARED）判 PENDING；同一用例
+//     出现多条结果判 FAIL（数据不一致，比缺失更严重，可能意味着测试流水线
+//     本身出了 bug，不能悄悄取其中一条了事）。
 //  2. 状态——白名单判定，只有 PASS 算通过；FAIL 判 FAIL；MANUAL_REVIEW/任何
 //     无法识别的状态值一律判 PENDING（不能让非法枚举值落进默认分支被当成
 //     通过，这是此前版本的一个真实漏洞）；NOT_DECLARED 视为已妥善处理，不
 //     参与判定。
-//  3. caseResults 里如果出现了不在 expectedIDs 里、但 CountsInBase22 与本组
-//     一致的用例，说明套件定义和期望列表已经不一致，同样判 PENDING（不能
-//     假装没看见）。
 //
-// expectedIDs 为空时（调用方未传入套件定义）跳过步骤 1/3，只做步骤 2——
-// 见 Compute 文档字符串。
-func evalCaseGroup(expectedIDs []string, caseResults []model.CaseResult, countsInBase22 bool) RuleResult {
-	byID := map[string][]model.CaseResult{}
-	for _, r := range caseResults {
-		if r.CountsInBase22 == countsInBase22 {
-			byID[r.CaseID] = append(byID[r.CaseID], r)
-		}
-	}
-
+// 套件外用例、分组标记不一致的检测在 evalRules1And2 里统一做过一次，这里
+// 不用重复扫描（byID 本身就只包含套件已知且属于本分组的用例）。
+func evalCaseGroup(expectedIDs []string, byID map[string][]model.CaseResult) RuleResult {
 	var reasons []string
 	hasFail, hasPending := false, false
 	fail := func(format string, a ...any) { hasFail = true; reasons = append(reasons, fmt.Sprintf(format, a...)) }
@@ -155,31 +206,15 @@ func evalCaseGroup(expectedIDs []string, caseResults []model.CaseResult, countsI
 		}
 	}
 
-	if len(expectedIDs) == 0 {
-		// 未传套件定义：退化为只看已出现的结果，不做完整性校验。
-		for id, rs := range byID {
-			for _, r := range rs {
-				checkStatus(id, r)
-			}
-		}
-	} else {
-		expectedSet := make(map[string]bool, len(expectedIDs))
-		for _, id := range expectedIDs {
-			expectedSet[id] = true
-			rs, ok := byID[id]
-			switch {
-			case !ok:
-				pending("%s: 缺失结果，用例从未执行或未产出记录", id)
-			case len(rs) > 1:
-				fail("%s: 出现 %d 条重复结果，数据不一致", id, len(rs))
-			default:
-				checkStatus(id, rs[0])
-			}
-		}
-		for id := range byID {
-			if !expectedSet[id] {
-				pending("%s: 不在当前套件的用例列表中，套件定义可能已变更", id)
-			}
+	for _, id := range expectedIDs {
+		rs, ok := byID[id]
+		switch {
+		case !ok:
+			pending("%s: 缺失结果，用例从未执行或未产出记录", id)
+		case len(rs) > 1:
+			fail("%s: 出现 %d 条重复结果，数据不一致", id, len(rs))
+		default:
+			checkStatus(id, rs[0])
 		}
 	}
 

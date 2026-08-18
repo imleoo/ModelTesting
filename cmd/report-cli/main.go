@@ -42,6 +42,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载套件定义失败: %v", err)
 	}
+	if len(suite.Cases) == 0 {
+		// suitedef.LoadSuite 只做 JSON 反序列化，不校验 cases 是否为空——
+		// 一份 {"cases":[]} 也能加载成功。空套件传给 report.Compute 会让
+		// 22 项完整性校验整体判 PENDING（不会误判 OK，见 verdict.go），
+		// 但报告生成本身没有意义，在此直接拒绝，而不是产出一份"待人工确认"
+		// 的空壳报告。
+		log.Fatalf("套件定义 %s 不含任何用例（cases 为空），无法生成有意义的报告", *suitePath)
+	}
 
 	caseResults, err := loadCaseResults(*caseResultsPath)
 	if err != nil {

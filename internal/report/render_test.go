@@ -85,6 +85,12 @@ func TestRender_AgainstRealP2P3Artifacts(t *testing.T) {
 	if strings.Contains(html, "sk-0da28b5ba62018fbce86919f840df2e2a141a16d62109a9816c25a2a1ffd97ac") {
 		t.Fatal("rendered report must never contain the real API key")
 	}
+	// 防止 P4 review round-1 发现的回归：真实套件里唯一的附加能力用例 ID
+	// 是 "reasoning_effort.scaling"（不是猜测出来的 "reasoning_effort"），
+	// 必须出现在"附加能力用例结果"章节里，不能被静默漏掉。
+	if !strings.Contains(html, "附加能力用例结果") || !strings.Contains(html, "reasoning_effort.scaling") {
+		t.Error("expected reasoning_effort.scaling to be visible in the additional-capability section")
+	}
 }
 
 func TestRender_NoBenchmarkDataStillRenders(t *testing.T) {
@@ -102,5 +108,30 @@ func TestRender_NoBenchmarkDataStillRenders(t *testing.T) {
 	}
 	if !strings.Contains(html, "PENDING_MANUAL_REVIEW") {
 		t.Error("expected overall verdict to be pending, not a fabricated PASS, when perf data is missing")
+	}
+}
+
+// TestRender_BucketingFollowsSuiteDefinitionNotResultField 防止 P4 review
+// round-2 发现的回归：套件定义说某用例是 22 项基础用例，但 CaseResult 自带
+// 的 CountsInBase22 字段却是 false（数据不一致）——报告页面的分桶必须以
+// 套件定义为准（展示在"功能测试结果表"的 22 项表格里），不能被结果自带的
+// 错误字段带偏到"附加能力用例结果"表格。
+func TestRender_BucketingFollowsSuiteDefinitionNotResultField(t *testing.T) {
+	html, err := Render(Input{
+		Environment: Environment{ModelID: "m", Endpoint: "e", TestDate: "d", GeneratedAt: "g"},
+		Cases:       []suitedef.Case{{ID: "stream_integrity", Name: "Stream 完整性", CountsInBase22: true}},
+		CaseResults: []model.CaseResult{
+			// 套件说这是 base22，结果自己却标了 false。
+			{CaseID: "stream_integrity", Status: model.StatusPass, CountsInBase22: false},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(html, "Stream 完整性") {
+		t.Fatal("expected the case to render somewhere in the report")
+	}
+	if strings.Contains(html, "附加能力用例结果") {
+		t.Error("expected a suite-declared base22 case to never land in the additional-capability section, even if CaseResult.CountsInBase22 disagrees")
 	}
 }
