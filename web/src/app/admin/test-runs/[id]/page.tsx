@@ -194,7 +194,12 @@ function RunDetail({ runId }: { runId: string }) {
           timer = setTimeout(poll, 2000);
         }
       } catch (e: any) {
-        if (!cancelled) setError(e.message || String(e));
+        if (cancelled) return;
+        setError(e.message || String(e));
+        // 网络抖动等临时性错误不应该让页面永久停在错误态、需要用户手动
+        // 刷新——只要任务本身还没到终态，就继续按原节奏重试，下一轮成功
+        // 时 setError('') 会自动清空这条错误提示。
+        timer = setTimeout(poll, 2000);
       }
     }
     poll();
@@ -205,7 +210,10 @@ function RunDetail({ runId }: { runId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runId]);
 
-  if (error) {
+  // 只有从未成功加载过任何数据时才整页显示错误——一旦轮询期间发生的是
+  // 临时性网络错误，已经取到的 run/caseResults 应该继续展示，不能因为
+  // 某一轮轮询失败就把已经渲染出来的结果表整个隐藏掉。
+  if (!run && error) {
     return (
       <Card extra="mt-5 p-5">
         <p className="text-sm text-red-500">加载失败：{error}</p>
@@ -226,6 +234,11 @@ function RunDetail({ runId }: { runId: string }) {
 
   return (
     <div className="mt-5 flex flex-col gap-5">
+      {error && (
+        <div className="rounded-xl bg-yellow-100 p-3 text-sm text-yellow-700">
+          轮询遇到网络问题，正在自动重试：{error}
+        </div>
+      )}
       <Card extra="p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-navy-700 dark:text-white">
@@ -300,13 +313,14 @@ function CaseResultTable({ rows }: { rows: CaseResult[] }) {
           <th className="py-2 pr-4">状态</th>
           <th className="py-2 pr-4">通过次数</th>
           <th className="py-2 pr-4">失败原因</th>
+          <th className="py-2 pr-4">请求/响应明细</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr key={r.id} className="border-b border-gray-100 dark:border-white/5">
-            <td className="py-2 pr-4">{r.case_id}</td>
-            <td className="py-2 pr-4">
+            <td className="py-2 pr-4 align-top">{r.case_id}</td>
+            <td className="py-2 pr-4 align-top">
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   r.status === 'PASS'
@@ -321,22 +335,72 @@ function CaseResultTable({ rows }: { rows: CaseResult[] }) {
                 {r.status}
               </span>
             </td>
-            <td className="py-2 pr-4">
+            <td className="py-2 pr-4 align-top">
               {r.passed_attempts}/{r.attempts}
             </td>
-            <td className="py-2 pr-4 text-gray-500 dark:text-gray-400">
+            <td className="py-2 pr-4 align-top text-gray-500 dark:text-gray-400">
               {r.fail_reason}
+            </td>
+            <td className="py-2 pr-4 align-top">
+              <CaseAttemptsDetail attempts={r.case_attempts} />
             </td>
           </tr>
         ))}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={4} className="py-4 text-gray-400">
+            <td colSpan={5} className="py-4 text-gray-400">
               无
             </td>
           </tr>
         )}
       </tbody>
     </table>
+  );
+}
+
+// CaseAttemptsDetail 对应设计方案 10.3 节要求："失败请求/响应体查看器用
+// Chakra Modal/Popover 承载"——本项目实际可用的 Chakra 依赖只有零散几个
+// 包（没有完整的 @chakra-ui/react 组件库，见 apiClient.ts 顶部注释同类
+// 说明），这里用原生 <details>/<summary> 达到同样的"默认折叠、按需展开"
+// 效果，不需要额外引入 Modal/Popover 依赖，和 P4 报告生成阶段 HTML 模板
+// 里请求/响应明细的呈现方式保持一致（internal/report/template.go）。
+function CaseAttemptsDetail({
+  attempts,
+}: {
+  attempts: CaseResult['case_attempts'];
+}) {
+  if (!attempts || attempts.length === 0) {
+    return <span className="text-gray-400">—</span>;
+  }
+  return (
+    <details>
+      <summary className="cursor-pointer text-brand-500 hover:underline dark:text-brand-400">
+        {attempts.length} 次请求明细
+      </summary>
+      <div className="mt-2 flex flex-col gap-3">
+        {attempts.map((a) => (
+          <div
+            key={a.id}
+            className="rounded-lg border border-gray-200 p-2 text-xs dark:border-white/10"
+          >
+            <p className="text-gray-500 dark:text-gray-400">
+              第 {a.attempt_index} 次（{a.variant_label}）· HTTP{' '}
+              {a.http_status} · {a.latency_ms}ms ·{' '}
+              {a.passed ? (
+                <span className="text-green-600">✓ 通过</span>
+              ) : (
+                <span className="text-red-500">✗ 未通过：{a.fail_reason}</span>
+              )}
+            </p>
+            <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-2 dark:bg-navy-900">
+              请求：{a.request_body}
+            </pre>
+            <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-2 dark:bg-navy-900">
+              响应：{a.response_body}
+            </pre>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
