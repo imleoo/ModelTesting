@@ -34,7 +34,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
 </table>
 
 <h2>二、功能测试结果表</h2>
-<p class="meta">22 项基础用例：{{.Base22Pass}} / {{.Base22Total}} 通过</p>
+<p class="meta">基础用例：{{.Base22Pass}} / {{.Base22Total}} 通过</p>
 <table>
   <tr><th>用例 ID</th><th>名称</th><th>类别</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>请求/响应明细</th></tr>
   {{range .Base22}}
@@ -51,7 +51,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
 </table>
 
 {{if .Additional}}
-<h3>附加能力用例结果（不计入 22 项分母，如 reasoning_effort）</h3>
+<h3>附加能力用例结果（不计入基础分母，如 reasoning_effort、长上下文、缓存命中率）</h3>
 <table>
   <tr><th>用例 ID</th><th>名称</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>各次采样明细</th></tr>
   {{range .Additional}}
@@ -62,7 +62,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
     <td>{{.PassedAttempts}}/{{.Attempts}}</td>
     <td>{{.FailReason}}</td>
     <td>
-      {{range .CaseAttempts}}{{.VariantLabel}}: {{if .ReasoningTokens}}{{.ReasoningTokens}} tokens{{end}}（第 {{.AttemptIndex}} 次，{{if .Passed}}✓{{else}}✗{{end}}）<br>{{end}}
+      {{range .CaseAttempts}}{{.VariantLabel}}: {{if .ReasoningTokens}}{{.ReasoningTokens}} tokens{{end}}{{range $k, $v := .Metrics}}{{$k}}={{$v}} {{end}}（第 {{.AttemptIndex}} 次，{{if .Passed}}✓{{else}}✗{{end}}）<br>{{end}}
     </td>
   </tr>
   {{end}}
@@ -81,9 +81,12 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
   <tr><td>thinking_toggle_methods</td><td>{{range .Capability.ThinkingToggleMethods}}{{.}} {{end}}</td></tr>
   <tr><td>default_thinking_behavior</td><td>{{.Capability.DefaultThinkingBehavior}}</td></tr>
   <tr><td>reasoning_effort</td><td>{{.Capability.ReasoningEffort}}</td></tr>
+  {{if .Capability.ContextWindowTokens}}<tr><td>context_window_tokens</td><td>{{.Capability.ContextWindowTokens}}</td></tr>{{end}}
+  {{if .Capability.MaxOutputTokens}}<tr><td>max_output_tokens</td><td>{{.Capability.MaxOutputTokens}}</td></tr>{{end}}
+  {{if .Capability.PromptCache}}<tr><td>prompt_cache</td><td>{{.Capability.PromptCache}}</td></tr>{{end}}
 </table>
 {{if .NotDeclared}}
-<p class="meta">以下用例因能力未声明标记为 NOT_DECLARED（不计入 22 项分母）：</p>
+<p class="meta">以下用例因能力未声明标记为 NOT_DECLARED（不计入基础分母）：</p>
 <ul>{{range .NotDeclared}}<li>{{.CaseID}}（{{.Name}}）</li>{{end}}</ul>
 {{else}}
 <p class="meta">无 NOT_DECLARED 用例（全部能力均已声明或为固定必过项）。</p>
@@ -135,9 +138,9 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
 <h2>四、验收结论</h2>
 <div class="verdict-box">
   <p><strong>总体结论：<span class="badge badge-{{.Summary.Verdict}}">{{.VerdictLabel}}</span></strong></p>
-  <p>规则 1（22 项基础用例 100% 通过）：<span class="badge badge-{{.Summary.Rule1.State}}">{{.Summary.Rule1.State}}</span></p>
+  <p>规则 1（基础用例 100% 通过）：<span class="badge badge-{{.Summary.Rule1.State}}">{{.Summary.Rule1.State}}</span></p>
   {{if .Summary.Rule1.Reasons}}<ul class="reasons">{{range .Summary.Rule1.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
-  <p>规则 2（已声明且不计入 22 项基础分母的附加能力用例 100% 通过）：<span class="badge badge-{{.Summary.Rule2.State}}">{{.Summary.Rule2.State}}</span></p>
+  <p>规则 2（已声明且不计入基础分母的附加能力用例 100% 通过）：<span class="badge badge-{{.Summary.Rule2.State}}">{{.Summary.Rule2.State}}</span></p>
   {{if .Summary.Rule2.Reasons}}<ul class="reasons">{{range .Summary.Rule2.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
   <p>规则 3（有 PDF 基线且可观测的性能指标满足判定）：<span class="badge badge-{{.Summary.Rule3.State}}">{{.Summary.Rule3.State}}</span></p>
   {{if .Summary.Rule3.Reasons}}<ul class="reasons">{{range .Summary.Rule3.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
@@ -147,7 +150,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
 {{define "attempts"}}
 {{if .}}<details><summary>{{len .}} 次请求明细</summary>
 {{range .}}
-<p class="meta">第 {{.AttemptIndex}} 次（{{.VariantLabel}}）· HTTP {{.HTTPStatus}} · {{.LatencyMS}}ms · {{if .Passed}}✓ 通过{{else}}✗ 未通过：{{.FailReason}}{{end}}</p>
+<p class="meta">第 {{.AttemptIndex}} 次（{{.VariantLabel}}）· HTTP {{.HTTPStatus}} · {{.LatencyMS}}ms · {{if .Passed}}✓ 通过{{else}}✗ 未通过：{{.FailReason}}{{end}}{{range $k, $v := .Metrics}} · {{$k}}={{$v}}{{end}}</p>
 <pre>请求：{{.RequestBody}}</pre>
 <pre>响应：{{.ResponseBody}}</pre>
 {{end}}

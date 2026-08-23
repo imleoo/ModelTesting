@@ -85,3 +85,4 @@ cd web && npm install && npm run dev   # http://localhost:3000，需要 web/.env
 
 - [设计方案](docs/模型自测台设计方案.md) — 架构、数据模型、用例引擎规则、验收标准、部署路线
 - [套件 Schema](suites/kimi-k3/SCHEMA.md) — 测试套件定义文件格式
+- [z-ai 套件说明](suites/z-ai/SCHEMA.md) — z.ai（GLM）套件的用例映射、新增断言类型与首次运行校准项

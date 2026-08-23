@@ -28,6 +28,20 @@ type CapabilityProfile struct {
 	ThinkingToggleMethods   []string `json:"thinking_toggle_methods"`
 	DefaultThinkingBehavior string   `json:"default_thinking_behavior"` // "thinks_by_default" | "no_thinking_by_default"
 	ReasoningEffort         bool     `json:"reasoning_effort"`
+
+	// 以下三项是 z-ai 套件引入的能力声明（kimi-k3 的 capability 文件不填，
+	// 零值 = 未声明 = 对应用例记 NOT_DECLARED，不影响既有行为）。
+	//
+	// ContextWindowTokens 是供应商声明的上下文窗口上限（如 GLM-5.2 为
+	// 1048576）。long_context_recall 用例据此判断是否执行：声明 0 视为未声明
+	// 长上下文能力。
+	ContextWindowTokens int `json:"context_window_tokens"`
+	// MaxOutputTokens 是单次响应可生成的最大 token 数（如 GLM-5.2 为 131072）。
+	// 输入校验用例用它构造"刚好越界"的 max_tokens 值，避免把这个数字写死在
+	// 用例模板里、换个模型就失效。
+	MaxOutputTokens int `json:"max_output_tokens"`
+	// PromptCache 声明供应商是否提供输入侧上下文缓存并在 usage 里回传命中数。
+	PromptCache bool `json:"prompt_cache"`
 }
 
 // HasThinkingMethod 判断某个思考开关方式（method_key，如 "enable_thinking"）
@@ -60,8 +74,13 @@ type CaseAttempt struct {
 	RequestBody     string `json:"request_body"`
 	ResponseBody    string `json:"response_body"`
 	ReasoningTokens int    `json:"reasoning_tokens,omitempty"`
-	Passed          bool   `json:"passed"`
-	FailReason      string `json:"fail_reason,omitempty"`
+	// Metrics 是断言过程中算出、需要出现在报告里的数值型观测量（如
+	// prompt_cache_hit_rate 的命中率、long_context_recall 的实际 prompt_tokens）。
+	// 用开放字典而不是给每种断言加一个具名字段，避免每加一个指标就动一次
+	// CASE_ATTEMPT 表结构。
+	Metrics    map[string]float64 `json:"metrics,omitempty"`
+	Passed     bool               `json:"passed"`
+	FailReason string             `json:"fail_reason,omitempty"`
 }
 
 // CaseResult 对应 03 节 CASE_RESULT 实体：用例级汇总。

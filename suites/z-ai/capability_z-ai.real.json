@@ -1,0 +1,15 @@
+{
+  "model_id": "glm-5.2",
+  "image_url": false,
+  "image_base64": false,
+  "video_url": false,
+  "video_base64": false,
+  "tool_call": true,
+  "tool_choice_function": true,
+  "thinking_toggle_methods": ["thinking_type", "reasoning_effort_off"],
+  "default_thinking_behavior": "thinks_by_default",
+  "reasoning_effort": true,
+  "context_window_tokens": 1048576,
+  "max_output_tokens": 131072,
+  "prompt_cache": true
+}

@@ -48,6 +48,69 @@ type Case struct {
 	MaterialRef     *MaterialRef    `json:"material_ref"`
 	RequestTemplate RequestTemplate `json:"request_template"`
 	Variants        []Variant       `json:"variants"`
+
+	// AssertionParams 是断言类型自带的判定参数（如 max_tokens_truncation 的
+	// expected_finish_reason、prompt_cache_hit_rate 的 min_hit_rate）。放在用例
+	// 数据里而不是写死在引擎里，是为了让同一个断言类型能被不同供应商用不同阈值
+	// 复用（见 suites/z-ai/SCHEMA.md「assertion_params」一节）。为空表示该断言
+	// 全部走内置默认值——kimi-k3 套件不填这个字段，行为与引入本字段前一致。
+	AssertionParams map[string]any `json:"assertion_params"`
+}
+
+// ParamInt 读取 assertion_params 里的整数参数。JSON 解出来的数字是 float64，
+// 这里统一收敛掉；缺失或类型不对时返回 def，由调用方决定是当默认值用还是报错。
+func (c Case) ParamInt(key string, def int) int {
+	switch v := c.AssertionParams[key].(type) {
+	case float64:
+		return int(v)
+	case int:
+		return v
+	default:
+		return def
+	}
+}
+
+// ParamFloat 读取 assertion_params 里的浮点参数，语义同 ParamInt。
+func (c Case) ParamFloat(key string, def float64) float64 {
+	switch v := c.AssertionParams[key].(type) {
+	case float64:
+		return v
+	case int:
+		return float64(v)
+	default:
+		return def
+	}
+}
+
+// ParamString 读取 assertion_params 里的字符串参数，语义同 ParamInt。
+func (c Case) ParamString(key, def string) string {
+	if v, ok := c.AssertionParams[key].(string); ok {
+		return v
+	}
+	return def
+}
+
+// ParamStringPairs 读取形如 [["low","max"],["off","max"]] 的字符串对列表，
+// 供 reasoning_effort_scaling 声明「哪些档位之间必须有可观测差异」。任何一对
+// 不是恰好两个字符串的元素都会被跳过，避免一处笔误让整条用例静默失去约束。
+func (c Case) ParamStringPairs(key string) [][2]string {
+	raw, ok := c.AssertionParams[key].([]any)
+	if !ok {
+		return nil
+	}
+	var out [][2]string
+	for _, item := range raw {
+		pair, ok := item.([]any)
+		if !ok || len(pair) != 2 {
+			continue
+		}
+		a, aok := pair[0].(string)
+		b, bok := pair[1].(string)
+		if aok && bok {
+			out = append(out, [2]string{a, b})
+		}
+	}
+	return out
 }
 
 type Fixtures struct {
@@ -60,10 +123,20 @@ type Defaults struct {
 	CategoryTimeoutOverrides map[string]int `json:"category_timeout_overrides"`
 }
 
+// 协议风格取值：Style 为空等价于 StyleOpenAIChatCompletions（现状默认，
+// kimi-k3 的 suite.v1.json 不需要显式填写这个字段）。
+const (
+	StyleOpenAIChatCompletions = "openai_chat_completions"
+	StyleAnthropicMessages     = "anthropic_messages"
+)
+
 type Protocol struct {
 	BasePath    string `json:"base_path"`
 	AuthHeader  string `json:"auth_header"`
 	ContentType string `json:"content_type"`
+	// Style 声明被测网关走哪种线上协议形状；见上面两个常量。空值按
+	// StyleOpenAIChatCompletions 处理，保持 kimi-k3 现状行为不变。
+	Style string `json:"style"`
 }
 
 type Suite struct {
@@ -184,6 +257,15 @@ func LoadMaterialsManifest(path string) (*MaterialsManifest, error) {
 }
 
 // LoadMaterialsManifestForSuite 加载某个 Suite 声明的 materials_manifest（相对仓库根的路径）。
+//
+// 套件未声明 materials_manifest 时返回 (nil, nil)，不是错误：纯文本套件
+// （如 suites/z-ai）没有多模态用例，也就没有素材清单。此前这里会把空路径拼成
+// 仓库根目录再去 ReadFile，得到一个"is a directory"的错误，让调用方误以为素材
+// 清单坏了。引擎侧对 Materials==nil 已有处理（deterministic_multimodal_qa 会
+// 判 FAIL 并说明未加载素材清单），不会静默放过真正需要素材的用例。
 func LoadMaterialsManifestForSuite(repoRoot string, s *Suite) (*MaterialsManifest, error) {
+	if s.MaterialsManifest == "" {
+		return nil, nil
+	}
 	return LoadMaterialsManifest(filepath.Join(repoRoot, s.MaterialsManifest))
 }
