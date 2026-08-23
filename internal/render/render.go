@@ -10,6 +10,7 @@ import (
 	"maps"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/leoobai/modeltestbed/internal/suitedef"
@@ -141,6 +142,8 @@ func resolveToken(token string, ctx Context) (any, error) {
 		return val, nil
 	case strings.HasPrefix(token, "material:"):
 		return resolveMaterialToken(token, ctx)
+	case strings.HasPrefix(token, "filler:"):
+		return resolveFillerToken(token)
 	default:
 		return nil, fmt.Errorf("unknown placeholder %q", token)
 	}
@@ -178,4 +181,44 @@ func resolveMaterialToken(token string, ctx Context) (any, error) {
 	default:
 		return nil, fmt.Errorf("unknown material form %q in placeholder %q", form, token)
 	}
+}
+
+// fillerSentence 是 {{filler:N}} 的重复单元。三条硬性约束，改动前先读完：
+//  1. 不含任何阿拉伯数字——长上下文用例靠"回答里出现的唯一数字串"判定是否
+//     找回了埋在正中间的暗号，填充语料里只要出现数字就会污染判定。
+//  2. 内容固定、不随机——同一个 {{filler:N}} 必须每次渲染出逐字节相同的文本，
+//     否则上下文缓存命中率用例的两次请求前缀不一致，缓存必然不命中。
+//  3. 语义上明确声明"本段不含答案"——避免模型把填充语料当成需要总结的正文。
+const fillerSentence = "这是长上下文填充语料，本段不包含任何答案或暗号，仅用于把上下文撑到目标长度，请忽略本段内容。"
+
+// resolveFillerToken 解析 "filler:<字符数>"，返回由 fillerSentence 重复拼接、
+// 精确截断到该字符数（按 rune 计，不是字节）的确定性文本。
+//
+// 为什么参数是字符数而不是 token 数：token 数取决于供应商的分词器，测试台
+// 无法在本地精确计算；用例真正要断言的"输入确实达到了目标规模"由响应体的
+// usage.prompt_tokens 来验证（见 long_context_recall 的 min_prompt_tokens
+// 参数），这里只负责生成一份可复现的、足够大的输入。
+func resolveFillerToken(token string) (any, error) {
+	parts := strings.SplitN(token, ":", 2)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("malformed filler placeholder %q", token)
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err != nil {
+		return nil, fmt.Errorf("filler placeholder %q 的字符数参数不是整数: %w", token, err)
+	}
+	if n < 0 {
+		return nil, fmt.Errorf("filler placeholder %q 的字符数不能为负", token)
+	}
+	unit := []rune(fillerSentence)
+	out := make([]rune, 0, n)
+	for len(out) < n {
+		remain := n - len(out)
+		if remain >= len(unit) {
+			out = append(out, unit...)
+			continue
+		}
+		out = append(out, unit[:remain]...)
+	}
+	return string(out), nil
 }

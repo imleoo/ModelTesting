@@ -4,11 +4,13 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/leoobai/modeltestbed/internal/anthropicapi"
 	"github.com/leoobai/modeltestbed/internal/assertion"
 	"github.com/leoobai/modeltestbed/internal/client"
 	"github.com/leoobai/modeltestbed/internal/model"
@@ -23,6 +25,62 @@ type Engine struct {
 	Materials  *suitedef.MaterialsManifest
 	Capability model.CapabilityProfile
 	RenderCtx  render.Context
+	// Style 决定全局基线校验/响应解析/流式结束判定走哪种协议形状，取值见
+	// suitedef.StyleOpenAIChatCompletions/StyleAnthropicMessages；空值按
+	// StyleOpenAIChatCompletions 处理，保持 kimi-k3 现状行为不变。调用方
+	// （如 cmd/testbed-cli）应把它设成与 Suite.Protocol.Style 一致的值。
+	Style string
+}
+
+// 以下几个 helper 是本文件唯一按协议分流的地方：其余全部编排逻辑（含
+// internal/assertion 的断言函数）保持协议无关，靠 anthropicapi.ParseResponse
+// 把 Anthropic 响应归一化成 openaiapi.Response 复用。Style=="" 或
+// StyleOpenAIChatCompletions 时，下面每个 helper 的行为必须与改动前逐字节
+// 一致——这是保护 kimi-k3 既有回归测试的硬约束。
+
+// schemaBaselineLabel 用于失败原因文案，避免 Anthropic 套件的报告里出现
+// "openai_schema_valid 未通过" 这种协议名对不上的误导性文字。
+func (e *Engine) schemaBaselineLabel() string {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return "anthropic_schema_valid"
+	}
+	return "openai_schema_valid"
+}
+
+func (e *Engine) parseResponse(raw []byte) (openaiapi.Response, error) {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return anthropicapi.ParseResponse(raw)
+	}
+	return openaiapi.ParseResponse(raw)
+}
+
+func (e *Engine) validateNonStreamSchema(raw []byte) (bool, []string) {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return anthropicapi.ValidateSchema(raw, false)
+	}
+	return openaiapi.ValidateSchema(raw, false)
+}
+
+// isStreamComplete 替代直接读取 cr.SSEResult.SawDone：OpenAI 协议的
+// "[DONE]" 哨兵由 internal/sse.Parse 在扫描阶段就识别并写入 SawDone；
+// Anthropic 协议没有这个哨兵，改为扫描分片里是否出现 message_stop 事件
+// （见 internal/anthropicapi/stream.go），两种协议的判定入口在这里统一。
+func (e *Engine) isStreamComplete(cr client.CallResult) bool {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return anthropicapi.IsStreamComplete(cr.SSEResult.Chunks)
+	}
+	return cr.SSEResult.SawDone
+}
+
+// finalStreamUsage 返回一次流式请求"最终应该拿到 usage 的那个分片"携带的
+// usage，供 usage_fields_stream 断言使用。两种协议对"哪个分片是最终分片"
+// 的定义不同（OpenAI 是 [DONE] 前最后一包，Anthropic 是最后一个
+// message_delta 分片），分流逻辑收在这里，调用方不用关心协议差异。
+func (e *Engine) finalStreamUsage(cr client.CallResult) (*openaiapi.Usage, bool) {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return anthropicapi.FinalUsage(cr.SSEResult.Chunks)
+	}
+	return lastChunkUsage(cr)
 }
 
 // capabilityGate 判断用例是否应该跳过（标记 NOT_DECLARED）。
@@ -68,6 +126,13 @@ func (e *Engine) isCapabilityDeclared(tag string) bool {
 		return e.Capability.ToolChoiceFunction
 	case "reasoning_effort":
 		return e.Capability.ReasoningEffort
+	case "prompt_cache":
+		return e.Capability.PromptCache
+	case "long_context":
+		// 长上下文能力用「声明了上下文窗口上限」表达，而不是再加一个布尔量：
+		// 用例本身需要这个数值来算 min_prompt_tokens，一个只说"支持"却不说
+		// "支持到多少"的布尔量对这条用例没有意义。
+		return e.Capability.ContextWindowTokens > 0
 	default:
 		return false
 	}
@@ -122,6 +187,16 @@ func (e *Engine) RunCase(ctx context.Context, c suitedef.Case) model.CaseResult 
 		e.runReasoningEffortScaling(ctx, c, &result)
 	case "rejects_invalid_request":
 		e.runRejectsInvalidRequest(ctx, c, &result)
+	case "max_tokens_truncation":
+		e.runSingleNonStream(ctx, c, &result, e.scoreMaxTokensTruncation)
+	case "stop_sequence_respected":
+		e.runSingleNonStream(ctx, c, &result, e.scoreStopSequenceRespected)
+	case "long_context_recall":
+		e.runSingleNonStream(ctx, c, &result, e.scoreLongContextRecall)
+	case "deterministic_repeat":
+		e.runDeterministicRepeat(ctx, c, &result)
+	case "prompt_cache_hit_rate":
+		e.runPromptCacheHitRate(ctx, c, &result)
 	default:
 		result.Status = model.StatusFail
 		result.FailReason = fmt.Sprintf("未知断言类型 %q", c.AssertionType)
@@ -183,49 +258,85 @@ func newAttempt(idx int, variantLabel string, cr client.CallResult) model.CaseAt
 	}
 }
 
+// newAttemptTraced 在 newAttempt 之上按用例声明的 trace_body_max_chars 截断
+// 请求体/响应体留痕。默认（未声明或 <=0）不截断，保持设计方案 04 节"每用例
+// 强制留痕完整请求体&响应体"的现状。只有长上下文这类单个请求体就上百万字符的
+// 用例才该显式打开——否则一条用例就能把结果 JSON 撑到几百 MB，报告根本打不开。
+func (e *Engine) newAttemptTraced(c suitedef.Case, idx int, variantLabel string, cr client.CallResult) model.CaseAttempt {
+	a := newAttempt(idx, variantLabel, cr)
+	if maxChars := c.ParamInt("trace_body_max_chars", 0); maxChars > 0 {
+		a.RequestBody = truncateTrace(a.RequestBody, maxChars)
+		a.ResponseBody = truncateTrace(a.ResponseBody, maxChars)
+	}
+	return a
+}
+
+func truncateTrace(s string, maxChars int) string {
+	r := []rune(s)
+	if len(r) <= maxChars {
+		return s
+	}
+	return string(r[:maxChars]) + fmt.Sprintf("\n...[留痕已按 trace_body_max_chars=%d 截断，原文共 %d 字符]", maxChars, len(r))
+}
+
 // scoreFunc 对一次已完成的调用做业务断言，填充 attempt.Passed/FailReason。
 type scoreFunc func(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt)
 
-func (e *Engine) runSingleNonStream(ctx context.Context, c suitedef.Case, result *model.CaseResult, score scoreFunc) {
-	cr, err := e.doCall(ctx, c, nil)
-	attempt := newAttempt(1, "", cr)
-	if err != nil {
-		attempt.Passed = false
-		attempt.FailReason = err.Error()
-	} else if cr.TransportErr != nil {
-		attempt.Passed = false
-		attempt.FailReason = cr.TransportErr.Error()
-	} else if cr.HTTPStatus != 200 {
-		attempt.Passed = false
-		attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
-	} else if ok, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !ok {
-		attempt.Passed = false
-		attempt.FailReason = "openai_schema_valid 未通过: " + joinViolations(violations)
-	} else {
-		score(c, cr, &attempt)
+// repeatCount 返回单变体应重复请求的次数。RepeatAttempts 未填（0）或非法（负数）
+// 时按 1 次处理——kimi-k3 套件里除 reasoning_effort 外全部是 1，行为不变。
+// z-ai 套件用 >1 的取值来复现截图里"usage 对象字段不稳定"这类偶发问题：单次
+// 请求碰巧正常并不能证明字段稳定。
+func repeatCount(c suitedef.Case) int {
+	if c.RepeatAttempts < 1 {
+		return 1
 	}
-	result.CaseAttempts = append(result.CaseAttempts, attempt)
+	return c.RepeatAttempts
+}
+
+func (e *Engine) runSingleNonStream(ctx context.Context, c suitedef.Case, result *model.CaseResult, score scoreFunc) {
+	for i := 0; i < repeatCount(c); i++ {
+		cr, err := e.doCall(ctx, c, nil)
+		attempt := e.newAttemptTraced(c, i+1, "", cr)
+		if err != nil {
+			attempt.Passed = false
+			attempt.FailReason = err.Error()
+		} else if cr.TransportErr != nil {
+			attempt.Passed = false
+			attempt.FailReason = cr.TransportErr.Error()
+		} else if cr.HTTPStatus != 200 {
+			attempt.Passed = false
+			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+		} else if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+			attempt.Passed = false
+			attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
+		} else {
+			score(c, cr, &attempt)
+		}
+		result.CaseAttempts = append(result.CaseAttempts, attempt)
+	}
 }
 
 func (e *Engine) runSingleStream(ctx context.Context, c suitedef.Case, result *model.CaseResult, score scoreFunc) {
-	cr, err := e.doCall(ctx, c, nil)
-	attempt := newAttempt(1, "", cr)
-	if err != nil {
-		attempt.Passed = false
-		attempt.FailReason = err.Error()
-	} else if cr.TransportErr != nil {
-		attempt.Passed = false
-		attempt.FailReason = cr.TransportErr.Error()
-	} else if cr.HTTPStatus != 200 {
-		attempt.Passed = false
-		attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
-	} else if ok, reason := validateStreamSchema(cr); !ok {
-		attempt.Passed = false
-		attempt.FailReason = "openai_schema_valid 未通过: " + reason
-	} else {
-		score(c, cr, &attempt)
+	for i := 0; i < repeatCount(c); i++ {
+		cr, err := e.doCall(ctx, c, nil)
+		attempt := e.newAttemptTraced(c, i+1, "", cr)
+		if err != nil {
+			attempt.Passed = false
+			attempt.FailReason = err.Error()
+		} else if cr.TransportErr != nil {
+			attempt.Passed = false
+			attempt.FailReason = cr.TransportErr.Error()
+		} else if cr.HTTPStatus != 200 {
+			attempt.Passed = false
+			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+		} else if ok, reason := validateStreamSchema(cr); !ok {
+			attempt.Passed = false
+			attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + reason
+		} else {
+			score(c, cr, &attempt)
+		}
+		result.CaseAttempts = append(result.CaseAttempts, attempt)
 	}
-	result.CaseAttempts = append(result.CaseAttempts, attempt)
 }
 
 // runRejectsInvalidRequest 承载"网关应对非法输入做校验，返回 4xx 而不是
@@ -618,22 +729,36 @@ func (e *Engine) runReasoningEffortScaling(ctx context.Context, c suitedef.Case,
 		return
 	}
 
-	lowAgg, lowOK := majority(tierTokens["low"])
-	if !lowOK {
-		result.Status = model.StatusFail
-		result.FailReason = "low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数）"
-		return
+	// 要求"有可观测差异"的档位对：默认 low vs high（kimi-k3 的 04 节口径，
+	// 套件不填 assertion_params 时行为不变）。z.ai 这类把 low 与 high 映射到
+	// 同一档思考强度的供应商，必须在套件里显式声明真正可区分的档位对
+	// （如 [["low","max"]]），否则这条用例会因为供应商侧的档位映射而恒失败，
+	// 那是套件口径没对齐，不是模型不合格。
+	pairs := c.ParamStringPairs("required_distinct_pairs")
+	if len(pairs) == 0 {
+		pairs = [][2]string{{"low", "high"}}
 	}
-	highAgg, highOK := majority(tierTokens["high"])
-	if !highOK {
-		result.Status = model.StatusFail
-		result.FailReason = "high 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数）"
-		return
-	}
-	if lowAgg == highAgg {
-		result.Status = model.StatusFail
-		result.FailReason = fmt.Sprintf("low 档与 high 档的 reasoning_tokens 多数结果均为 %d，无可观测差异", lowAgg)
-		return
+	for _, pair := range pairs {
+		aAgg, aOK := majority(tierTokens[pair[0]])
+		if !aOK {
+			result.Status = model.StatusFail
+			result.FailReason = fmt.Sprintf("%s 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数；该档共 %d 次采样）",
+				pair[0], len(tierTokens[pair[0]]))
+			return
+		}
+		bAgg, bOK := majority(tierTokens[pair[1]])
+		if !bOK {
+			result.Status = model.StatusFail
+			result.FailReason = fmt.Sprintf("%s 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数；该档共 %d 次采样）",
+				pair[1], len(tierTokens[pair[1]]))
+			return
+		}
+		if aAgg == bAgg {
+			result.Status = model.StatusFail
+			result.FailReason = fmt.Sprintf("%s 档与 %s 档的 reasoning_tokens 多数结果均为 %d，无可观测差异",
+				pair[0], pair[1], aAgg)
+			return
+		}
 	}
 	result.Status = model.StatusPass
 }
@@ -759,4 +884,210 @@ func extractJSONSchema(c suitedef.Case) (map[string]any, bool) {
 	}
 	schema, ok := js["schema"].(map[string]any)
 	return schema, ok
+}
+
+// ── z-ai 套件引入的断言编排（见 suites/z-ai/SCHEMA.md）。判定逻辑本身都在
+// internal/assertion，这里只负责取参数、组织请求次数、填留痕。
+
+// requestBodyField 从本次调用的**实际请求体**里取一个顶层字段。判定参数必须
+// 取自真正发出去的那个 body，而不是用例模板：模板里的值可能被 variant 的
+// request_overrides 覆盖，用模板值去校验会出现"断言按 16 判、实际发了 32"的
+// 错位。ok=false 表示请求体不可解析或没有该字段。
+func requestBodyField(cr client.CallResult, key string) (any, bool) {
+	var body map[string]any
+	if err := json.Unmarshal([]byte(cr.RequestBody), &body); err != nil {
+		return nil, false
+	}
+	v, ok := body[key]
+	return v, ok
+}
+
+func (e *Engine) scoreMaxTokensTruncation(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	raw, ok := requestBodyField(cr, "max_tokens")
+	if !ok {
+		attempt.Passed, attempt.FailReason = false, "用例定义缺少 max_tokens，无法校验强制截断"
+		return
+	}
+	maxTokens, ok := raw.(float64)
+	if !ok || maxTokens <= 0 {
+		attempt.Passed, attempt.FailReason = false, fmt.Sprintf("请求体 max_tokens 取值非法: %v", raw)
+		return
+	}
+	v := assertion.MaxTokensTruncation(resp, int(maxTokens))
+	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+}
+
+func (e *Engine) scoreStopSequenceRespected(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	raw, ok := requestBodyField(cr, "stop")
+	if !ok {
+		attempt.Passed, attempt.FailReason = false, "用例定义缺少 stop 字段，无法校验 stop 语义"
+		return
+	}
+	var stops []string
+	switch v := raw.(type) {
+	case string:
+		stops = []string{v}
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				stops = append(stops, s)
+			}
+		}
+	}
+	if len(stops) == 0 {
+		attempt.Passed, attempt.FailReason = false, fmt.Sprintf("请求体 stop 取值非法: %v", raw)
+		return
+	}
+	verdict := assertion.StopSequenceRespected(resp, stops, c.ParamString("must_contain", ""))
+	attempt.Passed, attempt.FailReason = verdict.Passed, verdict.Reason
+}
+
+func (e *Engine) scoreLongContextRecall(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	needle := c.ParamString("needle", "")
+	if needle == "" {
+		attempt.Passed, attempt.FailReason = false, "用例定义缺少 assertion_params.needle，无法校验长上下文找回"
+		return
+	}
+	minPromptTokens := c.ParamInt("min_prompt_tokens", 0)
+	if minPromptTokens <= 0 {
+		attempt.Passed, attempt.FailReason = false, "用例定义缺少 assertion_params.min_prompt_tokens（必须 >0），无法确认输入是否被截断"
+		return
+	}
+	if resp.Usage != nil {
+		attempt.Metrics = map[string]float64{"prompt_tokens": float64(resp.Usage.PromptTokens)}
+	}
+	v := assertion.LongContextRecall(resp, needle, minPromptTokens)
+	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+}
+
+// runDeterministicRepeat 编排 temperature=0 确定性用例：同一请求连发
+// repeat_attempts 次，全部成功后比对输出是否逐字节一致。比对结论同时写回每一条
+// attempt——报告里点开任意一次采样都应能看到"是这组采样整体不一致"，而不是只有
+// 最后一次带失败原因。
+func (e *Engine) runDeterministicRepeat(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
+	n := repeatCount(c)
+	if n < 2 {
+		result.Status = model.StatusFail
+		result.FailReason = "deterministic_repeat 用例的 repeat_attempts 必须 ≥2，否则没有可比对的第二次采样"
+		return
+	}
+	texts := make([]string, 0, n)
+	allOK := true
+	for i := 0; i < n; i++ {
+		cr, err := e.doCall(ctx, c, nil)
+		attempt := e.newAttemptTraced(c, i+1, "", cr)
+		switch {
+		case err != nil:
+			attempt.FailReason = err.Error()
+		case cr.TransportErr != nil:
+			attempt.FailReason = cr.TransportErr.Error()
+		case cr.HTTPStatus != 200:
+			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+		default:
+			if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+				attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
+			} else if resp, perr := e.parseResponse([]byte(cr.ResponseBody)); perr != nil {
+				attempt.FailReason = "响应体解析失败: " + perr.Error()
+			} else if len(resp.Choices) == 0 || resp.Choices[0].Message == nil || resp.Choices[0].Message.Content == nil {
+				attempt.FailReason = "响应缺少 content，无法比对确定性"
+			} else {
+				texts = append(texts, *resp.Choices[0].Message.Content)
+				attempt.Passed = true
+			}
+		}
+		if !attempt.Passed {
+			allOK = false
+		}
+		result.CaseAttempts = append(result.CaseAttempts, attempt)
+	}
+	if !allOK {
+		// 有采样根本没跑成功时不做一致性判定：拿剩下的几次"凑巧相同"来判 PASS
+		// 会掩盖掉真实故障。交给 finalizeAggregate 按全量 attempt 汇总成 FAIL。
+		return
+	}
+	v := assertion.DeterministicRepeat(texts)
+	for i := range result.CaseAttempts {
+		result.CaseAttempts[i].Passed = v.Passed
+		if !v.Passed {
+			result.CaseAttempts[i].FailReason = v.Reason
+		}
+	}
+}
+
+// runPromptCacheHitRate 编排上下文缓存命中率用例：先发 warmup_requests 次预热
+// 请求把前缀写进缓存，再发一次同样的请求并对它判定命中率。预热请求只校验到
+// "请求本身成功"为止，不参与命中率判定——首次请求必然 0 命中，拿它判定等于写了
+// 一条恒假断言。
+func (e *Engine) runPromptCacheHitRate(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
+	warmups := c.ParamInt("warmup_requests", 1)
+	if warmups < 1 {
+		warmups = 1
+	}
+	minRate := c.ParamFloat("min_hit_rate", 0.5)
+
+	for i := 0; i < warmups; i++ {
+		cr, err := e.doCall(ctx, c, nil)
+		attempt := e.newAttemptTraced(c, i+1, "warmup", cr)
+		switch {
+		case err != nil:
+			attempt.FailReason = err.Error()
+		case cr.TransportErr != nil:
+			attempt.FailReason = cr.TransportErr.Error()
+		case cr.HTTPStatus != 200:
+			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+		default:
+			if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+				attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
+			} else {
+				attempt.Passed = true
+			}
+		}
+		result.CaseAttempts = append(result.CaseAttempts, attempt)
+		if !attempt.Passed {
+			return // 预热都没成功，后面那次的命中率没有意义
+		}
+	}
+
+	cr, err := e.doCall(ctx, c, nil)
+	attempt := e.newAttemptTraced(c, warmups+1, "measured", cr)
+	switch {
+	case err != nil:
+		attempt.FailReason = err.Error()
+	case cr.TransportErr != nil:
+		attempt.FailReason = cr.TransportErr.Error()
+	case cr.HTTPStatus != 200:
+		attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+	default:
+		if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+			attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
+		} else if resp, perr := e.parseResponse([]byte(cr.ResponseBody)); perr != nil {
+			attempt.FailReason = "响应体解析失败: " + perr.Error()
+		} else {
+			v, rate := assertion.PromptCacheHitRate(resp, minRate)
+			attempt.Metrics = map[string]float64{"prompt_cache_hit_rate": rate}
+			if resp.Usage != nil {
+				attempt.Metrics["prompt_tokens"] = float64(resp.Usage.PromptTokens)
+				if cached, present := resp.Usage.CachedTokens(); present {
+					attempt.Metrics["cached_tokens"] = float64(cached)
+				}
+			}
+			attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+		}
+	}
+	result.CaseAttempts = append(result.CaseAttempts, attempt)
 }

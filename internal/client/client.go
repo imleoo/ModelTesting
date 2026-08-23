@@ -13,12 +13,23 @@ import (
 	"time"
 
 	"github.com/leoobai/modeltestbed/internal/sse"
+	"github.com/leoobai/modeltestbed/internal/suitedef"
 )
+
+// anthropicVersion 是 Anthropic Messages API 要求的 anthropic-version 请求头
+// 取值。已用真实请求验证（2026-08-19，对 kiro.leoobai.cn/cc 与 api.we2ai.com）
+// 生效，固定写死在这里，不做成套件可配置项——按 YAGNI 原则，除非以后遇到
+// 需要覆盖该版本号的供应商，再引入配置项。
+const anthropicVersion = "2023-06-01"
 
 type Client struct {
 	BaseURL    string
 	APIKey     string
 	HTTPClient *http.Client
+	// Style 决定发起请求时用哪种鉴权头，取值见 internal/suitedef 的
+	// StyleOpenAIChatCompletions/StyleAnthropicMessages；空值按
+	// StyleOpenAIChatCompletions 处理，保持现状行为不变。
+	Style string
 }
 
 func New(baseURL, apiKey string) *Client {
@@ -58,7 +69,12 @@ func (c *Client) Call(ctx context.Context, path string, body map[string]any, tim
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if c.APIKey != "" {
-		req.Header.Set("Authorization", "Bearer "+c.APIKey)
+		if c.Style == suitedef.StyleAnthropicMessages {
+			req.Header.Set("x-api-key", c.APIKey)
+			req.Header.Set("anthropic-version", anthropicVersion)
+		} else {
+			req.Header.Set("Authorization", "Bearer "+c.APIKey)
+		}
 	}
 
 	streamed, _ := body["stream"].(bool)
