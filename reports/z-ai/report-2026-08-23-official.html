@@ -1,0 +1,818 @@
+<title>自测报告 · glm-5.2</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 2rem auto; max-width: 1100px; color: #1a1a1a; line-height: 1.5; }
+  h1 { font-size: 1.5rem; border-bottom: 2px solid #333; padding-bottom: .5rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; border-left: 4px solid #444; padding-left: .5rem; }
+  table { border-collapse: collapse; width: 100%; margin: .75rem 0 1.5rem; font-size: .9rem; }
+  th, td { border: 1px solid #ccc; padding: .4rem .6rem; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+  .badge { display: inline-block; padding: .1rem .5rem; border-radius: 3px; font-weight: 600; font-size: .8rem; }
+  .badge-PASS, .badge-OK { background: #d4edda; color: #155724; }
+  .badge-FAIL { background: #f8d7da; color: #721c24; }
+  .badge-NOT_DECLARED, .badge-NOT_APPLICABLE { background: #e2e3e5; color: #383d41; }
+  .badge-MANUAL_REVIEW, .badge-PENDING, .badge-PENDING_MANUAL_REVIEW, .badge-SAME_ORDER { background: #fff3cd; color: #856404; }
+  .verdict-box { border: 2px solid #333; padding: 1rem; border-radius: 6px; margin: 1rem 0; }
+  .reasons { font-size: .85rem; color: #555; margin: .25rem 0 0 1rem; }
+  details { margin: .25rem 0; }
+  summary { cursor: pointer; color: #333; font-size: .85rem; }
+  pre { white-space: pre-wrap; word-break: break-all; background: #f8f8f8; border: 1px solid #ddd; padding: .5rem; font-size: .8rem; max-height: 400px; overflow: auto; }
+  .meta { font-size: .9rem; color: #444; }
+  @media print { body { max-width: 100%; } details { display: block; } summary { display: none; } }
+</style>
+
+<h1>模型自测报告 · glm-5.2</h1>
+
+<h2>一、环境信息</h2>
+<table>
+  <tr><th>模型 ID</th><td>glm-5.2</td></tr>
+  <tr><th>API 端点</th><td>https://open.bigmodel.cn/api/paas/v4/chat/completions</td></tr>
+  <tr><th>测试套件</th><td>z-ai · 1.0.0</td></tr>
+  <tr><th>测试日期</th><td>2026-08-23</td></tr>
+  <tr><th>报告生成时间</th><td>2026-08-23T21:35:06&#43;08:00</td></tr>
+</table>
+
+<h2>二、功能测试结果表</h2>
+<p class="meta">基础用例：13 / 18 通过</p>
+<table>
+  <tr><th>用例 ID</th><th>名称</th><th>类别</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>请求/响应明细</th></tr>
+  
+  <tr>
+    <td>connectivity.basic</td>
+    <td>基础单轮请求</td>
+    <td>连通性</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 11637ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风轻抚过沉睡的大地，唤醒了枝头的嫩绿，也催开了满园的繁花。&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求：**\n    *   主题：春天（春天）。\n    *   语言：中文（中文）。\n    *   格式：单个句子（一句...的话）。\n\n2.  **头脑风暴春季意象与主题：**\n    *   觉醒、重生、温暖、花朵绽放、冰雪融化、微风、雨水、绿色。\n    *   关键词：春风（春风）、花开（花朵绽放）、绿意（绿意）、万物复苏（万物复苏）、细雨（毛毛雨）、燕子（燕子）、阳光（阳光）。\n\n3.  **起草句子：**\n    *   *草稿 1：* 春风吹过大地，万物复苏，到处都是绿意盎然的景象。（有点普通）\n    *   *草稿 2：* 春天的细雨滋润了大地，让沉睡的花朵重新绽放了笑容。（更好一些，富有诗意）\n    *   *草稿 3：* 春天像一位温柔的画师，用绿色的画笔染绿了枝头，用五彩的颜料唤醒了满园的繁花。（比喻，意象优美）\n    *   *草稿 4：* 春风轻抚过枝头，唤醒了沉睡的嫩芽，万物在这温柔的暖阳中悄然复苏。（优雅，引人共鸣）\n\n4.  **选择最佳选项：**\n    草稿4或草稿3都不错。让我们采用草稿3/4的变体，使其优美、简洁，并捕捉春天的精髓。\n    \&#34;春风轻抚过沉睡的大地，唤醒了枝头的嫩绿，也催开了满园的繁花。\&#34;（春风轻抚沉睡的大地，唤醒枝头的嫩绿，并催促满园花朵绽放。）\n\n5.  **润色：**\n    \&#34;春风轻抚过沉睡的大地，唤醒了枝头的嫩绿，也催开了满园的繁花。\&#34;\n    这句话富有诗意，结构平衡，并且描绘了一幅清晰的春日景象。\n\n6.  **最终输出生成：** 按要求提供选定的句子。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491125,&#34;id&#34;:&#34;20260823211833b76555955bf54521&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823211833b76555955bf54521&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:472,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:445},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:493}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>protocol.usage_nonstream</td>
+    <td>非流式对话（Usage 字段稳定性）</td>
+    <td>协议完整性</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>5/5</td>
+    <td></td>
+    <td>
+<details><summary>5 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 6243ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风轻拂过沉睡的枝头，唤醒了满树繁花，将温柔与生机悄然洒满人间。&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求**：\n    *   语言：中文（中文）\n    *   主题：春天（春天）\n    *   格式：单句（一句...的话）\n2.  **头脑风暴春天的意象**：\n    *   花朵绽放，绿草如茵，燕子归来，冰雪融化，暖风，细雨。\n    *   春天的感觉：希望，复苏，温暖，生机。\n3.  **起草句子**：\n    *   *选项1（简单）：* 春天来了，花儿开了，草绿了。（有点太基础了）\n    *   *选项2（诗意）：* 春风轻拂，唤醒了沉睡的大地，万物在明媚的阳光中绽放生机。（不错，有画面感）\n    *   *选项3（简短且引人共鸣）：* 春风化作千丝细雨，润透了枯枝，催开了一树繁花。（非常有诗意）\n    *   *选项4（经典意象）：* 陌上花开，春风十里，万物温柔地苏醒在这明媚的暖阳里。（优美且引人共鸣）\n4.  **选择最佳选项**：选项4或稍作修改的选项2都不错。我们选一个平衡、富有诗意且能引起普遍共鸣的句子。\n    *   \&#34;春风轻拂过沉睡的大地，唤醒了满树繁花与一池新绿，将温柔与生机洒满人间。\&#34;（春风轻拂过沉睡的大地，唤醒了满树繁花与一池新绿，将温柔与生机洒满世间。）\n5.  **最终润色**：使其简洁而富有诗意。\n    \&#34;春风轻拂过沉睡的枝头，唤醒了满树繁花，将温柔与生机悄然洒满人间。\&#34;（春风轻拂过沉睡的枝头，唤醒了满树繁花，悄然将温柔与生机洒满世间。）\n6.  **生成输出**：按照要求仅呈现该句子。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491131,&#34;id&#34;:&#34;202608232118458d9ab2a99eb04f51&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232118458d9ab2a99eb04f51&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:449,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:421},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:470}}</pre>
+
+<p class="meta">第 2 次（）· HTTP 200 · 8567ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风送暖，万物复苏，枝头的嫩绿与绽放的繁花共同唤醒了大地无尽的生机与希望。&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求：**\n    *   主题：Spring (春天)\n    *   语言：Chinese (中文)\n    *   格式：一个单句 (一句...的话)\n\n2.  **头脑风暴春天的意象与主题：**\n    *   花朵绽放 (花开)\n    *   微风轻拂 (春风)\n    *   燕子归来 (燕子归来)\n    *   绿柳 (绿柳)\n    *   万物复苏/重生 (万物复苏)\n    *   希望、温暖、新的开始\n\n3.  **起草句子：**\n    *   *草稿 1：* 春天来了，万物复苏，花儿都开了。 (有点太平淡了)\n    *   *草稿 2：* 春风轻轻吹过，唤醒了沉睡的大地，漫山遍野开满了鲜花。 (更好一些，更具描述性)\n    *   *草稿 3：* 春风送暖，万物复苏，满山遍野的绿意里藏着无尽的希望与生机。 (优美，富有诗意，简洁)\n    *   *草稿 4：* 春天是一首轻柔的诗，用温暖的微风和绽放的繁花，唤醒了大地沉睡的生机。 (非常有诗意)\n\n4.  **选择并润色最佳选项：**\n    草稿 4 或草稿 3 的润色版本都不错。我们采用一种平衡、有氛围感且优雅的表达吧。\n    \&#34;春风送暖，万物复苏，绿意在枝头悄然蔓延，唤醒了满世界的生机与希望。\&#34; (春风送来温暖，万物复苏，绿意在枝头悄然蔓延，唤醒了一个充满生机与希望的世界。)\n\n    让我们把它变得稍微更简短、更引人回味一些：\n    \&#34;春风拂过，万物复苏，枝头的绿意与绽放的繁花共同谱写着一首关于希望的赞歌。\&#34; (当春风拂过，万物复苏，枝头的绿意与绽放的繁花共同谱写着一首关于希望的赞歌。)\n\n    让我们选择一些简单但极具画面感的表达：\n    \&#34;春风轻抚过大地，唤醒了沉睡的万物，让满园的繁花在暖阳下肆意绽放。\&#34; (春风轻抚过大地，唤醒了沉睡的万物，让满园的繁花在暖阳下肆意绽放。)\n\n5.  **最终润色（确保恰好是“一句话”）：**\n    春风送暖，万物复苏，枝头的嫩绿与绽放的繁花共同唤醒了大地无尽的生机与希望。 (很好，涵盖了精髓，并且恰好是一句话)。\n\n6.  **生成输出：**直接提供选定的句子即可。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491140,&#34;id&#34;:&#34;202608232118519eea06fe58e94ff4&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232118519eea06fe58e94ff4&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:598,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:571},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:619}}</pre>
+
+<p class="meta">第 3 次（）· HTTP 200 · 10084ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风轻抚过沉睡的大地，唤醒了万物，让每一寸泥土都悄然绽放出新绿与希望。&#34;,&#34;reasoning_content&#34;:&#34;1. **分析请求：**\n   * 主题：Spring（春天）。\n   * 语言：Chinese（中文）。\n   * 格式：A single sentence（一句...话）。\n\n2. **头脑风暴春天的意象与主题：**\n   * 复苏、万物复苏、绿草、繁花盛开、冰雪消融、和风、暖阳、希望、生机。\n   * 关键词：春风、万物复苏、繁花、生机盎然、绿意、暖阳。\n\n3. **起草句子（迭代过程）：**\n   * *草案1（字面/简单）：* 春天来了，天气变暖了，花儿都开了。（太平淡）\n   * *草案2（诗意/描述性）：* 春风轻轻吹过，大地披上了绿色的新装，满眼的鲜花都在微笑着迎接春天的到来。（有些老套，但还可以）。\n   * *草案3（简练且引人共鸣）：* 春风化雨，万物复苏，枝头的新绿在暖阳下悄然绽放着生机与希望。（意象很好，感觉优美平衡）。\n   * *草案4（简单却极具感染力）：* 春风拂过大地，唤醒了沉睡的万物，让每一寸泥土都绽放出生机与希望。（强烈的意象）。\n\n4. **选择最佳选项：**\n   * 草案4或草案3的修改版本。让它优美而简洁。\n   * “春风轻抚过大地，唤醒了沉睡的万物，让每一寸生机都在暖阳下悄然绽放。”（春风轻抚过大地，唤醒沉睡的万物，让每一寸生机在暖阳下悄然绽放。）\n   * 等等，保持更具诗意且简单：“春风化作温柔的笔触，在沉睡的大地上绘出了一幅生机盎然的万物复苏图。”（太长）。\n   * 用这个吧：“春风轻拂过沉睡的大地，唤醒了万物，让每一寸泥土都绽放出嫩绿的新生与希望。”（春风轻拂沉睡的大地，唤醒万物，让每一寸泥土绽放出嫩绿的新生与希望。）\n   * 替代方案（更经典的韵味）：“春风一拂，冰雪消融，万物在这温润的阳光里悄然苏醒，绽放出满眼的生机与希望。”\n\n5. **最终润色（只选一句完美的句子）：**\n   春风轻抚大地，唤醒了沉睡的万物，让每一寸泥土都绽放出新绿与希望。\n   （春风轻抚大地，唤醒沉睡的万物，让每一寸泥土绽放出新绿与希望。）\n\n6. **对照限制条件审查：** 是中文吗？是的。是关于春天的吗？是的。是一句话吗？是的。\n\n7. **输出生成：** 直接输出选定的句子。\n   “春风轻抚过沉睡的大地，唤醒了万物，让每一寸泥土都悄然绽放出新绿与希望。”（添加了“过”和“悄然”以改善节奏）。\n   就输出这个。\n   “春风轻抚过沉睡的大地，唤醒了万物，让每一寸泥土都悄然绽放出新绿与希望。”\n   完美。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491150,&#34;id&#34;:&#34;20260823211900a20c064ff8e44e3b&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823211900a20c064ff8e44e3b&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:700,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:673},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:721}}</pre>
+
+<p class="meta">第 4 次（）· HTTP 200 · 11949ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与繁花。&#34;,&#34;reasoning_content&#34;:&#34;1. **分析请求：**\n    * 主题：Spring (春天)\n    * 语言：Chinese (中文)\n    * 格式：A single sentence (一句...的话)\n\n2. **头脑风暴意象与主题：**\n    * 复苏、花朵、绿芽、微风、冰雪消融、温暖、希望。\n    * 诗意表达：春风又绿江南岸, 春暖花开, 万物复苏, 草长莺飞.\n    * 隐喻：春天是大自然的苏醒，是一封温柔的来信。\n\n3. **起草句子：**\n    * 选项1：春天来了，万物复苏，到处都是生机勃勃的景象。 (有点陈词滥调/普通)\n    * 选项2：春风轻抚过大地的脸庞，唤醒了沉睡一冬的嫩绿与花香。 (充满诗意，意象优美)\n    * 选项3：春天是一封温柔的来信，用满树的繁花和抽芽的绿柳宣告着万物复苏的喜悦。 (非常富有文学色彩和比喻意味)\n    * 选项4：春风化雨，润物无声，悄然而至的春天把大地染成了一派生机盎然的翠绿。 (古典韵味)\n\n4. **选择并提炼最佳选项：**\n    选项2和3都非常不错。我们选一个优雅、引人共鸣的句子，既能捕捉春天的精髓，又不过于复杂。\n    \&#34;春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与繁花。\&#34; (春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与盛开的繁花。)\n    稍微提升一下意境：\&#34;春天像一封温柔的信，用满树繁花与抽芽的嫩绿，宣告着万物复苏的喜悦。\&#34; (春天像一封温柔的信，用满树的繁花与抽芽的嫩绿，宣告着万物复苏的喜悦。) -&gt; 这句非常容易引发共鸣。\n\n    让我们提供一句经过高度润色的句子。\n    \&#34;春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与花香。\&#34;\n\n    或者也许可以写一些更简单、更经典的话：\n    \&#34;春风化雨，万物复苏，枝头的嫩绿与初绽的繁花正诉说着春天的温柔。\&#34; (春风化作细雨，万物复苏，枝头的嫩绿与初绽的繁花诉说着春天的温柔。)\n\n    就用这句吧：\n    春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与繁花。\n    (春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与盛开的繁花。)\n\n5. **最终润色：** \&#34;春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与繁花。\&#34; 这句简洁、唯美，且完美契合了提示要求。让我们把它写得更令人振奋一些。\n    \&#34;春风如温柔的画笔，在大地上点染出满目翠绿与繁花似锦。\&#34;\n    (春风宛如温柔的画笔，在大地上点染出满目翠绿与繁花似锦。) -&gt; 这句非常棒。\n\n6. **生成输出：** 呈现所选的句子。我们采用画笔的隐喻，它非常生动。\n    \&#34;春风宛如一位温柔的画师，在大地上悄然点染出满目翠绿与繁花似锦。\&#34;\n    等等，要求是\&#34;一句关于春天的话\&#34;。让我们保持简练优美。\n    \&#34;春风轻柔地拂过大地，唤醒了沉睡一冬的嫩绿与繁花。\&#34; -&gt; 这句很完美，经典且在情感上产生共鸣。我将输出这句。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491162,&#34;id&#34;:&#34;202608232119109f8e30f6cc804c0e&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232119109f8e30f6cc804c0e&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:804,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:781},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:825}}</pre>
+
+<p class="meta">第 5 次（）· HTTP 200 · 9407ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;春风轻柔地拂过枝头，唤醒了满树的新绿与繁花，也将生生不息的希望播种在每一寸泥土里。&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求：**\n    *   **主题：** 春天（Spring）。\n    *   **语言：** 中文（Chinese）。\n    *   **格式：** 一句话（A single sentence）。\n    *   **目标：** 写一句关于春天的句子。\n\n2.  **头脑风暴春天的意象与主题：**\n    *   绽放的花朵（百花齐放, 繁花似锦）\n    *   温暖的微风（春风拂面, 微风不燥）\n    *   新芽/绿色（嫩绿抽芽, 绿意盎然）\n    *   融化的冰雪/雨水（冰雪消融, 春雨绵绵）\n    *   希望/重生（万物复苏, 生机勃勃, 充满希望）\n\n3.  **起草句子：**\n    *   *草稿1（简单）：* 春天来了，万物复苏，到处都是绿油油的。 （有点太平淡了）\n    *   *草稿2（诗意）：* 春风轻抚过大地的脉络，唤醒了沉睡的繁花与绿叶，将希望洒满人间。 （不错，但可能有点过于华丽）\n    *   *草稿3（平衡且引人共鸣）：* 春风轻柔地拂过枝头，唤醒了满树的繁花，也吹暖了人间的岁月。 （优雅且简洁）\n    *   *草稿4（经典感）：* 三月的春风裁出满树的新绿，细雨唤醒了沉睡的繁花，万物都在此刻悄然生长。 （非常生动）\n    *   *草稿5（简短有力）：* 春风化雨，万物复苏，满目皆是生生不息的希望。 （清晰，振奋人心）\n\n4.  **选择最佳选项：**\n    草稿3和草稿5都很棒。让我们提供一个具有高度感染力且精心雕琢的句子。\n    \&#34;春风轻柔地拂过枝头，唤醒了满树的新绿与繁花，将无尽的生机与希望铺满人间。\&#34;（春风轻柔地拂过枝头，唤醒了满树的新绿与繁花，将无尽的生机与希望铺满世界。）\n\n    让我们对其进行润色，使其听起来非常自然且富有诗意：\n    \&#34;春风轻柔地拂过大地，唤醒了枝头的新绿与繁花，将满眼的生机与希望铺满人间。\&#34;\n\n5.  **最终润色：**\n    \&#34;春风轻柔地拂过大地的脉络，唤醒了满枝的新绿与繁花，让一切沉睡的希望都在此刻悄然复苏。\&#34; （有点长）\n    让我们使用更简单、经典的诗意表达：\n    \&#34;春风轻拂过大地，唤醒了沉睡的枝头，让满树的新绿与繁花，将希望铺满人间。\&#34;\n\n    事实上，让我们给出一句真正优美、经过润色的话：\n    \&#34;春风轻柔地拂过枝头，唤醒了满树的新绿与繁花，也将生生不息的希望播种在每一寸泥土里。\&#34;\n\n6.  **输出生成：** 提供所选定的句子。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491171,&#34;id&#34;:&#34;20260823211922ff9d33e5b4fb46bb&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823211922ff9d33e5b4fb46bb&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:691,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:659},&#34;prompt_tokens&#34;:21,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:712}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>protocol.usage_stream</td>
+    <td>流式对话（Usage 结构）</td>
+    <td>协议完整性</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/2</td>
+    <td>openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段</td>
+    <td>
+<details><summary>2 次请求明细</summary>
+
+<p class="meta">第 1 次（no_include_usage）· HTTP 200 · 7385ms · ✗ 未通过：openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:true}</pre>
+<pre>响应：data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;1&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;.  **分析&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;请求：**\n    *   **&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;主题：** 春天\n&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    *   **语言：**&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 中文\n    *   **格式&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：** 一句话\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;   **目标：** 写&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一句优美的/有描述性的关于&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春天的话。\n\n2.&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;  **头脑风暴意象&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;与主题：**\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;   冰雪融化，河水&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;流淌（冰雪消融，&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春水初生）\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;   百花绽放，绿&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;芽（百花齐放，绿&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;意盎然，柳&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;枝吐绿）\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 微风，温暖（&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春风拂面，暖&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;阳）\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 希望与重生（万物&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;复苏，充满希望）\n\n&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;3.  **起草句子&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：**\n    *   *草&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;稿1：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;天来了，冰雪融化，花儿&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;开了，到处都是生机勃勃的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;景象。 （有点太普通/&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;平淡）\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; *草稿2：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;风轻拂过大地，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了沉睡的草木&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，给世界披上了一层嫩&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;绿的新装。 （好&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;些了，更具诗意&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;）\n    *   *草稿3&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：* 春天的风&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;带着微温，吹散了冬&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;日的残寒，让&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;万物在细雨与&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;暖阳中悄然复苏&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。 （非常有诗意，营造&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了一种很好的氛围）\n    *   *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;草稿4：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;日微风拂过枝&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;头，吹开了漫山遍&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;野的繁花，也&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;唤醒了沉睡一&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;冬的温柔与希望。 （意象&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;优美：微风、繁&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花、希望）\n\n4.  **&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;选择最佳选项：**\n   &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 草稿4非常&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;能唤起共鸣，读&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;起来也很顺畅。让我们稍&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;加润色以获得完美的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;节奏。\n    \&#34;春风轻&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;柔地拂过大地&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，唤醒了沉睡一&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;冬的草木，也&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;吹开了满枝的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;繁花与希望。\&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; （春风轻柔地扫&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;过大地，唤醒了沉睡&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一冬的草木，也&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;吹开了满枝的繁&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花与希望。）\n\n5&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;.  **最终润色（&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;保持简洁优雅）：**\n    春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;风轻拂过大地，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了沉睡一冬&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的草木，也将满枝&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的繁花与希望悄然&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;绽放。\n\n    让我们采用&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一句经典且能唤起共鸣的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;句子：\n    \&#34;春风轻&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;柔地拂过大地&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，唤醒了沉睡一冬&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的万物，也吹开了&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;满树繁花与无限&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;希望。\&#34;\n\n6.  **&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;生成输出：**&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 提供选定的句子&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;春风轻柔地拂过&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;大地，唤醒了沉睡一冬&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;的万物，也吹开了满树&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;繁花与无限希望。&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211931ac70d5d44d7c4d4b&#34;,&#34;created&#34;:1787491171,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;finish_reason&#34;:&#34;stop&#34;,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}],&#34;usage&#34;:{&#34;prompt_tokens&#34;:21,&#34;completion_tokens&#34;:543,&#34;total_tokens&#34;:564,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:513}}}
+data: [DONE]
+</pre>
+
+<p class="meta">第 2 次（with_include_usage）· HTTP 200 · 7443ms · ✗ 未通过：openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:true,&#34;stream_options&#34;:{&#34;include_usage&#34;:true}}</pre>
+<pre>响应：data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;1&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;. &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; **分析请求：**\n&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    *   **主题：**&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; Spring (春天)\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; **语言：** Chinese (中文&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;)\n    *   **格式：&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;** A sentence (一句&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;)\n    *   **目标&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：** 写出关于&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春天的优美或描写性的句子。\n\n2&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;.  **头脑风暴意象&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;与主题：**\n   &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; *   恢&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;复生机，繁花盛开&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，冰雪消融，燕子&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;归来，微风吹拂&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，阳光温暖。\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 关键词：春风、&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;繁花、绿意&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;、暖阳、万物&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;复苏。\n\n3.  **&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;起草句子：**\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;   *草稿1&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：* 春风轻轻吹过&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，万物复苏，满&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;山遍野开满了鲜花。 （&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;略显平淡）\n    *   *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;草稿2：* 春天的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;脚步近了，冰雪&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;融化，绿意在枝头蔓延&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，一切都充满了生机。 （&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;很好，经典的感觉）\n    *  &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; *草稿3：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;风拂过大地，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了沉睡的万物，在&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;枝头绽放出满&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;目的绿意与繁&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花。 （更具诗意且&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;引人共鸣）\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;   *草稿4：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;天是一首温柔的诗&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，春风化雨，&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;催开了满树繁花，也&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;温暖了世间的每一个&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;角落。 （非常富有诗意&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;）\n\n4.  **选择并&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;润色最佳句子：**\n    让&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;我们选择一个生动且&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;引人共鸣的句子。\n&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    \&#34;春风拂过大地，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了沉睡的万物，在&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;枝头绽放出满目的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;绿意与繁花。\&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; -&gt; 不错，但让我们&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;让它更具音韵美&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。\n    \&#34;春风化&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;雨润无声，万物复苏&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;之际，大地披上了一&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;袭嫩绿的新装，在繁&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花盛开中诉说着生命的&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;温柔。\&#34;\n\n    让&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;我们保持优雅但不要&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;过于复杂。\n    \&#34;春风轻&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;抚过大地，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了沉睡的万物，枝&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;头吐露的新绿与&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;漫山遍野的繁花，&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;交织成一首生机盎&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;然的春之赞歌。\&#34; （&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春风轻抚过大地，唤醒沉&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;睡的万物；枝头&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;吐露的新绿与漫&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;山遍野的繁花交织&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;在一起，构成了一首生机&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;盎然的春之赞&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;歌。）\n\n5.  **最终&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;润色：**\n    春&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;风轻抚过大地，&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;唤醒了沉睡的万物，&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;枝头吐露的新&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;绿与漫山遍野的繁&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花，交织成一首&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;生机盎然的春之&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;赞歌。\n\n6. &#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; **生成输出：**&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 按要求呈现该&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;句子。&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;春风轻抚&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;过大地，唤醒了沉睡&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;的万物，枝头吐露的新&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;绿与漫山遍野的繁&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;花，交织成一首生机盎然的&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;春之赞歌。&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;20260823211938e38b83597a1b4b87&#34;,&#34;created&#34;:1787491179,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;finish_reason&#34;:&#34;stop&#34;,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}],&#34;usage&#34;:{&#34;prompt_tokens&#34;:21,&#34;completion_tokens&#34;:567,&#34;total_tokens&#34;:588,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:526}}}
+data: [DONE]
+</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>protocol.stream_integrity</td>
+    <td>Stream 完整性</td>
+    <td>协议完整性</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/1</td>
+    <td>openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段</td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 9813ms · ✗ 未通过：openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一句关于春天的话。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:true}</pre>
+<pre>响应：data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;1&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;. **&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;分析请求：**\n    * &#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;主题：Spring (春天)\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    * 语言：Chinese&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; (中文)\n    * 格&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;式：A single sentence&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; (一句)\n    * 目&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;标：写一句描写&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春天或关于春天的话&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。\n\n2. **头脑风暴意象&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;与主题：**\n   &#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; * 觉醒、&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;绽放、微风、绿色&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;、温暖、希望。\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    * \&#34;春风拂&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;过柳梢\&#34; (Spring&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; breeze brushes the willow branches)\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    * \&#34;万物复苏\&#34; (All&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; things come back to life)\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    * \&#34;繁花似锦\&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; (Flowers blooming like brocade&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;)\n    * \&#34;春雨润&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;物无声\&#34; (Spring rain&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; moistening things silently)\n\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;3. **起草句子：&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;**\n    * *选项&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;1：* 春风轻&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;拂过柳枝，唤醒了&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;满地的新绿与&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;繁花。 - *不错&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，富有诗意。*\n    * *&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;选项2：* 春天&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;迈着轻盈的步伐，用&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;温柔的微风唤醒了沉睡&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的万物。 - *&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;有点陈词滥调，&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;但很扎实。*\n    *&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; *选项3：*&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 细雨润酥了初&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;醒的泥土，枝&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;头悄然绽放的嫩绿&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;宣告着春天的降临。 - *非常&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;生动。*\n    * *选项4&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;（经典风格）：* 春&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;风化雨润无声&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，万枝吐绿唤&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;新生。 - *有&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;诗意，可能太正式了&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。*\n\n4. **选择&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;并润色最佳选项&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：**\n    我们选&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一句优雅、能唤&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;起共鸣且被广泛理解&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的诗意散文句子吧&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。\n    \&#34;春风轻拂过河&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;畔的柳枝，唤醒&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;了满城的新绿与繁&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花。\&#34; (The spring breeze gently&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; brushes past the willow branches&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; by the riverbank, awakening the&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; city&#39;s new green and blo&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;oming flowers.)\n    让我们让它&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;稍微简洁且更有感染力一点&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：\n    \&#34;春风轻拂&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;过柳枝，悄然&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;唤醒了满城的新绿与繁&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花。\&#34; (The spring breeze&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; gently brushes past the willow&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; branches, quietly awakening the whole&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; city&#39;s new green and blo&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;oming flowers.)\n\n    让&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;我们试试另一句：\n&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;    \&#34;春风化作温柔的&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;笔触，在大地上画出了&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;满眼的新绿与繁&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花。\&#34; (The spring breeze&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; turns into gentle brushstrokes&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;, painting the earth with&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; eyes full of new green and blo&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;oming flowers.) -&gt; 我&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;喜欢这句，它富有&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;文学气息且画面感很强&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。\n\n5. **最终打磨&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;（中文）：**\n    \&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春风化作温柔的笔触，在大&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;地上悄然绘出满眼&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;的新绿与繁花。&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;\&#34;\n    (The spring&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; breeze acts as a gentle brush, quietly&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; painting the earth with eyes&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; full of new green and blooming&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; flowers.)\n\n6. **对照&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;约束条件进行回顾：** 中文&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;？是的。一句？是的。关于&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;春天？是的。\n\n7. **&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;输出生成：**&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; 呈现选定的句子&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。（可以提供一个简单优美的&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;句子）。保持简单，&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;并按照要求只写&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一句话。\n\n    让我们使用&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;一句经典的、引起共鸣的句子&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;：\n    \&#34;春风轻柔&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;地拂过柳梢&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;，悄然唤醒了满&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;眼的新绿与繁&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;花。\&#34; (The spring breeze&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; gently brushes the willow tips&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;, quietly awakening the eyes full&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34; of new green and blooming flowers&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;.) 这句很完美。简单&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;、优雅且引人回味&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;reasoning_content&#34;:&#34;。&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;春风轻柔地拂过&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;柳梢，悄然唤醒了满眼&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;的新绿与繁花。&#34;,&#34;reasoning_content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}]}
+data: {&#34;id&#34;:&#34;202608232119463f4cc1bc4e684aed&#34;,&#34;created&#34;:1787491186,&#34;object&#34;:&#34;chat.completion.chunk&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;choices&#34;:[{&#34;index&#34;:0,&#34;finish_reason&#34;:&#34;stop&#34;,&#34;delta&#34;:{&#34;role&#34;:&#34;assistant&#34;,&#34;content&#34;:&#34;&#34;}}],&#34;usage&#34;:{&#34;prompt_tokens&#34;:21,&#34;completion_tokens&#34;:697,&#34;total_tokens&#34;:718,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:675}}}
+data: [DONE]
+</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>output_control.max_tokens_truncation</td>
+    <td>max_tokens 强制截断</td>
+    <td>输出控制</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>3/3</td>
+    <td></td>
+    <td>
+<details><summary>3 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 4764ms · ✓ 通过</p>
+<pre>请求：{&#34;max_tokens&#34;:256,&#34;messages&#34;:[{&#34;content&#34;:&#34;请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;length&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;时间是一条没有尽头的河流，而四季则是这条河流上起伏的波浪。在这条浩荡的河流中，我们洗去稚嫩，褪去青涩，走向成熟，最终归于平静。四季的轮回，不仅仅是气候的更迭、景物的变换，更是生命的隐喻，是天地写在岁月长轴上的一首无言的史诗。每一个季节都有其独特的气味、色彩与声响，它们像四位性格迥异的画师，轮流在广袤的大地上挥毫泼墨，将生命的故事一遍遍地讲述。\n\n当第一缕柔和的微风拂过冰封的河面，发出细微的碎裂声时，春，便在寂静中降临了。这是一种不动声色的力量，看似柔弱，却能穿透整个冬日的坚冰与死寂。春天的到来往往不是排山倒海的，而是从地底最深处、从枯枝的最末梢悄然开始的。你若俯下身去，拨开覆盖在泥土上的枯黄落叶，便能看见那些针尖般细小的绿意。它们探头探脑地打量着这个重新变得温润的世界，带着一种初生牛犊般的怯生生与勇敢。\n\n春雨是绵密的，像千丝万缕&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491201,&#34;id&#34;:&#34;20260823211956cf367f98f8bf49b6&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823211956cf367f98f8bf49b6&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:256,&#34;prompt_tokens&#34;:34,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:290}}</pre>
+
+<p class="meta">第 2 次（）· HTTP 200 · 5056ms · ✓ 通过</p>
+<pre>请求：{&#34;max_tokens&#34;:256,&#34;messages&#34;:[{&#34;content&#34;:&#34;请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;length&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;当第一缕风带着些许凛冽的残寒，却又悄然混入了一丝不易察觉的温润时，大地的脉络便开始苏醒。冰雪融化时发出的细微碎裂声，是季节更迭的密语。枯黄的草叶底下，那一点点苍绿正竭力地向上顶着，仿佛要刺破漫长冬日的沉寂。泥土变得柔软，带着一种发酵般的、混合着腐殖质与新生命的气息。这便是春的先声，不张扬，却带着一种不可抗拒的韧性。\n\n春的来临，是一场色彩的渐变与交响。最初是水岸边随风摆动的柳条，那是一种近乎于虚幻的鹅黄，远远望去，像是一团若隐若现的雾气笼罩在枝头。待到几场春雨淅沥落过，那鹅黄便渐渐地深了、浓了，变成了翠绿。春雨是极细极密的，像牛毛，像花针，交织成一张透明的网，笼罩着山川与屋舍。在雨中，桃花开了，杏花白了，连翘黄得耀眼。那些花瓣薄如蝉翼，承不住太重的水珠，偶尔有一滴滚落&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491206,&#34;id&#34;:&#34;202608232120018257042275c44e84&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232120018257042275c44e84&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:256,&#34;prompt_tokens&#34;:34,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:290}}</pre>
+
+<p class="meta">第 3 次（）· HTTP 200 · 5195ms · ✓ 通过</p>
+<pre>请求：{&#34;max_tokens&#34;:256,&#34;messages&#34;:[{&#34;content&#34;:&#34;请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;length&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;当第一缕微风带着些许湿润与柔软拂过面颊时，我知道，那个漫长的、坚硬的蛰伏期终于宣告结束。时间的齿轮在不知不觉中悄然换挡，发出一声清脆的喀哒声，将世界从黑白默片切换入了绚烂的彩卷。四季的轮回，便在这似有若无的风中，缓缓拉开了帷幕。\n\n春的苏醒，总是带着一种试探的意味。起初是风的变化，它不再像冬日那般如同带着钝刀子割人，而是变得温吞起来，像是一双微凉但轻柔的手，慢慢抚平了大地紧皱的眉头。接着是冰雪的消融。那些覆盖在屋檐、树梢、旷野上的白，开始变得透明、残破，最终化作淅淅沥沥的水滴，渗入泥土深处。如果你在清晨走到野外，蹲下身来贴近地面，或许能听到一种极其细微的、类似叹息般的声音——那是泥土在呼吸，是千万颗蛰伏了一整个冬天的种子在伸展腰肢。\n\n然后，绿色就像是某种不可阻挡的潮流，从地平线的边缘开始向内蔓延。但这种绿绝不是夏日里那种浓烈到近乎&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491211,&#34;id&#34;:&#34;202608232120067c1ffe394b8b405c&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232120067c1ffe394b8b405c&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:256,&#34;prompt_tokens&#34;:34,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:290}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>output_control.stop_semantics</td>
+    <td>stop 语义</td>
+    <td>输出控制</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 600ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请严格按下面的格式输出三行，每行一个单词，不要加任何解释、编号或标点：\nALPHA\nBRAVO\nCHARLIE&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stop&#34;:[&#34;BRAVO&#34;],&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;ALPHA\n&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491211,&#34;id&#34;:&#34;202608232120115acdc8407eea4ee0&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232120115acdc8407eea4ee0&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:8,&#34;prompt_tokens&#34;:40,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:48}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>determinism.temperature_zero</td>
+    <td>temperature=0</td>
+    <td>确定性</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/3</td>
+    <td>temperature=0 下第 1 次与第 2 次输出不一致：
+  第 1 次: &#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;
+  第 2 次: &#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;</td>
+    <td>
+<details><summary>3 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 1312ms · ✗ 未通过：temperature=0 下第 1 次与第 2 次输出不一致：
+  第 1 次: &#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;
+  第 2 次: &#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;temperature&#34;:0,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491213,&#34;id&#34;:&#34;2026082321201110e6bfdcb3f1428e&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201110e6bfdcb3f1428e&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:55,&#34;prompt_tokens&#34;:27,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:82}}</pre>
+
+<p class="meta">第 2 次（）· HTTP 200 · 1609ms · ✗ 未通过：temperature=0 下第 1 次与第 2 次输出不一致：
+  第 1 次: &#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;
+  第 2 次: &#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;temperature&#34;:0,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491214,&#34;id&#34;:&#34;2026082321201358e974288b6b44f9&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201358e974288b6b44f9&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:69,&#34;prompt_tokens&#34;:27,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:96}}</pre>
+
+<p class="meta">第 3 次（）· HTTP 200 · 1422ms · ✗ 未通过：temperature=0 下第 1 次与第 2 次输出不一致：
+  第 1 次: &#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;
+  第 2 次: &#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;temperature&#34;:0,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;哈希函数是一种将任意长度数据映射为固定长度摘要的数学算法。它具有单向性，无法从结果反推原数据。由于输入数据的微小变化会导致输出发生剧变，哈希函数常被用于密码存储、数据完整性校验及区块链等领域，以保障信息安全。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491216,&#34;id&#34;:&#34;2026082321201424861104481440eb&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201424861104481440eb&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:62,&#34;prompt_tokens&#34;:27,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:89}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.call_capability</td>
+    <td>工具调用</td>
+    <td>工具调用支持</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 816ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tool_choice&#34;:&#34;required&#34;,&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;tool_calls&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;&#34;,&#34;reasoning_content&#34;:&#34;The user is asking about the weather in Beijing today. I should call the get_weather function with city \&#34;北京\&#34;.&#34;,&#34;role&#34;:&#34;assistant&#34;,&#34;tool_calls&#34;:[{&#34;function&#34;:{&#34;arguments&#34;:&#34;{\&#34;city\&#34;: \&#34;北京\&#34;}&#34;,&#34;name&#34;:&#34;get_weather&#34;},&#34;id&#34;:&#34;call_-7323325543586196211&#34;,&#34;index&#34;:0,&#34;type&#34;:&#34;function&#34;}]}}],&#34;created&#34;:1787491217,&#34;id&#34;:&#34;2026082321201667b6de2f97474165&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201667b6de2f97474165&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:35,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:23},&#34;prompt_tokens&#34;:158,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:193}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.choice_default</td>
+    <td>tool_choice Default（不传）</td>
+    <td>工具调用检测</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 957ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;tool_calls&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;&#34;,&#34;reasoning_content&#34;:&#34;The user is asking about the weather in Beijing today. I should use the get_weather function with city \&#34;北京\&#34;.&#34;,&#34;role&#34;:&#34;assistant&#34;,&#34;tool_calls&#34;:[{&#34;function&#34;:{&#34;arguments&#34;:&#34;{\&#34;city\&#34;: \&#34;北京\&#34;}&#34;,&#34;name&#34;:&#34;get_weather&#34;},&#34;id&#34;:&#34;call_-7322531043355917829&#34;,&#34;index&#34;:0,&#34;type&#34;:&#34;function&#34;}]}}],&#34;created&#34;:1787491217,&#34;id&#34;:&#34;20260823212017996a4e0dd7724e5d&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823212017996a4e0dd7724e5d&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:35,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:23},&#34;prompt_tokens&#34;:158,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:193}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.choice_auto</td>
+    <td>tool_choice auto</td>
+    <td>工具调用检测</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 963ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tool_choice&#34;:&#34;auto&#34;,&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;tool_calls&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;&#34;,&#34;reasoning_content&#34;:&#34;The user is asking about the weather in Beijing. I&#39;ll call the get_weather function with city \&#34;北京\&#34;.&#34;,&#34;role&#34;:&#34;assistant&#34;,&#34;tool_calls&#34;:[{&#34;function&#34;:{&#34;arguments&#34;:&#34;{\&#34;city\&#34;: \&#34;北京\&#34;}&#34;,&#34;name&#34;:&#34;get_weather&#34;},&#34;id&#34;:&#34;call_-7323289087903787252&#34;,&#34;index&#34;:0,&#34;type&#34;:&#34;function&#34;}]}}],&#34;created&#34;:1787491218,&#34;id&#34;:&#34;20260823212018f827f8531edf4652&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823212018f827f8531edf4652&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:34,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:22},&#34;prompt_tokens&#34;:158,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:192}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.choice_required</td>
+    <td>tool_choice required</td>
+    <td>工具调用检测</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 947ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tool_choice&#34;:&#34;required&#34;,&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;tool_calls&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;&#34;,&#34;reasoning_content&#34;:&#34;The user is asking about the weather in Beijing. I should call the get_weather function with the city parameter set to \&#34;北京\&#34;.&#34;,&#34;role&#34;:&#34;assistant&#34;,&#34;tool_calls&#34;:[{&#34;function&#34;:{&#34;arguments&#34;:&#34;{\&#34;city\&#34;: \&#34;北京\&#34;}&#34;,&#34;name&#34;:&#34;get_weather&#34;},&#34;id&#34;:&#34;call_-7323266582275158385&#34;,&#34;index&#34;:0,&#34;type&#34;:&#34;function&#34;}]}}],&#34;created&#34;:1787491219,&#34;id&#34;:&#34;2026082321201889c0c7e81a2c4ab5&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201889c0c7e81a2c4ab5&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:38,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:26},&#34;prompt_tokens&#34;:158,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:196}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.choice_none</td>
+    <td>tool_choice none</td>
+    <td>工具调用检测</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 13326ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tool_choice&#34;:&#34;none&#34;,&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;抱歉，作为一个人工智能，我无法实时获取今天的天气数据。\n\n建议您直接打开手机上的**天气应用**，或者在搜索引擎（如百度、必应）中搜索**“北京天气”**，即可查看最准确的实时气温、穿衣指数和是否下雨等信息。\n\n如果您查到了大致的天气情况，也可以告诉我，我非常乐意为您提供今天的**穿衣建议**或**出行指南**！&#34;,&#34;reasoning_content&#34;:&#34;1. **分析请求：**\n    *   **用户提问：** “北京今天天气怎么样？”（北京今天天气怎么样？）\n    *   **意图：** 用户想知道北京当前的天气情况。\n    *   **限制条件：** 作为一个人工智能，我没有*实时*的网络访问权限，也没有内置的实时天气数据源，除非我使用搜索工具（这在标准的文本生成中通常不启用，或者取决于具体的部署情况）。我需要如实说明这一限制，同时提供获取该信息的最实用方式。\n\n2. **确定最佳方案：**\n    *   *直接回答：* 我无法提供*此刻*准确的实时天气，因为我没有实时数据源。\n    *   *有帮助的替代方案：* 建议用户如何轻松找到它（天气应用、搜索引擎）。\n    *   *模拟/假设（可选但通常容易引起混淆，最好避免）：* 不要随意猜测天气。如果有必要，请使用占位符，但最好还是只解释局限性。\n    *   *一般气候背景（可选）：* 可以提及北京的一般季节（如果是夏天，就说“现在是夏天，通常很热……”），但如果用户只是想要*今天*的天气，这可能显得多此一举。让我们先坚持直接的回答。\n\n3. **起草回复（内心独白/尝试草稿）：**\n    *   *草稿 1：* 我不知道北京今天的天气，因为我没有联网功能。请你打开手机天气应用查看。 （太生硬，有点机械）。\n    *   *草稿 2：* 抱歉，作为一个人工智能，我无法获取实时的天气数据。建议您通过手机上的天气App、或者搜索引擎（如百度、必应）搜索“北京天气”来获取最准确的实时信息。 （好一些，礼貌且实用）。\n    *   *草稿 3（考虑系统时间）：* 如果我知道当前的日期和季节，我可以添加一点背景信息。今天的日期大约是2024年5月（基于典型的当前训练/系统提示，但我也不应该对确切日期假设太多）。让我们坚持安全、有帮助的模板。\n\n4. **完善回复（最终润色）：**\n    *   “抱歉，作为一个人工智能，我无法直接获取实时的天气数据。”（道歉，说明原因。）\n    *   “建议您通过以下方式查询北京今天的实时天气：”（提供有帮助的替代方案。）\n        *   手机上的天气应用（如苹果天气、墨迹天气等）（天气应用）\n        *   在搜索引擎中直接搜索“北京天气”（搜索引擎）\n        *   关注“气象北京”官方微博或微信公众号（官方来源）\n    *   “如果您能告诉我您大概所在的位置或需要关注哪些方面（如是否下雨、气温高低），我也可以为您提供一些北京常见天气的穿衣或出行建议！”（提供一个转折：如果他们告诉我天气情况，我可以给出关于穿衣/出行的建议）。\n\n5. **最终选择（类似草稿 2/完善版）：**\n    保持简洁友好。\n\n    “抱歉，作为一个人工智能，我无法实时获取今天的天气数据。\n\n    建议您直接打开手机上的**天气App**，或者在百度、微信等平台搜索**“北京天气”**，就能看到最准确的实时气温、降水情况和空气质量了。\n\n    如果您知道今天的大致气温或天气状况（比如晴天、下雨），也可以告诉我，我可以为您提供穿衣或出行建议！”\n\n6. **对照限制条件进行审查：** 没有凭空捏造天气数据，提供了有帮助的替代方案，语气礼貌。（完美）。*自我纠正：某些平台现在确实允许AI进行搜索。如果我有搜索权限，我会使用它。由于我必须在没有搜索工具的标准提示词下运行，因此标准免责声明是正确的。* 我们采用这种坦诚且有帮助的回复。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491233,&#34;id&#34;:&#34;2026082321201905b87f16a58741c6&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321201905b87f16a58741c6&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:882,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:796},&#34;prompt_tokens&#34;:17,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:899}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>tool.choice_function</td>
+    <td>指定工具调用（tool_choice function）</td>
+    <td>工具调用检测</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 1323ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;北京今天天气怎么样？&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;tool_choice&#34;:{&#34;function&#34;:{&#34;name&#34;:&#34;get_weather&#34;},&#34;type&#34;:&#34;function&#34;},&#34;tools&#34;:[{&#34;function&#34;:{&#34;description&#34;:&#34;查询指定城市的当前天气&#34;,&#34;name&#34;:&#34;get_weather&#34;,&#34;parameters&#34;:{&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;}},&#34;required&#34;:[&#34;city&#34;],&#34;type&#34;:&#34;object&#34;}},&#34;type&#34;:&#34;function&#34;}]}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;tool_calls&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;我来帮您查询北京今天的天气情况。&#34;,&#34;reasoning_content&#34;:&#34;The user is asking about the weather in Beijing today. I should use the get_weather function to query the weather for Beijing.&#34;,&#34;role&#34;:&#34;assistant&#34;,&#34;tool_calls&#34;:[{&#34;function&#34;:{&#34;arguments&#34;:&#34;{\&#34;city\&#34;: \&#34;北京\&#34;}&#34;,&#34;name&#34;:&#34;get_weather&#34;},&#34;id&#34;:&#34;call_-7323328395444482056&#34;,&#34;index&#34;:0,&#34;type&#34;:&#34;function&#34;}]}}],&#34;created&#34;:1787491234,&#34;id&#34;:&#34;20260823212033b5bbe158e6714735&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823212033b5bbe158e6714735&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:46,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:25},&#34;prompt_tokens&#34;:158,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:204}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>thinking.thinking_type</td>
+    <td>关闭思考块（thinking.type）</td>
+    <td>思考行为</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>2/2</td>
+    <td></td>
+    <td>
+<details><summary>2 次请求明细</summary>
+
+<p class="meta">第 1 次（on）· HTTP 200 · 10785ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请计算 37 乘以 48 等于多少，并简要给出计算过程。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;enabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;37 乘以 48 等于 **1776**。\n\n以下是两种简要的计算过程：\n\n**方法一：常规竖式乘法逻辑（拆分法）**\n将 48 拆分为 40 和 8，分别与 37 相乘后再相加：\n1. 37 × 8 = 296\n2. 37 × 40 = 1480\n3. 296 &#43; 1480 = 1776\n\n**方法二：简便运算（凑整法）**\n将 48 看作 (50 - 2)，利用乘法分配律进行计算：\n1. 37 × 50 = 1850\n2. 37 × 2 = 74\n3. 1850 - 74 = 1776&#34;,&#34;reasoning_content&#34;:&#34;1.  **理解目标：** 用户想要计算 37 乘以 48，并需要简要给出计算过程的解释。\n\n2.  **计算：**\n    *   $37 \\times 48$\n    *   方法1：竖式乘法（标准算法）\n        *   $37 \\times 8 = 296$\n        *   $37 \\times 40 = 1480$\n        *   $296 &#43; 1480 = 1776$\n    *   方法2：代数变形（分配律）\n        *   $37 \\times (50 - 2) = 37 \\times 50 - 37 \\times 2 = 1850 - 74 = 1776$\n    *   方法3：另一个代数变形\n        *   $(40 - 3) \\times 48 = 40 \\times 48 - 3 \\times 48 = 1920 - 144 = 1776$\n\n3.  **起草回答：**\n    *   首先清楚地说明最终答案。\n    *   提供一个清晰、易于理解且简单的计算过程。方法2（$37 \\times (50 - 2)$）通常在头脑中或书面解释时最简单，但标准算法（方法1）是最普遍被理解的。为了清晰起见，让我们提供标准的拆分方法。\n\n    *起草计算过程：*\n    37 × 48 = 1776\n\n    计算过程如下：\n    可以将 48 拆分为 40 和 8，然后分别与 37 相乘：\n    1. 37 乘以 8 等于 296\n    2. 37 乘以 40 等于 1480\n    3. 将两者相加：296 &#43; 1480 = 1776\n\n    或者用另一种拆分法（凑整法）：\n    将 48 拆分为 (50 - 2)：\n    37 × 48 = 37 × (50 - 2) = 37 × 50 - 37 × 2 = 1850 - 74 = 1776。\n\n    两者都很好。我将提供拆分为 40 和 8 的方法，因为它符合标准的竖式乘法逻辑，而且我也会简要提及“凑整”方法，因为它是一种巧妙的捷径。\n\n4.  **完善输出：**\n    37 乘以 48 等于 **1776**。\n\n    **简要计算过程：**\n\n    **方法一：拆分法（常规竖式乘法逻辑）**\n    将48拆分为40和8，分别与37相乘再相加：\n    1. 37 × 8 = 296\n    2. 37 × 40 = 1480\n    3. 296 &#43; 1480 = 1776\n\n    **方法二：凑整法（简便计算）**\n    将48转化为(50 - 2)：\n    37 × 48\n    = 37 × (50 - 2)\n    = 37 × 50 - 37 × 2\n    = 1850 - 74\n    = 1776\n\n5.  **最终检查：** 数学计算正确吗？\n    $37 \\times 8 = 296$（30*8=240，7*8=56，240&#43;56=296）正确。\n    $37 \\times 40 = 1480$ 正确。\n    $296 &#43; 1480 = 1776$ 正确。\n    $37 \\times 50 = 1850$ 正确。\n    $37 \\times 2 = 74$ 正确。\n    $1850 - 74 = 1776$ 正确。\n\n6.  **生成回答：** 按要求输出中文。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491245,&#34;id&#34;:&#34;202608232120344b0196b44e7d4812&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232120344b0196b44e7d4812&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:992,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:824},&#34;prompt_tokens&#34;:33,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:1025}}</pre>
+
+<p class="meta">第 2 次（off）· HTTP 200 · 15811ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请计算 37 乘以 48 等于多少，并简要给出计算过程。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false,&#34;thinking&#34;:{&#34;type&#34;:&#34;disabled&#34;}}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;### 问题陈述\n\n我们需要计算 37 乘以 48，并简要给出计算过程。\n\n### 初步思考\n\n首先，我回忆了一下乘法的基本方法。通常，我们可以使用竖式乘法来计算两个两位数的乘积。此外，也可以考虑将其中一个数拆分成更易计算的部分，然后分别相乘再相加。我决定尝试这两种方法，看看哪种更直观。\n\n### 方法一：竖式乘法\n\n让我们先用竖式乘法来计算 37 × 48。\n\n```\n   37\n  ×48\n  ----\n```\n\n首先，用48的个位数8去乘37：\n\n```\n   37\n  ×48\n  ----\n   296   (因为 7 × 8 = 56，写下6，进位5；3 × 8 = 24，加上进位的5，得到29，所以写下29)\n```\n\n然后，用48的十位数4（实际上是40）去乘37：\n\n```\n   37\n  ×48\n  ----\n   296\n  1480   (因为 7 × 40 = 280，3 × 40 = 120，相加得到400，但实际计算是 37 × 40 = 1480)\n```\n\n接下来，将这两个部分相加：\n\n```\n   296\n  1480\n  ----\n  1776\n```\n\n所以，37 × 48 = 1776。\n\n### 方法二：分配律拆分\n\n另一种方法是利用分配律，将其中一个数拆分成更易计算的部分。例如，将48拆分成40和8：\n\n37 × 48 = 37 × (40 &#43; 8) = 37 × 40 &#43; 37 × 8\n\n计算37 × 40：\n\n37 × 40 = (30 &#43; 7) × 40 = 30 × 40 &#43; 7 × 40 = 1200 &#43; 280 = 1480\n\n计算37 × 8：\n\n37 × 8 = (30 &#43; 7) × 8 = 30 × 8 &#43; 7 × 8 = 240 &#43; 56 = 296\n\n然后相加：\n\n1480 &#43; 296 = 1776\n\n同样得到37 × 48 = 1776。\n\n### 验证计算\n\n为了确保我们的答案正确，我决定用另一种方法来验证。这次，我将37拆分成30和7：\n\n30 × 48 = 1440\n\n7 × 48 = 336\n\n然后相加：\n\n1440 &#43; 336 = 1776\n\n再次得到1776，验证了之前的计算。\n\n### 可能的误区\n\n在进行乘法计算时，容易犯的错误包括：\n\n1. **进位错误**：在竖式乘法中，忘记加进位的数。例如，在37 × 8中，7 × 8 = 56，需要进位5到十位，然后3 × 8 = 24，加上进位的5，应该是29，而不是24。\n   \n   错误示例：\n   - 7 × 8 = 56，写下6，忘记进位5。\n   - 3 × 8 = 24，直接写下24，得到246（错误，应为296）。\n\n2. **位数对齐错误**：在竖式乘法中，第二步的乘法（如37 × 40）需要向左移动一位，即实际上是在十位上进行乘法。如果忘记对齐，会导致结果错误。\n   \n   错误示例：\n   - 37 × 40 = 1480，但写时不向左移动一位，直接写在下面：\n     ```\n       296\n       148\n     ```\n     相加得到444（错误）。\n\n3. **分配律拆分错误**：在拆分时，可能选择不合适的拆分方式，导致计算复杂。例如，将37拆分成30和7是合理的，但如果拆分成其他数字，可能增加计算难度。\n\n### 其他计算方法\n\n还可以使用**印度乘法**（也称为交叉乘法或格子乘法）来计算：\n\n```\n   3   7\n   ×4  8\n   --------\n     3×4=12\n   3×8 &#43; 7×4=24 &#43; 28=52\n     7×8=56\n   --------\n   组合：12 (52) 56 → 1776\n```\n\n解释：\n- 交叉相乘后，得到的部分积为12（百位），52（十位），56（个位）。\n- 由于52中有进位（5），需要加到12上，得到12 &#43; 5 = 17。\n- 所以，最终组合为17（来自12 &#43; 5），52 - 50 = 2（因为50已经作为5加到12上），56。\n- 因此，1776。\n\n### 计算器的验证\n\n为了彻底确认，我使用计算器计算：\n\n37 × 48 = 1776\n\n这与我们的手动计算结果一致，因此可以确定37 × 48 = 1776。\n\n### 总结\n\n通过多种方法的计算和验证，我们确认：\n\n**37 × 48 = 1776**\n\n### 计算过程简述\n\n1. **竖式乘法**：\n   - 37 × 8 = 296\n   - 37 × 40 = 1480\n   - 296 &#43; 1480 = 1776\n\n2. **分配律拆分**：\n   - 37 × (40 &#43; 8) = 37 × 40 &#43; 37 × 8 = 1480 &#43; 296 = 1776\n\n3. **印度乘法**：\n   - 交叉相乘组合得到1776。\n\n4. **验证**：\n   - 计算器确认结果为1776。\n\n因此，最终答案为：**1776**。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491261,&#34;id&#34;:&#34;202608232120451d285f358a45476f&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232120451d285f358a45476f&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:1255,&#34;prompt_tokens&#34;:27,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:1282}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>thinking.reasoning_effort_off</td>
+    <td>关闭思考块（reasoning_effort=off）</td>
+    <td>思考行为</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/2</td>
+    <td></td>
+    <td>
+<details><summary>2 次请求明细</summary>
+
+<p class="meta">第 1 次（on）· HTTP 200 · 10210ms · ✗ 未通过：</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请计算 37 乘以 48 等于多少，并简要给出计算过程。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;reasoning_effort&#34;:&#34;high&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;37 乘以 48 等于 **1776**。\n\n**简要计算过程：**\n\n这里使用拆分法来计算：\n37 × 48 \n= 37 × (50 - 2)   （将48拆分成50减去2，方便计算）\n= 37 × 50 - 37 × 2\n= 1850 - 74\n= 1776\n\n或者用竖式计算的思路：\n1. 先算 37 × 8 = 296\n2. 再算 37 × 40 = 1480\n3. 最后相加：296 &#43; 1480 = 1776&#34;,&#34;reasoning_content&#34;:&#34;1.  **理解请求：**\n    *   计算乘积：37 * 48。\n    *   提供简要的计算过程。\n    *   语言：中文。\n\n2.  **执行计算（心算 / 草稿）：**\n    *   *方法1：竖式乘法 (列竖式)*\n        *   37 * 8 = 296\n        *   37 * 40 = 1480\n        *   296 &#43; 1480 = 1776\n    *   *方法2：分配律 (拆分法)*\n        *   37 * (50 - 2)\n        *   37 * 50 = 1850\n        *   37 * 2 = 74\n        *   1850 - 74 = 1776\n    *   *方法3：另一种拆分法*\n        *   (40 - 3) * 48\n        *   40 * 48 = 1920\n        *   3 * 48 = 144\n        *   1920 - 144 = 1776\n\n3.  **选择最佳方法进行解释：**\n    *   方法1（竖式乘法）非常标准且易于遵循。\n    *   方法2（拆分法：50 - 2）稍微更巧妙一些，且用文本解释起来更容易，无需画网格。我将提供一个简短的竖式乘法分解，或者两者都提供。让我们采用标准的分解法，因为它在文本格式中看起来非常清晰。\n\n4.  **起草回复（中文）：**\n    *   *结果：* 37乘以48等于 1776。\n    *   *过程：*\n        可以使用拆分法计算：\n        37 × 48\n        = 37 × (50 - 2)\n        = 37 × 50 - 37 × 2\n        = 1850 - 74\n        = 1776\n\n        或者使用竖式计算思路：\n        37 × 8 = 296\n        37 × 40 = 1480\n        296 &#43; 1480 = 1776\n\n5.  **完善回复：**\n    保持简明、清晰，并严格回答提示。\n\n    37 乘以 48 等于 **1776**。\n\n    **简要计算过程（拆分法）：**\n    37 × 48\n    = 37 × (50 - 2)  （将48拆分为50-2）\n    = 37 × 50 - 37 × 2\n    = 1850 - 74\n    = 1776\n\n    **或者（竖式计算思路）：**\n    1. 37 × 8 = 296\n    2. 37 × 40 = 1480\n    3. 296 &#43; 1480 = 1776\n\n6.  **最终检查：** 数学计算正确吗？37 * 50 = 1850。37 * 2 = 74。1850 - 74 = 1776。是的。竖式乘法：7*8=56（进位5），3*8&#43;5=29 -&gt; 296。37*40 = 1480。296&#43;1480=1776。正确。满足所有约束条件。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491271,&#34;id&#34;:&#34;202608232121014439d9082dfe4b6e&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232121014439d9082dfe4b6e&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:853,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:716},&#34;prompt_tokens&#34;:33,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:886}}</pre>
+
+<p class="meta">第 2 次（off）· HTTP 400 · 41ms · ✗ 未通过：HTTP 状态码 400，期望 200</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请计算 37 乘以 48 等于多少，并简要给出计算过程。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;reasoning_effort&#34;:&#34;off&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;error&#34;:{&#34;code&#34;:&#34;1210&#34;,&#34;message&#34;:&#34;reasoning_effort 参数值非法，可选值为：none、minimal、low、medium、high、xhigh、max&#34;}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>thinking.default_behavior</td>
+    <td>默认思考行为</td>
+    <td>思考行为</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 7162ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请计算 37 乘以 48 等于多少，并简要给出计算过程。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;37 乘以 48 等于 **1776**。\n\n简要计算过程如下：\n\n可以将 48 拆分为 40 和 8，然后分别与 37 相乘再相加：\n1. 37 × 40 = 1480\n2. 37 × 8 = 296\n3. 1480 &#43; 296 = 1776&#34;,&#34;reasoning_content&#34;:&#34;1.  **理解目标**：用户希望计算 37 和 48 的乘积，并简要解释计算过程。\n2.  **计算**：37 * 48\n    *   方法 1：标准乘法。\n        *   37 * 8 = 296\n        *   37 * 40 = 1480\n        *   296 &#43; 1480 = 1776\n    *   方法 2：代数性质（例如，分配律）。\n        *   37 * (50 - 2) = 37 * 50 - 37 * 2 = 1850 - 74 = 1776\n    *   方法 3：面积模型 / 网格乘法。\n        *   30 * 40 = 1200\n        *   30 * 8 = 240\n        *   7 * 40 = 280\n        *   7 * 8 = 56\n        *   1200 &#43; 240 &#43; 280 &#43; 56 = 1776\n3.  **构思解释**：我将使用标准乘法，因为它最常见也最容易理解，或者使用分配律。让我们将分解为部分作为过程来提供。分解法非常清晰。\n    *   第 1 步：将 48 拆分为 40 和 8。\n    *   第 2 步：计算 37 乘以 40，等于 1480。\n    *   第 3 步：计算 37 乘以 8，等于 296。\n    *   第 4 步：将这两个结果相加：1480 &#43; 296 = 1776。\n4.  **起草回复**：\n    37 乘以 48 等于 1776。\n    计算过程如下：\n    将 48 拆分为 40 和 8：\n    1. 先算 37 乘以 40，得到 1480；\n    2. 再算 37 乘以 8，得到 296；\n    3. 最后将两者相加：1480 &#43; 296 = 1776。\n5.  **检查**：37 * 48 = 1776。计算正确。过程清晰简明。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491278,&#34;id&#34;:&#34;20260823212111e803aa440f1e4ef3&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;20260823212111e803aa440f1e4ef3&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:575,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:492},&#34;prompt_tokens&#34;:33,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:608}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>structured.json_schema</td>
+    <td>结构化输出（JSON Schema）</td>
+    <td>结构化输出</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/1</td>
+    <td>content 不是合法 JSON: invalid character &#39;`&#39; looking for beginning of value</td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 4217ms · ✗ 未通过：content 不是合法 JSON: invalid character &#39;`&#39; looking for beginning of value</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;response_format&#34;:{&#34;json_schema&#34;:{&#34;name&#34;:&#34;weather_answer&#34;,&#34;schema&#34;:{&#34;additionalProperties&#34;:false,&#34;properties&#34;:{&#34;city&#34;:{&#34;type&#34;:&#34;string&#34;},&#34;temperature_c&#34;:{&#34;type&#34;:&#34;number&#34;}},&#34;required&#34;:[&#34;city&#34;,&#34;temperature_c&#34;],&#34;type&#34;:&#34;object&#34;},&#34;strict&#34;:true},&#34;type&#34;:&#34;json_schema&#34;},&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;```json\n{\n  \&#34;city\&#34;: \&#34;测试城市\&#34;,\n  \&#34;temperature_c\&#34;: 21.5\n}\n```&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求**：\n    *   目标：提供一个结构化数据的天气示例。\n    *   城市名 (`city`)：必须填 \&#34;测试城市\&#34;。\n    *   摄氏温度 (`temperature_c`)：必须填 21.5。\n    *   约束条件：这是虚构的测试数据，不需要查证真实数据。\n    *   输出格式：结构化数据（通常指 JSON、YAML 等格式，这里最稳妥和常用的是 JSON）。\n\n2.  **构建数据结构**：\n    *   字段 `city`，值为 \&#34;测试城市\&#34;\n    *   字段 `temperature_c`，值为 21.5\n\n    ```json\n    {\n      \&#34;city\&#34;: \&#34;测试城市\&#34;,\n      \&#34;temperature_c\&#34;: 21.5\n    }\n    ```\n\n3.  **检查约束**：\n    *   结构化数据？是 (JSON)。\n    *   city 填的是 \&#34;测试城市\&#34;？是。\n    *   temperature_c 填的是 21.5？是。\n    *   没有引入无关的复杂信息，保持简单直接。\n\n4.  **最终输出生成**：直接输出 JSON 格式数据，或者加上简单的 Markdown 代码块标记。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491282,&#34;id&#34;:&#34;2026082321211804d0307348d341ab&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;2026082321211804d0307348d341ab&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:300,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:274},&#34;prompt_tokens&#34;:68,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:368}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+  <tr>
+    <td>structured.json_object</td>
+    <td>结构化输出（json_object）</td>
+    <td>结构化输出</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+<details><summary>1 次请求明细</summary>
+
+<p class="meta">第 1 次（）· HTTP 200 · 4717ms · ✓ 通过</p>
+<pre>请求：{&#34;messages&#34;:[{&#34;content&#34;:&#34;请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。以 JSON 对象格式输出。&#34;,&#34;role&#34;:&#34;user&#34;}],&#34;model&#34;:&#34;glm-5.2&#34;,&#34;response_format&#34;:{&#34;type&#34;:&#34;json_object&#34;},&#34;stream&#34;:false}</pre>
+<pre>响应：{&#34;choices&#34;:[{&#34;finish_reason&#34;:&#34;stop&#34;,&#34;index&#34;:0,&#34;message&#34;:{&#34;content&#34;:&#34;{\&#34;city\&#34;:\&#34;测试城市\&#34;,\&#34;temperature_c\&#34;:21.5}&#34;,&#34;reasoning_content&#34;:&#34;1.  **分析请求：**\n    *   目标：创建一个包含虚构天气示例的结构化JSON对象。\n    *   键值要求：`city` -&gt; \&#34;测试城市\&#34;，`temperature_c` -&gt; 21.5。\n    *   格式要求：有效的JSON对象。使用指定的结构。如果不确定，请使用 `{\&#34;answer\&#34;: \&#34;$your_answer\&#34;}`。始终以 \&#34;```\&#34; 结束代码块以指示JSON对象的结束。\n    *   约束条件：指令非常具体地要求了字段 `city` 和 `temperature_c`。\n\n2.  **确定JSON结构：**\n    *   由于用户指定了确切的键（`city` 和 `temperature_c`），我可以直接输出包含这些键的JSON对象。\n    *   JSON对象：\n        ```json\n        {\n          \&#34;city\&#34;: \&#34;测试城市\&#34;,\n          \&#34;temperature_c\&#34;: 21.5\n        }\n        ```\n\n3.  **完善输出格式：**\n    *   必须在代码块中输出有效的JSON。\n    *   必须以 \&#34;```\&#34; 结束。\n\n4.  **起草回复：**\n    ```json\n    {\n      \&#34;city\&#34;: \&#34;测试城市\&#34;,\n      \&#34;temperature_c\&#34;: 21.5\n    }\n    ```\n\n5.  **最终检查：** 是否遵循了所有指令？是的。有效的JSON，正确使用了指定的结构（直接匹配请求的键），在代码块中输出，以 \&#34;```\&#34; 结束。&#34;,&#34;role&#34;:&#34;assistant&#34;}}],&#34;created&#34;:1787491287,&#34;id&#34;:&#34;202608232121227fc6b97a27c2451d&#34;,&#34;model&#34;:&#34;glm-5.2&#34;,&#34;object&#34;:&#34;chat.completion&#34;,&#34;request_id&#34;:&#34;202608232121227fc6b97a27c2451d&#34;,&#34;usage&#34;:{&#34;completion_tokens&#34;:337,&#34;completion_tokens_details&#34;:{&#34;reasoning_tokens&#34;:311},&#34;prompt_tokens&#34;:128,&#34;prompt_tokens_details&#34;:{&#34;cached_tokens&#34;:0},&#34;total_tokens&#34;:465}}</pre>
+
+</details>
+</td>
+  </tr>
+  
+</table>
+
+
+<h3>附加能力用例结果（不计入基础分母，如 reasoning_effort、长上下文、缓存命中率）</h3>
+<table>
+  <tr><th>用例 ID</th><th>名称</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>各次采样明细</th></tr>
+  
+  <tr>
+    <td>reasoning_effort.scaling</td>
+    <td>思考等级（low / high / max）</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>9/9</td>
+    <td>low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数；该档共 3 次采样）</td>
+    <td>
+      low: 5674 tokens（第 1 次，✓）<br>low: 4163 tokens（第 2 次，✓）<br>low: 1814 tokens（第 3 次，✓）<br>high: 5606 tokens（第 4 次，✓）<br>high: 3079 tokens（第 5 次，✓）<br>high: 3741 tokens（第 6 次，✓）<br>max: 14624 tokens（第 7 次，✓）<br>max: 3553 tokens（第 8 次，✓）<br>max: 4126 tokens（第 9 次，✓）<br>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>context.long_context_recall</td>
+    <td>1M 上下文</td>
+    <td><span class="badge badge-FAIL">FAIL</span></td>
+    <td>0/1</td>
+    <td>HTTP 状态码 400，期望 200</td>
+    <td>
+      : （第 1 次，✗）<br>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>cache.prompt_cache_hit_rate</td>
+    <td>缓存命中率</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>2/2</td>
+    <td></td>
+    <td>
+      warmup: （第 1 次，✓）<br>measured: cached_tokens=5888 prompt_cache_hit_rate=0.9934199426353973 prompt_tokens=5927 （第 2 次，✓）<br>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>input_validation.max_tokens_over_limit</td>
+    <td>max_tokens 非法（超出模型上限）</td>
+    <td><span class="badge badge-PASS">PASS</span></td>
+    <td>1/1</td>
+    <td></td>
+    <td>
+      : （第 1 次，✓）<br>
+    </td>
+  </tr>
+  
+</table>
+
+
+<h3>能力声明与豁免说明</h3>
+<table>
+  <tr><th>能力</th><th>声明值</th></tr>
+  <tr><td>image_url</td><td>false</td></tr>
+  <tr><td>image_base64</td><td>false（固定必过，不可豁免）</td></tr>
+  <tr><td>video_url</td><td>false</td></tr>
+  <tr><td>video_base64</td><td>false（固定必过，不可豁免）</td></tr>
+  <tr><td>tool_call</td><td>true</td></tr>
+  <tr><td>tool_choice_function</td><td>true</td></tr>
+  <tr><td>thinking_toggle_methods</td><td>thinking_type reasoning_effort_off </td></tr>
+  <tr><td>default_thinking_behavior</td><td>thinks_by_default</td></tr>
+  <tr><td>reasoning_effort</td><td>true</td></tr>
+  <tr><td>context_window_tokens</td><td>1048576</td></tr>
+  <tr><td>max_output_tokens</td><td>131072</td></tr>
+  <tr><td>prompt_cache</td><td>true</td></tr>
+</table>
+
+<p class="meta">无 NOT_DECLARED 用例（全部能力均已声明或为固定必过项）。</p>
+
+
+<h2>三、性能测试结果</h2>
+
+<p class="meta">压测尚未执行，本报告仅包含功能测试结果；验收结论规则 3（性能指标）暂无法判定。</p>
+
+
+<h2>四、验收结论</h2>
+<div class="verdict-box">
+  <p><strong>总体结论：<span class="badge badge-FAIL">未通过（FAIL）</span></strong></p>
+  <p>规则 1（基础用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
+  <ul class="reasons"><li>protocol.usage_stream: FAIL（openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段）</li><li>protocol.stream_integrity: FAIL（openai_schema_valid 未通过: chunk[0]: choices[0] 缺少 finish_reason 字段）</li><li>determinism.temperature_zero: FAIL（temperature=0 下第 1 次与第 2 次输出不一致：
+  第 1 次: &#34;哈希函数是一种将任意长度数据映射为固定长度特征串的数学算法。它具有单向性，从输出无法反推输入；且对输入极其敏感，微小改动会使输出发生巨大变化。它常用于密码校验与数据完整性检测。&#34;
+  第 2 次: &#34;哈希函数是一种将任意长度输入数据转换为固定长度输出字符串的数学算法。其输出值通常被称为哈希值或摘要。它具有单向性与抗碰撞性，即无法从结果逆推原数据，且不同输入极难得到相同结果。它被广泛应用于数据校验、密码存储与区块链等领域。&#34;）</li><li>thinking.reasoning_effort_off: FAIL（）</li><li>structured.json_schema: FAIL（content 不是合法 JSON: invalid character &#39;`&#39; looking for beginning of value）</li></ul>
+  <p>规则 2（已声明且不计入基础分母的附加能力用例 100% 通过）：<span class="badge badge-FAIL">FAIL</span></p>
+  <ul class="reasons"><li>context.long_context_recall: FAIL（HTTP 状态码 400，期望 200）</li><li>reasoning_effort.scaling: FAIL（low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数；该档共 3 次采样））</li></ul>
+  <p>规则 3（有 PDF 基线且可观测的性能指标满足判定）：<span class="badge badge-PENDING">PENDING</span></p>
+  <ul class="reasons"><li>throughput_req_s: 缺失该性能指标数据，无法判定</li><li>ttft: 缺失该性能指标数据，无法判定</li><li>tpot: 缺失该性能指标数据，无法判定</li><li>cache_hit_rate: 缺失该性能指标数据，无法判定</li></ul>
+  <p class="meta">规则 1、2、3 任一为 FAIL 即总体 FAIL；无 FAIL 但存在 PENDING（含未清空的 MANUAL_REVIEW 或缺失数据）则总体锁定为「待人工确认」，直至人工复核改写。</p>
+</div>
+
+

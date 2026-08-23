@@ -1,0 +1,772 @@
+[
+  {
+    "id": "protocol.stream_integrity",
+    "case_id": "protocol.stream_integrity",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "openai_schema_valid 未通过: chunk[33]: choices 数组不应为空",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 4067,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":true}",
+        "response_body": "data: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"The\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" user\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" asks\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" for\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" a\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" Chinese\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" sentence\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" about\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" spring\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\".\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" Simple\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" request\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\".\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"春风\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"拂过\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"大地\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"冰雪\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"消融\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"万物复苏\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"枝头\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"的新\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"芽\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"正\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"悄悄\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"探\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"出\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"头来\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"。\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"finish_reason\":\"stop\"}]}\ndata: {\"id\":\"resp_chatcmpl2aefbd9cc8785a3004edda07\",\"object\":\"chat.completion.chunk\",\"created\":1787493795,\"model\":\"kimi-k3\",\"choices\":[],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":44,\"total_tokens\":4527,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":13}}}\ndata: [DONE]\n",
+        "passed": false,
+        "fail_reason": "openai_schema_valid 未通过: chunk[33]: choices 数组不应为空"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "protocol.usage_nonstream",
+    "case_id": "protocol.usage_nonstream",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 6282,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl7dc4961625c5c93d68ee6d12\",\"object\":\"chat.completion\",\"created\":1787493801,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"春天来了,冰雪消融,嫩绿的新芽从枝头探出头来,微风里满是花草的清香。\",\"reasoning_content\":\"User asks to write a sentence about spring in Chinese. Simple.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":49,\"total_tokens\":4532,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":13}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "protocol.usage_stream",
+    "case_id": "protocol.usage_stream",
+    "status": "FAIL",
+    "attempts": 2,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "openai_schema_valid 未通过: chunk[29]: choices 数组不应为空",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "no_include_usage",
+        "http_status": 200,
+        "latency_ms": 3802,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":true}",
+        "response_body": "data: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"Simple\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" request\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\",\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" answer\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" directly\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\".\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"春天\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"来了\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"万物复苏\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"嫩\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"绿\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"的新\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"芽\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"在\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"微\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"风中\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"轻轻\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"摇曳\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"处处\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"洋溢着\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"生机\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"与\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"希望\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"。\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"finish_reason\":\"stop\"}]}\ndata: {\"id\":\"resp_chatcmpl6f67cc220033f78e7d4d0e79\",\"object\":\"chat.completion.chunk\",\"created\":1787493805,\"model\":\"kimi-k3\",\"choices\":[],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":40,\"total_tokens\":4523,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":6}}}\ndata: [DONE]\n",
+        "passed": false,
+        "fail_reason": "openai_schema_valid 未通过: chunk[29]: choices 数组不应为空"
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "with_include_usage",
+        "http_status": 200,
+        "latency_ms": 6982,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":true,\"stream_options\":{\"include_usage\":true}}",
+        "response_body": "data: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"Simple\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" request\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\",\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" just\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" answer\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" in\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\" Chinese\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\".\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"春风\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"拂\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"面\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"万物复苏\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"，\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"枝头\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"的新\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"绿\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"和\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"绽放\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"的花朵\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"共同\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"诉说着\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"生命\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"的美好\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"。\"},\"finish_reason\":null}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"finish_reason\":\"stop\"}]}\ndata: {\"id\":\"resp_chatcmpl0ad0e6b05e0528e9fd390839\",\"object\":\"chat.completion.chunk\",\"created\":1787493811,\"model\":\"kimi-k3\",\"choices\":[],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":38,\"total_tokens\":4521,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":8}}}\ndata: [DONE]\n",
+        "passed": false,
+        "fail_reason": "openai_schema_valid 未通过: chunk[27]: choices 数组不应为空"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "multimodal.image_url",
+    "case_id": "multimodal.image_url",
+    "status": "NOT_DECLARED",
+    "attempts": 0,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "能力 \"image_url\" 未在 CAPABILITY_PROFILE 中声明",
+    "case_attempts": null,
+    "counts_in_base22": true
+  },
+  {
+    "id": "multimodal.image_base64",
+    "case_id": "multimodal.image_base64",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 9785,
+        "request_body": "{\"messages\":[{\"content\":[{\"text\":\"图片中央的数字是几？请只回答数字，不要包含其他文字。\",\"type\":\"text\"},{\"image_url\":{\"url\":\"data:image/png;base64,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q1Y+Pj6NGzd2cGCpDLSwJCYmKmsoU6bMI69cunTJKj2xK/369fvhhx+s3Qsb06dPn8mTJyu7sWnTph49eggWtOkZrHPnzq267/z581bpgIuLS7NmzXr37t2sWbPcHQVSU1PXrFmzYsWKHTt2pKamGtNoiRIlOnXq9N5773l6ehrTIuwnYDCDBeD/iY2N/eSTTxiRtLS0tWvX/vvf/34wpWQtKSkpG+8rVapUz54933333b/97W+57A1KSkpatGjR7Nmzo6KiDG46Ojo6JCRk5syZb775pp+fn7e3t8EdQC6Wm38fAvC8hgwZcv36dXset/j4+FmzZnl7ew8YMMDq6ephkZGRkyZNqlOnzogRI564xsgWxcXFffHFF7Vr1/7ss8+MT1cPpKenh4WFvfnmm127dv3999+t1Q3kMgQsAP/XqlWr1q5da7fDkZKSMnv27Jdffnn06NFXrlxRppSSkjJ37ty6det+8cUX8fHxypYtX768Xr16X3311a1bt5Q5/Pzzzy1btvT394+JibF2X2DzCFgA/sfVq1eHDh1qt2MRFhbWoEGDUaNG3blzR5leYmLiV1999corr4SFhSkbdOrUqbfeesvPz8+E06WZmZnffffda6+99s033zzL86HAnyFgAfgfgYGB5plIMFJERESHDh18fX0vXryobMrNmzd9fX0HDBhgQ29cRkbGlClTmjVrtnv3bmViCQkJQ4cO7dixY0REhLX7AltFwAKgQkNDf/75ZzsciCVLljRq1Gjnzp3KZq1ataphw4Zbt25Vpnfjxo3OnTt/+eWXaWlpyhbs3LmzadOm69evt3ZHYJMIWIC9u3z58meffabsTGxsbI8ePT7++OOEhARl465du9atW7d///vfysT27NnTtGnTX375RdmUO3fuvPfee6NGjRLckQt2goAF2LWMjIyAgABr7YdnLefOnWvduvWmTZtUbpGRkfHZZ58NGTLEnJNDoaGhHTp0uHr1qrJNs2fP7tGjRy7I4jASAQuwa3PmzNm1a5eyJ7t27XrzzTdtbsXVs1i4cGH37t2TkpKUmcyYMWPQoEHmTH7PbsuWLW3btr127Zq1OwKbQcAC7Fd4ePiECROUPVm9enWnTp1u376tcqlt27b16NEjOTlZmcOECRM+//xzlSucOnXKx8eHZe94RgQswE6lpaX5+/ub5yexAbZs2fLR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QXv88q1bt27bts3R0dHNza1v374eHh5PHLGsPy9durREiRJNmjTJ+uvkyZO7d+9etGjRRYsWHThwYP78+RLvOQAANsNWA5azs3N0dHRGRoaDg0NmZua1a9ecnZ2VUkePHt2+ffuIESPc3NySkpKmTJlSuHDh6tWrOzk5jRw5UimVnJwcFBTk6ur62muvPXjxL3nflxVWHlwyb968Ry6fM2fOkCFDPDw89u3bt2TJkoCAgKdcdfny5a+++qpOnTqPd+OJvc36p8c/wSJFilSpUkUpdejQodatWx85cqRx48bPNWhZHr782LFjBw4cGDNmjKOj47p16+bOnTt06NCHO/aIl19+edOmTVkB6969ezdu3ChduvTYsWNfe+21gwcPPssIAwCQm9jwLcKyZcv+8ccfSqlLly6VLl0668WwsLDu3bu7ubkppdzc3Lp167Zu3bqHr3J1de3WrVvWxJK4uLi41NRUpVTdunVbtWr19A/29PR0dHR8+sc83tvHP8G1a9cqpVJSUpKTk5s2bXr48OHnHbTHL1+/fv0777yT1b2WLVu6uLhkZGQ8payXl9fFixfT09OVUsePH69Vq5ZSauDAga1bt376JwgAQK5kwwGrZs2aR48ezZrUqVmzZtaLUVFRZcuWffAx5cqVu3LlyiMXli5d+tq1azq61KVLl7Fjx86dO/fBPcGnOHnyZM+ePf+y5iO9ffwTjIyMzBqEWrVqlShR4vr162lpac81aI9fHhkZ6enpmfVPefLkGTRokIPD075UHBwcKlaseO7cOaXUkSNH6tatq5QqVKjQX352AADkSrZ6i1ApVaNGjZ9++qljx44nT55s2bLlEz8mMzPz8RfT09Oz5mbS0tLGjx+f9WKXLl0qVar0yEd+//33Z86cadOmTdadvkc8fnmjRo3q1q174MCB0NBQb2/vf/zjH392VWpq6h9//FGtWrU6deo8vRtZvX3Qk8c/weTk5KxVYpcuXdq3b9/t27dPnTp1+vTpJ/b8zwbtkcsfzFf9+OOPhw4dun379ldfffX4p3zkyJEHrdSpU+f333+vXLny2bNnfX19n/h2AABgJ2w4YLm7u1sslps3byql8ubNm/ViyZIlL1y44OXllfXXixcvlipV6pELz58/nzU985drsDp16vSUf33k8ri4uKtXr3p5eTVu3Pjll18eOnToEwPWg6siIiLGjh37l93I6u2DnmzZsuWRT7BkyZIZGRlXr16dNGlS1lzU4cOHe/Xq9eyD9vjlxYsXj4iIKF++fNu2bZs0afLRRx898VN+OAvWqlVr48aNFy9eLFu27F/e+gQAIHez4VuEWT/Uly9fXr169Qev+Pj4LF26NCkpSSmVlJS0dOnS9u3bP3xJYmLismXLHnlRhMViCQkJycouCQkJRYoUefrHu7u7v/DCC0//mMd72759+4c/wax/DQ8Pf7CgqkqVKseOHXuuQXv88mbNmq1YsSJrTdXmzZuffn8wi5ubm4uLyy+//PLE2T4AAOyKDc9gKaVq1669fPnyyZMnP3ilRo0asbGxEyZMyNqmoXXr1tWqVXv43lZ6enr79u1feumlR254VapUqUuXLmlpaZ9//nnWK15eXt26dXtK649f3rdv35CQEGdnZwcHhwEDBjzlKovFopTq06fPn3Xj8d5mqVatWmxs7MSJEx0cHLKWl8XExNy4cSPr01RKubi4FChQ4MqVKyVLlnzGQTt48OAjl2etXRs6dGjhwoUbNGjwYEbq8a4+XPnll19euXJl165dnzJoAADYA0tiYqJVGi5Tpswjr1y6dMkqPbFp8fHxkZGRDycwAADsWRlzBAzbvkWI/Pnzk64AADAbAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwAhYAAIAwJ2UaZcqUsXYXAAAABDCDBQAAIIyABQAAIIyABQAAIIyABQAAIIyABQAAIMySmJgoXRMAAMCuMYMFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAAAgjIAFAACgZP0fXUguBtY5XOQAAAAASUVORK5CYII=\"},\"type\":\"image_url\"}],\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpld7f586c5c55653463540de6c\",\"object\":\"chat.completion\",\"created\":1787493822,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"7429\",\"reasoning_content\":\"The image shows 7429. Center digit... The number is 7429, four digits. \\\"图片中央的数字\\\" - the number in the center of the image is 7429. Answer only the number.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":5136,\"completion_tokens\":59,\"total_tokens\":5195,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":44}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "multimodal.video_url",
+    "case_id": "multimodal.video_url",
+    "status": "NOT_DECLARED",
+    "attempts": 0,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "能力 \"video_url\" 未在 CAPABILITY_PROFILE 中声明",
+    "case_attempts": null,
+    "counts_in_base22": true
+  },
+  {
+    "id": "multimodal.video_base64",
+    "case_id": "multimodal.video_base64",
+    "status": "MANUAL_REVIEW",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 30538,
+        "request_body": "{\"messages\":[{\"content\":[{\"text\":\"视频画面中央的数字是几？请只回答数字，不要包含其他文字。\",\"type\":\"text\"},{\"type\":\"video_url\",\"video_url\":{\"url\":\"data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAJ9BtZGF0AAACrwYF//+r3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NSByMzIyMiBiMzU2MDVhIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyNSAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTE4IGxvb2thaGVhZF90aHJlYWRzPTMgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MyBiX3B5cmFtaWQ9MiBiX2FkYXB0PTEgYl9iaWFzPTAgZGlyZWN0PTEgd2VpZ2h0Yj0xIG9wZW5fZ29wPTAgd2VpZ2h0cD0yIGtleWludD0yNTAga2V5aW50X21pbj0yNSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAGfxliIQAO//+46v4FNjeim3EXVY0Y0/PFJds8hM3HK/+B301YAAAAwAAAwAAAwAM2N4Vz0gMeOXQAAADADHyf8PTklmANxall9KY0T1eDw8VHNkg25DyXVjCV9tUAAAKSL4hYIX8Ml/URflPglMOlD+xN7OukJ5N+WdLjmFQ7UVwl+gzNTRAAAE4w5Yf7+eQ7h2VEN9NrJyYvAAABrOZ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\"}}],\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl2733203f91cc53c61b5e5b0e\",\"object\":\"chat.completion\",\"created\":1787493852,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"我没有收到任何视频或图片内容，无法看到画面中的数字。请上传视频或截图后，我再帮你识别。\",\"reasoning_content\":\"The user is asking me to identify a number in a video frame. But I have no video or image provided. I cannot see any video. I should respond that I don't have access... but the instruction says \\\"please only answer the number\\\". However, there's no attachment. I must be honest: no video was provided.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4491,\"completion_tokens\":103,\"total_tokens\":4594,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":65}}}",
+        "passed": false,
+        "fail_reason": "响应未包含可比对的数字（开放式描述）"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.call_capability",
+    "case_id": "tool.call_capability",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 5985,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tool_choice\":\"required\",\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"id\":\"resp_chatcmpl210c55fe0a2b0df6d811e9f2\",\"object\":\"chat.completion\",\"created\":1787493858,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":\"用户询问北京今天天气，需调用 get_weather，city=北京。\",\"tool_calls\":[{\"id\":\"get_weather_0\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"北京\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":4592,\"completion_tokens\":66,\"total_tokens\":4658,\"completion_tokens_details\":{\"reasoning_tokens\":16}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_default",
+    "case_id": "tool.choice_default",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 6010,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"id\":\"resp_chatcmplc89202c714ffb0e595f80c47\",\"object\":\"chat.completion\",\"created\":1787493864,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":\"用户问北京今天天气。需要调用天气工具。使用get_weather city北京。然后回答。需要注意工具返回可能虚构。调用。\",\"tool_calls\":[{\"id\":\"get_weather_0\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"北京\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":4556,\"completion_tokens\":79,\"total_tokens\":4635,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":29}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_auto",
+    "case_id": "tool.choice_auto",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 6081,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tool_choice\":\"auto\",\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"id\":\"resp_chatcmpla06be329d1ccfc251884a1a1\",\"object\":\"chat.completion\",\"created\":1787493870,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"我来帮你查一下北京今天的天气。\",\"reasoning_content\":\"用户问北京今天天气怎么样，需要调用天气查询工具。直接调用get_weather。\",\"tool_calls\":[{\"id\":\"get_weather_0\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"北京\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":4556,\"completion_tokens\":77,\"total_tokens\":4633,\"prompt_tokens_details\":{\"cached_tokens\":4556},\"completion_tokens_details\":{\"reasoning_tokens\":19}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_required",
+    "case_id": "tool.choice_required",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 4548,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tool_choice\":\"required\",\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"id\":\"resp_chatcmpl2a29346a3d1c7d0ca21c4617\",\"object\":\"chat.completion\",\"created\":1787493875,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":\"用户询问北京今天的天气，我需要调用 get_weather 工具来获取北京的天气信息。\",\"tool_calls\":[{\"id\":\"get_weather_0\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"北京\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":4592,\"completion_tokens\":68,\"total_tokens\":4660,\"prompt_tokens_details\":{\"cached_tokens\":4592},\"completion_tokens_details\":{\"reasoning_tokens\":18}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_none",
+    "case_id": "tool.choice_none",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "openai_schema_valid 未通过: choices[0].message 既没有非 null 的 content 也没有合法 tool_calls，消息内容为空",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 4134,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tool_choice\":\"none\",\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"id\":\"resp_chatcmplbed04c026a71f54cebccfadf\",\"object\":\"chat.completion\",\"created\":1787493879,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning_content\":\"用户问北京今天天气。需要调用get_weather工具。我们在工具结果后回答。系统又要求不得调用工具；这与用户请求冲突？但实际工具可用。应遵循可用工具回答天气。工具说明。调用。\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4594,\"completion_tokens\":60,\"total_tokens\":4654,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":47}}}",
+        "passed": false,
+        "fail_reason": "openai_schema_valid 未通过: choices[0].message 既没有非 null 的 content 也没有合法 tool_calls，消息内容为空"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_function",
+    "case_id": "tool.choice_function",
+    "status": "NOT_DECLARED",
+    "attempts": 0,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "能力 \"tool_choice_function\" 未在 CAPABILITY_PROFILE 中声明",
+    "case_attempts": null,
+    "counts_in_base22": true
+  },
+  {
+    "id": "tool.choice_allowed_tools",
+    "case_id": "tool.choice_allowed_tools",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "HTTP 状态码 400，期望 200",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 400,
+        "latency_ms": 467,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"tool_choice\":{\"allowed_tools\":{\"mode\":\"auto\",\"tools\":[{\"function\":{\"name\":\"get_weather\"},\"type\":\"function\"}]},\"type\":\"allowed_tools\"},\"tools\":[{\"function\":{\"description\":\"查询指定城市的当前天气\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"}},\"type\":\"function\"}]}",
+        "response_body": "{\"error\":{\"message\":\"is required and must be a non-empty string (request id: 752d06ba-a29f-4b5e-99a3-e14f85b4a0a0)\",\"type\":\"invalid_request_error\"}}",
+        "passed": false,
+        "fail_reason": "HTTP 状态码 400，期望 200"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "thinking.enable_thinking",
+    "case_id": "thinking.enable_thinking",
+    "status": "FAIL",
+    "attempts": 2,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "on",
+        "http_status": 200,
+        "latency_ms": 5203,
+        "request_body": "{\"enable_thinking\":true,\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmplbc75a8de8d9bfa9e493d80e5\",\"object\":\"chat.completion\",\"created\":1787493884,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = 1776\\n\\n计算过程：将 48 拆成 50 − 2，则\\n- 37 × 50 = 1850\\n- 37 × 2 = 74\\n- 1850 − 74 = 1776\\n\\n所以 37 × 48 = 1776。\",\"reasoning_content\":\"Simple math question. Just answer.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":90,\"total_tokens\":4582,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":7}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "off",
+        "http_status": 200,
+        "latency_ms": 4661,
+        "request_body": "{\"enable_thinking\":false,\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmple53688c1075367bf4d2a1bdb\",\"object\":\"chat.completion\",\"created\":1787493889,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"**37 × 48 = 1776**\\n\\n计算过程（拆分法）：\\n\\n```\\n37 × 48 = 37 × (50 - 2)\\n        = 37 × 50 - 37 × 2\\n        = 1850 - 74\\n        = 1776\\n```\\n\\n或者用竖式验证：37 × 8 = 296，37 × 40 = 1480，296 + 1480 = 1776。\",\"reasoning_content\":\"Simple math: 37 × 48 = 37 × 48. 37 × 50 = 1850, minus 74 = 1776.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":140,\"total_tokens\":4632,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":33}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "thinking.thinking_type",
+    "case_id": "thinking.thinking_type",
+    "status": "FAIL",
+    "attempts": 2,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "on",
+        "http_status": 200,
+        "latency_ms": 5245,
+        "request_body": "{\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"thinking\":{\"type\":\"enabled\"}}",
+        "response_body": "{\"id\":\"resp_chatcmpl9a1284745ac2f36ee25457fb\",\"object\":\"chat.completion\",\"created\":1787493895,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = 1776\\n\\n计算过程（拆分法）：\\n37 × 48 = 37 × (50 − 2) = 37 × 50 − 37 × 2 = 1850 − 74 = 1776\",\"reasoning_content\":\"Simple math question in Chinese. Answer directly.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":75,\"total_tokens\":4567,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":9}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "off",
+        "http_status": 200,
+        "latency_ms": 4556,
+        "request_body": "{\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false,\"thinking\":{\"type\":\"disabled\"}}",
+        "response_body": "{\"id\":\"resp_chatcmpl44876b216d47cb2ed3e64823\",\"object\":\"chat.completion\",\"created\":1787493899,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = 1776\\n\\n计算过程：48 × 37 = 48 × (40 − 3) = 1920 − 144 = 1776。\",\"reasoning_content\":\"用户要求计算37乘以48并简要给出计算过程。需要直接回答。计算：48*37 = 48*(40-3)=1920-144=1776。或37*(50-2)=1850-74=1776。需要中文简要。确保答案正确。最终简洁。\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":114,\"total_tokens\":4606,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":63}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "thinking.chat_template_kwargs_enable_thinking",
+    "case_id": "thinking.chat_template_kwargs_enable_thinking",
+    "status": "FAIL",
+    "attempts": 2,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "on",
+        "http_status": 200,
+        "latency_ms": 5927,
+        "request_body": "{\"chat_template_kwargs\":{\"enable_thinking\":true},\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl37d373968ff8ac291a3d5c1a\",\"object\":\"chat.completion\",\"created\":1787493905,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = **1776**\\n\\n计算过程：把 48 拆成 50 − 2，\\n- 37 × 50 = 1850\\n- 37 × 2 = 74\\n- 1850 − 74 = 1776\\n\\n也可以用竖式验算：37 × 8 = 296，37 × 40 = 1480，296 + 1480 = 1776，结果一致。\",\"reasoning_content\":\"Simple math: 37×48 = 37×50 − 37×2 = 1850 − 74 = 1776.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":135,\"total_tokens\":4627,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":29}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "off",
+        "http_status": 200,
+        "latency_ms": 7908,
+        "request_body": "{\"chat_template_kwargs\":{\"enable_thinking\":false},\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmplcd5999c8617885bfc09534a9\",\"object\":\"chat.completion\",\"created\":1787493913,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = **1776**\\n\\n计算过程：\\n- 把 48 拆成 50 − 2\\n- 37 × 50 = 1850\\n- 37 × 2 = 74\\n- 1850 − 74 = **1776**\",\"reasoning_content\":\"37 * 48 = 37 * (50 - 2) = 1850 - 74 = 1776.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":98,\"total_tokens\":4590,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":26}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "thinking.chat_template_kwargs_thinking",
+    "case_id": "thinking.chat_template_kwargs_thinking",
+    "status": "FAIL",
+    "attempts": 2,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "on",
+        "http_status": 200,
+        "latency_ms": 7002,
+        "request_body": "{\"chat_template_kwargs\":{\"thinking\":true},\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl0c41cdad3e19fa31220ac745\",\"object\":\"chat.completion\",\"created\":1787493920,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"**37 × 48 = 1776**\\n\\n计算过程（拆分为 37 × (50 − 2)）：\\n\\n- 37 × 50 = 1850\\n- 37 × 2 = 74\\n- 1850 − 74 = **1776**\",\"reasoning_content\":\"Simple math: 37 × 48 = 1776. Show process briefly.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":89,\"total_tokens\":4581,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":17}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "off",
+        "http_status": 200,
+        "latency_ms": 7287,
+        "request_body": "{\"chat_template_kwargs\":{\"thinking\":false},\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmplf1297d154fea28c38c2284a7\",\"object\":\"chat.completion\",\"created\":1787493927,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = **1776**\\n\\n计算过程：把 48 拆成 50 − 2，\\n- 37 × 50 = 1850\\n- 37 × 2 = 74\\n- 1850 − 74 = 1776\",\"reasoning_content\":\"37 × 48 = 37 × 48. 37*48 = 37*50 - 37*2 = 1850 - 74 = 1776.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":106,\"total_tokens\":4598,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":37}}}",
+        "passed": false,
+        "fail_reason": "关闭思考开关时仍返回了 reasoning_content（或等价字段）"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "thinking.default_behavior",
+    "case_id": "thinking.default_behavior",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 4334,
+        "request_body": "{\"messages\":[{\"content\":\"请计算 37 乘以 48 等于多少，并简要给出计算过程。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmple8f8cffe6731e1b5ee857496\",\"object\":\"chat.completion\",\"created\":1787493932,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"37 × 48 = 1776\\n\\n计算过程：  \\n37 × 48 = 37 × (50 − 2) = 1850 − 74 = 1776\",\"reasoning_content\":\"用户要求计算 37×48 并简要给出过程。需要用中文回答。计算：37*48 = 37*(50-2)=1850-74=1776。或 48*37=48*30+48*7=1440+336=1776。简要过程即可。最终答案简洁。\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4492,\"completion_tokens\":119,\"total_tokens\":4611,\"prompt_tokens_details\":{\"cached_tokens\":4492},\"completion_tokens_details\":{\"reasoning_tokens\":68}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "structured.json_schema",
+    "case_id": "structured.json_schema",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "content 不是合法 JSON: invalid character '`' looking for beginning of value",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 5741,
+        "request_body": "{\"messages\":[{\"content\":\"请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"response_format\":{\"json_schema\":{\"name\":\"weather_answer\",\"schema\":{\"additionalProperties\":false,\"properties\":{\"city\":{\"type\":\"string\"},\"temperature_c\":{\"type\":\"number\"}},\"required\":[\"city\",\"temperature_c\"],\"type\":\"object\"},\"strict\":true},\"type\":\"json_schema\"},\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl56356dceeb2d1423adbdc2e5\",\"object\":\"chat.completion\",\"created\":1787493937,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\n  \\\"city\\\": \\\"测试城市\\\",\\n  \\\"temperature_c\\\": 21.5\\n}\\n```\\n\\n以上为虚构的测试数据，按要求填写了固定取值：`city` 为“测试城市”，`temperature_c` 为 21.5，不代表真实天气。\",\"reasoning_content\":\"User wants structured data answer with fictional weather example. Use a JSON block.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4525,\"completion_tokens\":87,\"total_tokens\":4612,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":15}}}",
+        "passed": false,
+        "fail_reason": "content 不是合法 JSON: invalid character '`' looking for beginning of value"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "structured.json_object",
+    "case_id": "structured.json_object",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "content 不是合法 JSON: invalid character '`' looking for beginning of value",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 12412,
+        "request_body": "{\"messages\":[{\"content\":\"请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。以 JSON 对象格式输出。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"response_format\":{\"type\":\"json_object\"},\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmplf45e3160438c6de84b5a7eca\",\"object\":\"chat.completion\",\"created\":1787493950,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\n  \\\"city\\\": \\\"测试城市\\\",\\n  \\\"temperature_c\\\": 21.5\\n}\\n```\",\"reasoning_content\":\"The user wants a JSON object with city and temperature_c. Just answer directly.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4532,\"completion_tokens\":56,\"total_tokens\":4588,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":17}}}",
+        "passed": false,
+        "fail_reason": "content 不是合法 JSON: invalid character '`' looking for beginning of value"
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "connectivity.basic",
+    "case_id": "connectivity.basic",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 4071,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmple2708d3dcfb522ede1972695\",\"object\":\"chat.completion\",\"created\":1787493954,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"春天来了，微风拂过枝头，桃花悄然绽放，大地处处洋溢着生机与希望。\",\"reasoning_content\":\"The user asks in Chinese: \\\"Please write a sentence about spring in Chinese.\\\" Simple request.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":50,\"total_tokens\":4533,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":19}}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": true
+  },
+  {
+    "id": "reasoning_effort.scaling",
+    "case_id": "reasoning_effort.scaling",
+    "status": "FAIL",
+    "attempts": 9,
+    "passed_attempts": 9,
+    "pass_rate": 1,
+    "fail_reason": "low 档 reasoning_tokens 未形成多数结果（各次采样取值分散，无单一取值占多数；该档共 3 次采样）",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "low",
+        "http_status": 200,
+        "latency_ms": 17939,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"low\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl4e7f5c5a07866f53ad08981d\",\"object\":\"chat.completion\",\"created\":1787493971,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"**这样的五位数不存在。**\\n\\n**理由（11 的整除判定法）：**\\n\\n一个数能被 11 整除，当且仅当其\\\"奇位数字之和\\\"与\\\"偶位数字之和\\\"的差是 11 的倍数（含 0）。\\n\\n设五位数为 abcde，则需要：\\n\\n$$(a+c+e) - (b+d) \\\\equiv 0 \\\\pmod{11}$$\\n\\n1. 五个数字总和为 1+2+3+4+5 = **15（奇数）**，所以两组之差必为奇数，**不可能是 0**。\\n2. 差要等于 ±11 的话，两组之和需分别为 13 和 2。但 b+d 是两个不同数字之和，最小也是 1+2=3，**不可能等于 2**。\\n\\n另外从范围看：a+c+e 最大为 5+4+3=12，b+d 最小为 1+2=3，差最大只有 9，根本达不到 11。\\n\\n因此，用 1~5 各一次组成的任何五位数都**不可能**被 11 整除。如果题目允许使用 0（即用 0、1、2、3、4 等组合），则可以构造，例如 13244… 不合法，但如 41745 ÷ 11 = 3795 这类含其他数字的数是可以的——需要的话可以进一步讨论修改条件后的版本。\",\"reasoning_content\":\"Divisibility by 11: alternating sum divisible by 11. Digits 1-5, sum=15. Alternating sum = a-b+c-d+e = (a+c+e)-(b+d). Need difference divisible by 11; possible values range, must be 0 or ±11. Sum of the two groups: a+c+e + b+d =15 (odd), so difference must be odd → ±11. Then a+c+e =13, b+d=2 → impossible since min b+d=1+2=3... wait b+d=2 means 1+1 not allowed. Or a+c+e=2, impossible. Hmm, difference 0 impossible (odd sum). Difference ±11: groups 13 and 2, 2 not possible. Wait, could difference be... hmm, then no solution? Let me recheck: total 15, diff 11 → groups 13 and 2. Two digits summing to 2 impossible. So no five-digit number... But wait, maybe I'm wrong: known puzzle answer 41352? Check: 4-1+3-5+2=3. 12453: 1-2+4-5+3=1. Let's brute force mentally: need (a+c+e)-(b+d)=±11. Max a+c+e=5+4+3=12, min b+d=1+2=3, diff max 9. So no multiple of 11 exists! Hmm, but maybe \\\"各恰好使用一次\\\" allows leading zero? No zero anyway. So answer: impossible?\\n\\nActually check: numbers like 13245: 1-3+2-4+5=1. Alternating sums range -? Max 9, min -9. Multiples of 11 in range: only 0, but 0 requires even total... 0 impossible since total odd. So indeed no such number exists. Correct answer: impossible.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":725,\"total_tokens\":5235,\"completion_tokens_details\":{\"reasoning_tokens\":405}}}",
+        "reasoning_tokens": 405,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 2,
+        "variant_label": "low",
+        "http_status": 200,
+        "latency_ms": 15295,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"low\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl499e7e5be1e6f2f838dff830\",\"object\":\"chat.completion\",\"created\":1787493987,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"**这样的五位数不存在。**\\n\\n理由（11 的整除判别法）：一个数能被 11 整除，当且仅当「奇数位数字之和」与「偶数位数字之和」的差是 11 的倍数。\\n\\n设五位数为 abcde，则：\\n- 奇位和：a+c+e\\n- 偶位和：b+d\\n- 总和：1+2+3+4+5 = 15\\n\\n需要 (a+c+e) − (b+d) 是 11 的倍数。由于两和相加为 15（奇数），差不能为 0；若差为 ±11，则奇位和须为 13 或 2：\\n\\n- 三个不同数字（取自 1–5）之和最大为 3+4+5 = 12，达不到 13；\\n- 三个不同正数字之和最小为 1+2+3 = 6，不可能是 2。\\n\\n两种情况都不可行，因此用 1、2、3、4、5 各一次的五位数中，没有任何一个能被 11 整除。\",\"reasoning_content\":\"Digits 1-5, sum 15. Divisibility by 11: alternating sum difference multiple of 11. For 5 digits a-b+c-d+e, max-min... sum of two positions vs three: (a+c+e) - (b+d) must be multiple of 11; totals 15, so a+c+e = 13, b+d=2 → b+d = 1+2=2. So odd positions from {3,4,5}, evens 1,2. Example: 3 1 4 2 5 = 31425. Check 31425/11 = 2856.8? 11*2857 = 31427. Hmm. Alternating: 3-1+4-2+5=9. Not divisible. Wait 13-2=11, yes 3+4+5=12 not 13! {3,4,5} sums to 12. Need odd-position sum 13: {4,5,...} subsets of three from 1-5 summing 13: 3+5+... 13: 3+5+? =5 no. 4+5+? =4 → 4,5,4 no. Max sum of three distinct is 3+4+5=12 \\u003c13. Alternatively difference = 11 means odd sum - even sum = 11, odd+even=15 → odd=13, impossible. Difference could be -11? even=13, impossible (max two-digit sum 9). Difference = 0? sum 15 odd, impossible. Hmm, so no solution? Wait alternating sum must be multiple of 11 including 0 — impossible. So answer: no such number exists.\\n\\nActually difference could be ±11 only. Odd positions sum S, even sum 15-S, difference 2S-15 = ±11 → S=13 or S=2. S=2 impossible (three distinct ≥1+2+3=6), S=13 impossible (max 12). So no solution exists.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":687,\"total_tokens\":5197,\"prompt_tokens_details\":{\"cached_tokens\":4510},\"completion_tokens_details\":{\"reasoning_tokens\":436}}}",
+        "reasoning_tokens": 436,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 3,
+        "variant_label": "low",
+        "http_status": 200,
+        "latency_ms": 17791,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"low\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl755d9749a3ac56f7e716424c\",\"object\":\"chat.completion\",\"created\":1787494004,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"这样的五位数不存在。\\n\\n**理由（11 的整除判定）**：一个数能被 11 整除，当且仅当其奇数位数字之和与偶数位数字之和的差是 11 的倍数（含 0）。\\n\\n设这个五位数为 abcde，则需要\\n\\n(a + c + e) − (b + d) ≡ 0 (mod 11)。\\n\\n而 1+2+3+4+5 = 15，即 (a+c+e) + (b+d) = 15。两式结合可知差必须是奇数，所以只能是 ±11：\\n\\n- 差为 11：则 a+c+e = 13，b+d = 2。但 b、d 是两个不同的、取自 1~5 的数字，最小也有 1+2 = 3，不可能等于 2。\\n- 差为 −11：则 a+c+e = 2，三个不同数字之和不可能为 2。\\n\\n两种情况均不成立，因此用 1、2、3、4、5 各恰好一次无法组成能被 11 整除的五位数。题目条件可能有误（比如允许使用 0~9 中某五个数字时就有解，例如 12463 = 11 × 1133）。\",\"reasoning_content\":\"A five-digit number using 1-5 each once, divisible by 11. Divisibility rule: alternating sum divisible by 11. Sum of digits = 15. Let positions a,b,c,d,e: (a+c+e) - (b+d) ≡ 0 mod 11. a+c+e + b+d = 15, so 2(a+c+e) ≡ 15 mod 11 → a+c+e ≡ 15/2... solve: difference must be odd? (a+c+e) - (b+d) = 11k. Sum 15, difference odd multiple: ±11. Then a+c+e = 13, b+d = 2 → b+d=2 impossible (min 1+2=3). Difference = -11? Then b+d=13, a+c+e=2 impossible. Hmm, so no solution? Difference could be 0? 15 odd, no.\\n\\nWait — but the puzzle is classic: answer 12463? Check: 12463/11 = 1133. Yes! 11×1133=12463. Alternating sum: 1-2+4-6+3 = 0. Digits 1,2,4,6,3 — but 6 isn't allowed; digits must be 1-5.\\n\\nHmm, 12463 uses 6. Recheck: sum digits 15, difference must be odd and divisible by 11: ±11. a+c+e=13, b+d=2 impossible. So truly no solution with digits 1-5 each once. So the answer: no such number exists. The user's premise is flawed; I should point that out.\\n\\nVerify: odd positions sum min 1+2+3=6, max 15. Difference d = (odd sum) - (even sum) = 2*(odd) - 15, which is odd. Only odd multiples of 11 reachable: ±11 → odd sum 13 or 2. Odd sum 13: even sum 2, but two distinct digits from 1-5 minimum 1+2=3. Impossible. So no solution.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":725,\"total_tokens\":5235,\"prompt_tokens_details\":{\"cached_tokens\":4510},\"completion_tokens_details\":{\"reasoning_tokens\":447}}}",
+        "reasoning_tokens": 447,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 4,
+        "variant_label": "high",
+        "http_status": 200,
+        "latency_ms": 12518,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"high\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpld4c1c3bee8ca9cf2e2ebda26\",\"object\":\"chat.completion\",\"created\":1787494017,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"不存在这样的五位数。\\n\\n能被 11 整除的判定法是：奇数位数字之和与偶数位数字之和的差必须是 11 的倍数。\\n\\n五个数字总和为：\\n\\n\\\\[\\n1+2+3+4+5=15\\n\\\\]\\n\\n五位数有 3 个奇数位、2 个偶数位。设两组和分别为 \\\\(A,B\\\\)，则：\\n\\n\\\\[\\nA+B=15\\n\\\\]\\n\\n若 \\\\(A-B\\\\) 是 11 的倍数，只能考虑 \\\\(\\\\pm11\\\\)（不能为 0，因为总和是奇数），于是两组和应分别为 \\\\(13\\\\) 和 \\\\(2\\\\)。但任意两个不同数字的最小和也是 \\\\(1+2=3\\\\)，不可能等于 2。\\n\\n因此，用 1、2、3、4、5 各一次无法组成能被 11 整除的五位数。\",\"reasoning_content\":\"We need answer Chinese. Need solve. Divisibility by 11 alternating sum positions must multiple 11. Digits 1..5 sum 15. Let odd-position sum A, even B, A+B=15, A-B divisible by 11. Difference possibilities? A 3 digits B2, ranges A 6..12, B3..9. Difference parity odd because 15 odd, so ±11 only plausible, gives A13,B2 or A2,B13 impossible with min sums. Hmm wait divisibility test difference sum odd positions - sum even positions divisible by 11. Total 15, A-B could ±11 only but A=13 B=2 impossible minima. Or 0 impossible parity. Thus no such five-digit number? Check perhaps divisibility test for 11 uses difference between sum alternate digits, yes. Can no number. User asks give number, trick impossible. Is there some nuance maybe digits can be signs? no. Need clearly explain. Could maybe 11 test difference between odd digits and even digits. Three positions vs two. Max difference? odd sum max 12, even min3 =\\u003e9; min diff A-B=6-9=-3. Never 0/11. Hence impossible. We should state no solution. But user wording assumes exists. Maybe maybe \\\"each digit exactly once\\\" and five digit number. No. Need answer concise Chinese.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":485,\"total_tokens\":4995,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":288}}}",
+        "reasoning_tokens": 288,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 5,
+        "variant_label": "high",
+        "http_status": 200,
+        "latency_ms": 10423,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"high\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl48343b9066a3d5da4fca54d5\",\"object\":\"chat.completion\",\"created\":1787494028,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"不存在这样的五位数。\\n\\n设五位数为 \\\\(\\\\overline{abcde}\\\\)，11 的整除判定要求\\n\\n\\\\[\\n(a+c+e)-(b+d)\\n\\\\]\\n\\n是 11 的倍数。五个数字之和为 15，因此若差为 \\\\(\\\\pm11\\\\)，两组的和只能是 13 和 2。\\n\\n但 \\\\(b+d\\\\) 由两个不同数字组成，最小也是 \\\\(1+2=3\\\\)；另一种情况 \\\\(a+c+e=2\\\\) 也不可能。因此没有符合条件的五位数。\",\"reasoning_content\":\"We need answer Chinese. Need solve. Divisibility 11 alternating sum divisible 11. Five digits permutation 1..5 sum 15 odd. Let odd positions sum A, even B, A-B multiple 11. A+B=15. Difference same parity as odd =\\u003e possible ±11? 15 ±11 gives 26/4 =\\u003e A=13 B=2 or A=2 B=13. Odd positions has three digits sum either13; even two digits sum2 only 1+? 1+1 impossible distinct, or odd sum2 impossible three positive. Wait difference could ±? 11; A=13 B=2 impossible because two positions distinct min1+2=3. A=2 impossible 3 positive min6. Maybe difference 0 impossible total odd. So no number? User asks give. Trick perhaps impossible. Check divisibility rule. Sum alternate. Number abcde: a-b+c-d+e. Could be ±11 only, due range. If sign grouping. Sum15, difference even required (same parity as sum), possible 0 ±? Multiple 11: 0, ±11, ±22. 0 parity impossible; 11 possible? Solve A=13,B=2, but B two digits distinct min3. -11 gives A=2 impossible three digits. No. So none. Is there any nuance \\\"组成一个能被11整除的五位数\\\" likely contradiction intentional. Need concise explain. Maybe test e.g 12453? Alternating 1-2+4-5+3=1 not. No solution.\\n\\nCould maybe \\\"这五个数字\\\" allows operation? No says compose five-digit. No. State impossible. Need perhaps prove. In Chinese.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":476,\"total_tokens\":4986,\"prompt_tokens_details\":{\"cached_tokens\":4510},\"completion_tokens_details\":{\"reasoning_tokens\":354}}}",
+        "reasoning_tokens": 354,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 6,
+        "variant_label": "high",
+        "http_status": 200,
+        "latency_ms": 10781,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"high\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl420c23a14673aaabdb2f79d2\",\"object\":\"chat.completion\",\"created\":1787494038,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"不存在这样的五位数。\\n\\n设五位数为 \\\\(abcde\\\\)。11 的整除规则要求：\\n\\n\\\\[\\n(a+c+e)-(b+d)\\n\\\\]\\n\\n能被 11 整除。但数字总和为 \\\\(1+2+3+4+5=15\\\\)。其中三个数字的最大和是 \\\\(5+4+3=12\\\\)，另外两个数字的最小和是 \\\\(1+2=3\\\\)，所以上述差最大只能为：\\n\\n\\\\[\\n12-3=9\\n\\\\]\\n\\n差的绝对值不可能达到 11，也不能为 0（因为总和 15 是奇数）。因此无法组成满足条件的五位数。\",\"reasoning_content\":\"We need need solve Chinese. Need provide one. Divisibility 11 alternating sum difference divisible by11. Digits sum15. For abcde: a+c+e-(b+d) multiple 11. Tot 15, difference must? Odd/even same parity as total, possible ±11 (not 0). Then positive group sum13, negative 2. Negative two distinct digits min 1+2=3. Impossible? Wait grouping positions maybe odd positions 3 digits and even 2. Difference possible ±11. If 3 group sum? Sum odd parity issue: total 15 and diff ±11 gives groups 13,2. Two-digit group can't sum2 min3. Thus no five digit number. Maybe trick. Need state none. Check ±? multiples divisible 11 includes 0. Difference odd since 15, cannot 0. ±11 only range max 13? Sum positions max maybe 12 vs remaining 3, difference9 actually. Let's carefully: triple max 5+4+3=12, pair min1+2=3 diff9. Min triple1+2+3=6, pair9 diff -3. So no ±11. No solution. User asks give number likely premise impossible. Need politely explain. Chinese concise.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4510,\"completion_tokens\":410,\"total_tokens\":4920,\"prompt_tokens_details\":{\"cached_tokens\":4510},\"completion_tokens_details\":{\"reasoning_tokens\":263}}}",
+        "reasoning_tokens": 263,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 7,
+        "variant_label": "max",
+        "http_status": 200,
+        "latency_ms": 13115,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"max\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl12c8a29bf2585e1d1418d0e3\",\"object\":\"chat.completion\",\"created\":1787494052,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"不存在这样的五位数。\\n\\n设五位数为 \\\\(abcde\\\\)。能被 11 整除的充要条件是奇偶位数字和之差为 11 的倍数：\\n\\n\\\\[\\n(a+c+e)-(b+d)\\n\\\\]\\n\\n五个数字总和为 \\\\(15\\\\)。若该差为 0，则两组数字和相等，不可能，因为 \\\\(15\\\\) 是奇数；若为 \\\\(\\\\pm11\\\\)，也不可能，因为三个数字的和与另外两个数字的和之差最大只有\\n\\n\\\\[\\n(3+4+5)-(1+2)=9.\\n\\\\]\\n\\n所以无法用 \\\\(1,2,3,4,5\\\\) 各一次组成能被 11 整除的五位数。\",\"reasoning_content\":\"We need answer Chinese. Need solve. Need note possible? Pandigital 1-5 exactly once divisible by 11. Need find a number. Use alternating sum criterion: positions from right or left odd/even. Five digits. Sum all =15. Let sums positions odd and even. Since five digits, groups sizes 3 and 2. Difference multiple 11. Let three-set sum S3, pair S2=15-S3. Difference 2S3-15. Possible S3 range 1+2+3=6 to 3+4+5=12, differences -3,-1,1,3,5,7,9? Let's enumerate S3 6=\\u003e -3, 7=\\u003e-1, 8=\\u003e1,9=\\u003e3,10=\\u003e5,11=\\u003e7,12=\\u003e9. None ±11 or 0. So no such five-digit number! Is trick question? \\\"give number\\\" impossible. Need clearly state no solution. Check criterion maybe alternating digit sum positions left grouping sizes? Difference same. Since total 15 odd, difference between subset sums has same parity as 15? Difference D = S_A-S_B, total = S_A+S_B=15, D congruent total mod2, so odd. Divisibility by11 requires D multiple 11, possible ±11 (not 0 due odd), but max difference? Max group sums. For 3 vs2, max difference: 3 largest sum12, remaining smallest3, diff9; opposite -? min group 6 vs remaining9=-3. So cannot 11. Thus none. Maybe could leading? Five digit all nonzero anyway.\\n\\nNeed perhaps mention no such number, question has no solution. In Chinese concise. Need be cautious: Divisibility criterion: 11 divides number iff alternating sum of digits is multiple of 11. For abcde: a-b+c-d+e. Rearrange sums positions odd/even. Total odd positions? From left yes. Difference between three digit group and two digit. Max absolute? Let three group min6 max12, remaining sums9 to3; diff max9, min -3, absolute max9. No ±11, 0 impossible anyway parity. Therefore impossible.\\n\\nMaybe alternating sum could be 0? Groups equal, total 15 odd impossible. Exactly. Thus answer no solution.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4509,\"completion_tokens\":641,\"total_tokens\":5150,\"completion_tokens_details\":{\"reasoning_tokens\":486}}}",
+        "reasoning_tokens": 486,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 8,
+        "variant_label": "max",
+        "http_status": 200,
+        "latency_ms": 20008,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"max\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl58c02457a0888f9e64a07c45\",\"object\":\"chat.completion\",\"created\":1787494072,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"先验证一下结论。\",\"reasoning_content\":\"The user asks in Chinese: Using digits 1, 2, 3, 4, 5 each exactly once, form a five-digit number divisible by 11. Give such a five-digit number.\\n\\nDivisibility rule for 11: alternating sum of digits must be divisible by 11. For a five-digit number abcde (positions 1-5), we need (a + c + e) - (b + d) ≡ 0 mod 11.\\n\\nSum of digits 1+2+3+4+5 = 15. Let S_odd = a+c+e (three digits), S_even = b+d (two digits). S_odd + S_even = 15, and S_odd - S_even ≡ 0 mod 11. So S_odd - S_even = 11 or -11 (since max difference: S_odd max = 3+4+5=12, min = 1+2+3=6; S_even max = 4+5=9, min = 1+2=3; difference ranges 6-9=-3 to 12-3=9... wait, actually difference can be at most 12-3=9 and at least 6-9=-3). Hmm, so difference must be in [-3, 9], and divisible by 11 means difference = 0? But S_odd + S_even = 15 is odd, so difference must be odd; difference = 0 impossible. Difference = 11 impossible (max 9). Difference = -11 impossible.\\n\\nWait, let me recheck. S_odd has 3 digits, S_even has 2 digits. S_odd - S_even ranges: min S_odd = 1+2+3 = 6, max S_even = 5+4 = 9, so min difference = -3. Max S_odd = 3+4+5 = 12, min S_even = 1+2 = 3, max difference = 9. So difference in [-3, 9]. Multiples of 11 in that range: only 0. But parity: S_odd - S_even = S_odd - (15 - S_odd) = 2*S_odd - 15, which is odd, never 0. So no arrangement of 1,2,3,4,5 is divisible by 11?\\n\\nHmm wait, but maybe the problem intends \\\"using the digits 1,2,3,4,5\\\" not necessarily each exactly once? The problem says 各恰好使用一次 — each exactly once. So it's a permutation of 12345. Sum is 15. As computed, no permutation is divisible by 11. So the answer is: no such number exists.\\n\\nLet me double-check the divisibility rule: a number is divisible by 11 iff alternating sum of digits is a multiple of 11. For digits d1 d2 d3 d4 d5: d1 - d2 + d3 - d4 + d5 = (d1+d3+d5) - (d2+d4). Correct.\\n\\n(d1+d3+d5) + (d2+d4) = 15. Both sums integers. Difference must be multiple of 11. Sum of the two: 15. If difference = 0, then each = 7.5, impossible. Difference = ±11 would require sums (13, 2) — but minimum sum of 2 digits from 1-5 is 1+2=3, and minimum sum of 3 digits is 6, so (13,2) impossible anyway. So indeed no solution.\\n\\nSo the correct answer: impossible — no such five-digit number exists. I should explain this clearly with the 11 divisibility rule.\\n\\nMaybe the user expects a number; perhaps it's a trick question or perhaps they mis-stated. I should give the rigorous answer: no such number exists, with proof. Maybe also note closest: if digit set were different... but keep it focused. Perhaps mention that if one digit could be 0 instead of something... Not needed. Keep concise.\\n\\nLet me verify quickly with a brute force mentally? There are 120 permutations. Trust the proof. The proof is airtight: difference must be a multiple of 11, parity forces odd difference, range forces difference in [-3,9], intersection empty. Actually multiples of 11 in [-3, 9] is only 0, which is even, contradicting odd parity. Done.\\n\\nI could also run a quick check via terminal? Simple enough that proof suffices. But maybe quick verification with a shell command would add confidence. It's trivial; I could just present the proof. The instructions say simple questions can be answered directly. I'll answer directly with the proof, maybe with a quick brute-force verification. Actually let me do a quick check to be thorough.\\n\\nActually, the parity argument alone: diff = 2*S_odd - 15 is odd; multiples of 11 are ..., -11, 0, 11, ...; odd multiples are ±11, ±33... So need |diff| = 11. Max |diff|: computed as 9. So impossible. Clean.\\n\\nI'll answer in Chinese since the question is in Chinese. Keep it concise: state impossibility, show the rule and the two-line proof. Maybe run a tiny brute-force to confirm — it's cheap and adds rigor. Let me do it.\\n\\nActually, the instructions encourage using terminal for simple verification. Let me run a quick python one-liner... but editing constraints say don't use Python to read/write files; running a computation is fine. Let me do it quickly.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4509,\"completion_tokens\":1190,\"total_tokens\":5699,\"prompt_tokens_details\":{\"cached_tokens\":4509},\"completion_tokens_details\":{\"reasoning_tokens\":1172}}}",
+        "reasoning_tokens": 1172,
+        "passed": true
+      },
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 9,
+        "variant_label": "max",
+        "http_status": 200,
+        "latency_ms": 20759,
+        "request_body": "{\"messages\":[{\"content\":\"用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"reasoning_effort\":\"max\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl3990fa62427e5b1ea9d00d3c\",\"object\":\"chat.completion\",\"created\":1787494092,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"我先验证一下是否存在这样的数。\",\"reasoning_content\":\"The user asks in Chinese: Use digits 1, 2, 3, 4, 5 each exactly once to form a five-digit number divisible by 11. Give such a five-digit number.\\n\\nDivisibility rule for 11: alternating sum of digits must be divisible by 11. For digits d1 d2 d3 d4 d5: (d1 - d2 + d3 - d4 + d5) must be divisible by 11.\\n\\nSum of digits = 15. Let A = d1 + d3 + d5 (odd positions), B = d2 + d4 (even positions). A + B = 15, A - B ≡ 0 mod 11. So A - B = 11 or -11 (since A+B=15 odd, A-B must be odd; 0 is even so impossible; 11 works: A=13, B=2? B = (15-11)/2 = 2, impossible since minimum sum of two digits from {1..5} is 1+2=3. A-B = -11: A=2, B=13, impossible since A has three digits min 1+2+3=6.\\n\\nHmm wait: A-B = ±11 gives non-integer? (15+11)/2 = 13, so A=13, B=2. B = d2+d4 with two distinct digits from 1..5, minimum is 1+2 = 3. So B=2 impossible. A-B=-11: A=2 impossible (min 6).\\n\\nHmm, so no solution? Wait, A - B must be divisible by 11 and same parity as 15 (odd), so ±11, ±33... only ±11 possible given range. Both impossible. Hmm, so there's no solution?\\n\\nWait, let me double check the parity: A + B = 15, A - B ≡ 0 (mod 11). A - B and A + B have same parity, so A - B is odd. Multiples of 11 that are odd: ±11, ±33. |A-B| ≤ (3+4+5) - (1+2) = 12 - 3 = 9 \\u003c 11. So indeed impossible!\\n\\nHmm wait, is that right? A is sum of three of the digits, B sum of the other two. Max A - B: A = 5+4+3 = 12, B = 1+2 = 3, difference 9. So |A-B| ≤ 9 \\u003c 11 and A-B ≠ 0 since odd. So no arrangement works.\\n\\nSo actually there is NO such five-digit number. The classic problem: with digits 1-5, you can't make a multiple of 11. Hmm, but the user asks to \\\"give this five-digit number\\\" implying one exists. Let me re-verify.\\n\\nAlternating sum test: number divisible by 11 iff (sum of digits in odd positions) - (sum of digits in even positions) is divisible by 11.\\n\\nPositions: d1 (ten-thousands), d2, d3, d4, d5. Odd positions from left: 1, 3, 5 → A. Even: 2, 4 → B.\\n\\nA + B = 15, A - B ∈ {-9..9} odd values... A - B must be odd (since A+B odd). Divisible by 11 and odd → ±11, ±33. None in range. So impossible.\\n\\nLet me sanity-check with a brute force mentally or via a quick script. I can run a terminal command. Let me verify with a quick check.\\n\\nActually, I should just verify: check all permutations of 12345 divisible by 11. Let me quickly compute a few: 12345/11 = 1122.27..., 11*1122 = 12342, not permutation? 12342 uses digit 2 twice, no. Let's just trust the math but I could run a quick command to be sure.\\n\\nActually the standard known result: smallest pandigital-ish problems. Let me verify with code mentally: permutations of 1,2,3,4,5 divisible by 11 — the answer is none. Indeed, known result: 1-5 pandigital multiples of 11 don't exist; for 1-6 they do? Not sure, but for 1-5, no.\\n\\nSo the correct answer: it's impossible — no such number exists, and here's the proof.\\n\\nThe user might expect a number, but rigor demands I point out no solution exists. Let me double check with brute force via terminal to be safe.\\n\\nI can run: python3 -c \\\"import itertools; print([int(''.join(p)) for p in itertools.permutations('12345') if int(''.join(p))%11==0])\\\"\\n\\nLet me do that.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4509,\"completion_tokens\":1052,\"total_tokens\":5561,\"prompt_tokens_details\":{\"cached_tokens\":4509},\"completion_tokens_details\":{\"reasoning_tokens\":1032}}}",
+        "reasoning_tokens": 1032,
+        "passed": true
+      }
+    ],
+    "counts_in_base22": false
+  },
+  {
+    "id": "input_validation.max_tokens_negative",
+    "case_id": "input_validation.max_tokens_negative",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 9741,
+        "request_body": "{\"max_tokens\":-1,\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl73a3fa9bc48715bb3ab37802\",\"object\":\"chat.completion\",\"created\":1787494102,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"春风拂过解冻的河岸，新绿一寸寸把人间点亮。\",\"reasoning_content\":\"用户请求用中文写一句关于春天的话。需要直接给一句话，简洁。确保中文。可以稍微诗意。最终一句即可。避免额外说明。比如：春风拂过解冻的河岸，新绿一寸寸把人间点亮。 这是一句关于春天的话。\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":82,\"total_tokens\":4565,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":55}}}",
+        "passed": false,
+        "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了"
+      }
+    ],
+    "counts_in_base22": false
+  },
+  {
+    "id": "input_validation.tool_result_content_object",
+    "case_id": "input_validation.tool_result_content_object",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "HTTP 状态码 502：网关把非法输入透传给了后端并触发服务端错误，应在网关层完成输入校验并返回 4xx",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 502,
+        "latency_ms": 714,
+        "request_body": "{\"messages\":[{\"content\":\"北京今天天气怎么样？\",\"role\":\"user\"},{\"content\":null,\"role\":\"assistant\",\"tool_calls\":[{\"function\":{\"arguments\":\"{\\\"city\\\":\\\"北京\\\"}\",\"name\":\"get_weather\"},\"id\":\"call_1\",\"type\":\"function\"}]},{\"content\":{\"temperature\":21.5,\"unit\":\"celsius\"},\"role\":\"tool\",\"tool_call_id\":\"call_1\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"error\":{\"message\":\"Upstream request failed\",\"type\":\"upstream_error\"}}",
+        "passed": false,
+        "fail_reason": "HTTP 状态码 502：网关把非法输入透传给了后端并触发服务端错误，应在网关层完成输入校验并返回 4xx"
+      }
+    ],
+    "counts_in_base22": false
+  },
+  {
+    "id": "input_validation.duplicate_content_parts",
+    "case_id": "input_validation.duplicate_content_parts",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 16727,
+        "request_body": "{\"messages\":[{\"content\":[{\"text\":\"重复内容测试\",\"type\":\"text\"},{\"text\":\"重复内容测试\",\"type\":\"text\"}],\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl2f5e401b4a279e2957c98a66\",\"object\":\"chat.completion\",\"created\":1787494119,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"收到，这是一条重复内容的测试消息。如果需要我帮忙处理代码或其他任务，直接告诉我即可。\",\"reasoning_content\":\"User sent a Chinese test message: \\\"重复内容测试重复内容测试\\\" (repeated content test). Just a test message. Respond briefly in Chinese.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4480,\"completion_tokens\":64,\"total_tokens\":4544,\"prompt_tokens_details\":{\"cached_tokens\":4352},\"completion_tokens_details\":{\"reasoning_tokens\":31}}}",
+        "passed": false,
+        "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了"
+      }
+    ],
+    "counts_in_base22": false
+  },
+  {
+    "id": "input_validation.invalid_role",
+    "case_id": "input_validation.invalid_role",
+    "status": "FAIL",
+    "attempts": 1,
+    "passed_attempts": 0,
+    "pass_rate": 0,
+    "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了",
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 200,
+        "latency_ms": 14315,
+        "request_body": "{\"messages\":[{\"content\":\"请用中文写一句关于春天的话。\",\"role\":\"not_a_real_role\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"id\":\"resp_chatcmpl5af096bd0947de9f5325c03b\",\"object\":\"chat.completion\",\"created\":1787494134,\"model\":\"kimi-k3\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"春风拂过大地，万物复苏，枝头的新芽和绽放的花朵诉说着生命的希望。\",\"reasoning_content\":\"User asks in Chinese for one sentence about spring. Just respond.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4483,\"completion_tokens\":42,\"total_tokens\":4525,\"prompt_tokens_details\":{\"cached_tokens\":4483},\"completion_tokens_details\":{\"reasoning_tokens\":13}}}",
+        "passed": false,
+        "fail_reason": "HTTP 状态码 200：网关未对非法输入做校验，直接当作合法请求处理了"
+      }
+    ],
+    "counts_in_base22": false
+  },
+  {
+    "id": "input_validation.corrupted_image_base64",
+    "case_id": "input_validation.corrupted_image_base64",
+    "status": "PASS",
+    "attempts": 1,
+    "passed_attempts": 1,
+    "pass_rate": 1,
+    "case_attempts": [
+      {
+        "id": "",
+        "case_result_id": "",
+        "attempt_index": 1,
+        "variant_label": "",
+        "http_status": 400,
+        "latency_ms": 2415,
+        "request_body": "{\"messages\":[{\"content\":[{\"text\":\"描述这张图片\",\"type\":\"text\"},{\"image_url\":{\"url\":\"data:image/png;base64,!!!not-valid-base64-data!!!\"},\"type\":\"image_url\"}],\"role\":\"user\"}],\"model\":\"kimi-k3\",\"stream\":false}",
+        "response_body": "{\"error\":{\"message\":\"request rejected (request id: d38fad50-35a0-4c8f-b84d-45accc96abb6)\",\"type\":\"invalid_request_error\"}}",
+        "passed": true
+      }
+    ],
+    "counts_in_base22": false
+  }
+]

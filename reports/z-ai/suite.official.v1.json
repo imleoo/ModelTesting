@@ -1,0 +1,779 @@
+{
+  "suite_id": "z-ai",
+  "suite_version": "1.0.0",
+  "design_doc": "docs/模型自测台设计方案.md",
+  "design_doc_version": "v0.3",
+  "description": "z.ai（GLM 系列，经 tokenpanel 网关转发）的可执行套件定义：18 项基础用例 + 4 项附加用例。用例主干来自 z.ai 实测底稿的 14 个测试项，另按 07 节 SOP 补入 kimi-k3 套件里正交且低成本的协议基线项（Stream 完整性、tool_choice 的 default/auto/required/none、默认思考行为、连通性）。不含多模态用例——本套件的被测模型是纯文本模型 glm-5.2，多模态需另建 glm-5v-turbo 的克隆套件并补 materials。",
+  "protocol": {
+    "base_path": "/chat/completions",
+    "auth_header": "Authorization: Bearer {{api_key}}",
+    "content_type": "application/json",
+    "style": "openai_chat_completions"
+  },
+  "defaults": {
+    "timeout_seconds": 60,
+    "category_timeout_overrides": {
+      "长上下文": 900,
+      "上下文缓存": 300,
+      "reasoning_effort": 300,
+      "输出控制": 120,
+      "确定性": 120
+    }
+  },
+  "fixtures": {
+    "tools": {
+      "get_weather": {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "查询指定城市的当前天气",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      }
+    },
+    "prompts": {
+      "generic_short": "请用中文写一句关于春天的话。",
+      "weather_query": "北京今天天气怎么样？",
+      "reasoning_prompt": "请计算 37 乘以 48 等于多少，并简要给出计算过程。",
+      "reasoning_effort_prompt": "用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。",
+      "structured_weather_question": "请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。",
+      "long_output_prompt": "请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。",
+      "stop_sequence_prompt": "请严格按下面的格式输出三行，每行一个单词，不要加任何解释、编号或标点：\nALPHA\nBRAVO\nCHARLIE",
+      "determinism_prompt": "请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。",
+      "cache_probe_question": "请只回答两个字：收到。",
+      "long_context_question": "上文中【暗号】后面的那个四位数字是多少？只输出这四位数字，不要输出任何其他字符。"
+    }
+  },
+  "cases": [
+    {
+      "id": "connectivity.basic",
+      "category": "连通性",
+      "name": "基础单轮请求",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "content_nonempty",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.7",
+      "notes": "底稿 14 项之外的协议基线补充：先证明链路本身通，后续用例失败才能归因到具体能力而不是网关不通。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_nonstream",
+      "category": "协议完整性",
+      "name": "非流式对话（Usage 字段稳定性）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_nonstream",
+      "repeat_attempts": 5,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 1 项。底稿判定为未通过，原因是『响应体 usage 对象字段不稳定』——单次请求碰巧正常不能作为通过依据，所以这里重复 5 次，任一次 usage 缺字段/不自洽即整体 FAIL。5 次是成本与检出率的折中：偶发率若低于 20%，需要在复测时临时调大这个值。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_stream",
+      "category": "协议完整性",
+      "name": "流式对话（Usage 结构）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_stream",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 2 项，判定未通过，原因是『没有 usage 结构』。两段式尝试：先不带 stream_options.include_usage，再带一次；任一变体的末包（[DONE] 前最后一包）自带合法 usage 即通过。两个变体都拿不到 usage 才判 FAIL，用来区分『网关不接受该参数』与『网关根本不回 usage』这两种不同的缺陷。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": true
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "no_include_usage",
+          "request_overrides": {}
+        },
+        {
+          "variant_label": "with_include_usage",
+          "request_overrides": {
+            "stream_options": {
+              "include_usage": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "protocol.stream_integrity",
+      "category": "协议完整性",
+      "name": "Stream 完整性",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "协议基线补充：与 usage 结构正交——流可能完整但不带 usage，也可能带了 usage 却中途断流，两者要分开归因。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "output_control.max_tokens_truncation",
+      "category": "输出控制",
+      "name": "max_tokens 强制截断",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "max_tokens_truncation",
+      "repeat_attempts": 3,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 3 项（判定通过，但备注同样记录了 usage 字段不稳定），因此重复 3 次。断言三条同时成立：finish_reason==\"length\"、usage.completion_tokens ∈ (0, max_tokens]、content 非空。请求里显式关掉思考，避免思考 token 把 256 的预算吃光导致 content 为空——那样失败原因会指向截断，实际问题却在思考开关，归因会错。max_tokens=256 是在『足够小以必然触发截断』与『大到能留下正文』之间取的值。",
+      "assertion_params": {
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.long_output_prompt}}"
+            }
+          ],
+          "max_tokens": 256,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.stop_semantics",
+      "category": "输出控制",
+      "name": "stop 语义",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stop_sequence_respected",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 12 项。提示词强制模型依次输出 ALPHA/BRAVO/CHARLIE，stop 取中间那个词：断言输出含 ALPHA（证明模型确实开始作答）、不含 BRAVO（stop 序列本身必须被吞掉）、finish_reason==\"stop\"。must_contain 是这条断言成立的关键——只查『不含 stop 串』的话，一个空响应也能通过。stop 只给一个元素：部分 GLM 版本对 stop 数组长度有上限，单元素在所有版本上语义一致。",
+      "assertion_params": {
+        "must_contain": "ALPHA"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.stop_sequence_prompt}}"
+            }
+          ],
+          "stop": [
+            "BRAVO"
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "determinism.temperature_zero",
+      "category": "确定性",
+      "name": "temperature=0",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_repeat",
+      "repeat_attempts": 3,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 7 项。同一请求连发 3 次，逐字节比对 content。提示词特意选了『有多种合理写法』的开放题（解释哈希函数）而不是『1+1=?』——固定答案的问题即使采样是随机的也会给出同样的输出，测不出确定性。比对不做 trim：允许『忽略首尾空白也算相同』等于默认供应商可以在确定性档位下产出不同空白。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.determinism_prompt}}"
+            }
+          ],
+          "temperature": 0,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.call_capability",
+      "category": "工具调用支持",
+      "name": "工具调用",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "底稿第 8 项。与 tool.choice_required 共用 tool_choice:required 触发方式，两者分别计数（前者代表『具备工具调用能力』，后者代表『tool_choice 的 required 分支语义正确』）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_default",
+      "category": "工具调用检测",
+      "name": "tool_choice Default（不传）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "协议基线补充。不传 tool_choice 时模型可自由选择，因此断言放宽为『非空文本或合法 tool_calls 二选一』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_auto",
+      "category": "工具调用检测",
+      "name": "tool_choice auto",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "协议基线补充，判定口径同 Default。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "auto",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_required",
+      "category": "工具调用检测",
+      "name": "tool_choice required",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "协议基线补充：required 必须真的产出 tool_calls，且每条 arguments 是合法 JSON。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_none",
+      "category": "工具调用检测",
+      "name": "tool_choice none",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_forbidden",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "协议基线补充：none 是 required 的反面约束，缺了它就无法证明网关真的在按 tool_choice 分流，而不是无论传什么都走同一条路径。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "none",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_function",
+      "category": "工具调用检测",
+      "name": "指定工具调用（tool_choice function）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "tool_choice_function",
+      "assertion_type": "tool_call_named",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "底稿第 9 项（通过）。与 kimi-k3 不同：kimi 官方不支持该参数、按可豁免处理，z.ai 支持，所以 CAPABILITY_PROFILE 声明 tool_choice_function=true 并按『声明则必过』执行。断言除函数名一致外，还校验 arguments 满足工具声明的 parameters schema。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": {
+            "type": "function",
+            "function": {
+              "name": "get_weather"
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.thinking_type",
+      "category": "思考行为",
+      "name": "关闭思考块（thinking.type）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "notes": "底稿第 5 项，判定未通过，原因是『禁用思考后依然输出思考内容』。开关成对校验：开启必须有 reasoning_content，关闭必须没有；两次都成立才算通过。只测关闭一侧无法区分『关闭生效』与『这个模型压根不返回思考内容』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "thinking": {
+              "type": "disabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.reasoning_effort_off",
+      "category": "思考行为",
+      "name": "关闭思考块（reasoning_effort=off）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:reasoning_effort_off",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "notes": "同为底稿第 5 项：z.ai 的 GLM-5.x 有两条关闭思考的路径（thinking.type=disabled 与 reasoning_effort=off），两条都要单独验证。真实排障中区分这两条很关键——只有一条失效时，结论是『某个参数没接住』而不是『模型不支持关闭思考』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "reasoning_effort": "off"
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.default_behavior",
+      "category": "思考行为",
+      "name": "默认思考行为",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "default_thinking_matches_declaration",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "notes": "协议基线补充：不传任何开关时的实际行为必须与 CAPABILITY_PROFILE.default_thinking_behavior 一致。首次对某个模型跑本套件时，这一项的失败往往说明能力声明填错了（登记环节问题），而不是模型有缺陷——按 07 节 SOP 应先核对声明再复测。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_schema",
+      "category": "结构化输出",
+      "name": "结构化输出（JSON Schema）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_schema_valid",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "notes": "底稿第 10 项（通过）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}"
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "weather_answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "temperature_c": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "city",
+                  "temperature_c"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_object",
+      "category": "结构化输出",
+      "name": "结构化输出（json_object）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_parseable",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "notes": "底稿第 11 项（通过）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。"
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "reasoning_effort.scaling",
+      "category": "reasoning_effort",
+      "name": "思考等级（low / high / max）",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "reasoning_effort",
+      "assertion_type": "reasoning_effort_scaling",
+      "repeat_attempts": 3,
+      "pdf_ref": "2.8",
+      "notes": "底稿第 6 项（通过）。附加用例，不计入基础分母。与 kimi-k3 的关键差异：z.ai 在 GLM-5.2 上把 low 与 high 映射到同一档思考强度，沿用默认的『low 与 high 必须有差异』会因为供应商侧的档位映射而恒失败——那是套件口径没对齐，不是模型不合格。因此显式声明 low vs max 为必须可区分的档位对；high 档仍然采样并留痕，供人工观察映射关系。",
+      "assertion_params": {
+        "required_distinct_pairs": [
+          [
+            "low",
+            "max"
+          ]
+        ]
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_effort_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "low",
+          "request_overrides": {
+            "reasoning_effort": "low"
+          }
+        },
+        {
+          "variant_label": "high",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "max",
+          "request_overrides": {
+            "reasoning_effort": "max"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context.long_context_recall",
+      "category": "长上下文",
+      "name": "1M 上下文",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "long_context",
+      "assertion_type": "long_context_recall",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "底稿第 13 项（通过）。附加用例。把四位暗号埋在两段填充语料正中间，要求模型只回答数字。两条证据缺一不可：usage.prompt_tokens ≥ min_prompt_tokens（证明超长输入没被网关或模型静默截断）+ 回答里唯一的数字串等于暗号。填充语料不含任何阿拉伯数字，否则会污染数字提取判定。⚠️ 校准项：filler 参数是字符数不是 token 数，两段各 75 万字符是按『1 token ≈ 1.5 汉字』估的，首次运行后必须用实测 prompt_tokens 反推校准；单次请求体约 4.5MB、输入约 100 万 token，成本与耗时都显著高于其他用例，不建议放进每日回归，按需手动跑。",
+      "assertion_params": {
+        "needle": "7391",
+        "min_prompt_tokens": 900000,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{filler:750000}}\n【暗号】7391\n{{filler:750000}}\n{{prompts.long_context_question}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "cache.prompt_cache_hit_rate",
+      "category": "上下文缓存",
+      "name": "缓存命中率",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "prompt_cache",
+      "assertion_type": "prompt_cache_hit_rate",
+      "repeat_attempts": 1,
+      "pdf_ref": "3.1",
+      "notes": "底稿第 14 项，底稿记录的是指标值 100.00%，不是通过/未通过。本套件把它固化成带门槛的断言：先发 1 次预热请求把前缀写进缓存，再发一次同样的请求并对后者判定 cached_tokens / prompt_tokens ≥ min_hit_rate，实测命中率写入 CASE_ATTEMPT.metrics 供报告展示。门槛取 0.5 而不是 1.0：命中率受缓存分块粒度影响，尾部不足一个分块的部分通常不计入命中，要求 100% 会把正常表现判成失败。填充语料约 8000 字符（≈5000 token），确保超过供应商的最小可缓存前缀长度。响应体里既读 usage.prompt_tokens_details.cached_tokens 也读平铺的 usage.cached_tokens——两个字段都没有时判 FAIL 并明确写『网关未回传缓存命中数』，不能当成命中 0 个。",
+      "assertion_params": {
+        "warmup_requests": 1,
+        "min_hit_rate": 0.5,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "system",
+              "content": "{{filler:8000}}"
+            },
+            {
+              "role": "user",
+              "content": "{{prompts.cache_probe_question}}"
+            }
+          ],
+          "temperature": 0,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.max_tokens_over_limit",
+      "category": "输入校验",
+      "name": "max_tokens 非法（超出模型上限）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "pdf_ref": null,
+      "notes": "底稿第 4 项，判定未通过：max_tokens 大于 131072 时应返回 400 提示参数错误，实际返回 200。附加用例，属于网关输入校验缺口而非模型能力问题。131073 = CAPABILITY_PROFILE.max_output_tokens + 1，换模型时必须同步改这个字面量（引擎不会自动从能力声明推导请求体取值）。判定标准是 HTTP 状态码本身：4xx 通过；5xx 判失败并注明『网关把非法输入透传给后端』；200 判失败并注明『网关未做校验』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "max_tokens": 131073,
+          "stream": false
+        }
+      }
+    }
+  ]
+}
