@@ -190,3 +190,49 @@ export function isTerminalStatus(status: TestRunStatus): boolean {
     status === 'FAILED'
   );
 }
+
+// ---- 结果对比（多源对比查看，只读）----
+
+export type CompareRunMeta = {
+  run_id: string;
+  model_id: string;
+  provider_id: string;
+  provider_name: string;
+  endpoint_via_tokenpanel: string;
+  status: TestRunStatus;
+  started_at: string;
+  finished_at?: string;
+};
+
+export type CompareCaseCell = {
+  status: 'PASS' | 'FAIL' | 'NOT_DECLARED' | 'MANUAL_REVIEW' | 'MISSING';
+  attempts: number;
+  passed_attempts: number;
+  avg_latency_ms: number;
+  fail_reason?: string;
+};
+
+export type CompareCaseRow = {
+  case_id: string;
+  name: string;
+  counts_in_base22: boolean;
+  cells: Record<string, CompareCaseCell>; // key = run_id
+};
+
+export type CompareCategory = {
+  category: string;
+  cases: CompareCaseRow[];
+};
+
+export type CompareResult = {
+  model_key: string;
+  suite_id: string;
+  runs: CompareRunMeta[];
+  categories: CompareCategory[];
+};
+
+export function compareTestRuns(runIds: string[]): Promise<CompareResult> {
+  return request<CompareResult>(
+    `/api/test-runs/compare?run_ids=${runIds.map(encodeURIComponent).join(',')}`,
+  );
+}
