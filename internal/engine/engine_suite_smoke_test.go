@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/leoobai/modeltestbed/internal/client"
@@ -50,14 +51,19 @@ func fullCapabilityProfile() model.CapabilityProfile {
 			"thinking_type",
 			"chat_template_kwargs_enable_thinking",
 			"chat_template_kwargs_thinking",
+			"reasoning_effort_off",
 		},
 		DefaultThinkingBehavior: "no_thinking_by_default",
 		ReasoningEffort:         true,
+		ContextWindowTokens:     1048576,
+		MaxOutputTokens:         131072,
+		PromptCache:             true,
 	}
 }
 
 // mockGatewayHandler 尽力模拟一个「全都答对」的 OpenAI 兼容网关。
 func mockGatewayHandler() http.HandlerFunc {
+	var cacheWarm atomic.Bool
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]any
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -67,7 +73,7 @@ func mockGatewayHandler() http.HandlerFunc {
 		// 这个 mock 网关被 TestSmoke_FullSuiteAgainstMockGateway 当作"表现
 		// 良好的被测网关"用来驱动整套 suite.v1.json（含 input_validation.*
 		// 系列 rejects_invalid_request 用例），所以除了正常应答之外，还需要
-		// 正确拒绝那 5 类故意构造的非法输入——一个真正做了输入校验的网关
+		// 正确拒绝那几类故意构造的非法输入——一个真正做了输入校验的网关
 		// 应该表现成这样，而不是像真实 tokenpanel 那样 500。
 		if reason := invalidRequestReason(body); reason != "" {
 			http.Error(w, reason, http.StatusBadRequest)
@@ -78,15 +84,20 @@ func mockGatewayHandler() http.HandlerFunc {
 			serveMockStream(w, body)
 			return
 		}
-		serveMockNonStream(w, body)
+		serveMockNonStream(w, body, &cacheWarm)
 	}
 }
 
 // invalidRequestReason 识别 suites/kimi-k3/suite.v1.json 里 input_validation.*
 // 系列用例构造的 5 类非法输入，非空字符串表示应该拒绝（400）。
 func invalidRequestReason(body map[string]any) string {
-	if mt, ok := body["max_tokens"].(float64); ok && mt < 0 {
-		return "max_tokens must be positive"
+	if mt, ok := body["max_tokens"].(float64); ok {
+		if mt < 0 {
+			return "max_tokens must be positive"
+		}
+		if mt > 1_000_000 {
+			return "max_tokens exceeds model limit"
+		}
 	}
 	messages, _ := body["messages"].([]any)
 	for _, raw := range messages {
@@ -134,20 +145,50 @@ func invalidRequestReason(body map[string]any) string {
 	return ""
 }
 
-func serveMockNonStream(w http.ResponseWriter, body map[string]any) {
+func serveMockNonStream(w http.ResponseWriter, body map[string]any, cacheWarm *atomic.Bool) {
 	msg := buildMockMessage(body)
 	usage := map[string]any{"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}
+	finish := "stop"
 	if reff, ok := body["reasoning_effort"].(string); ok {
 		tokens := map[string]int{"low": 50, "high": 200, "max": 220}[reff]
 		usage["completion_tokens_details"] = map[string]any{"reasoning_tokens": tokens}
 	}
+
+	// v1.2.0 新增的 4 条用例（stop 语义、长上下文召回、缓存命中率、
+	// max_tokens 强制截断）靠固定提示词里的特征字符串识别，与 z-ai
+	// 冒烟测试（engine_zai_suite_smoke_test.go）用同一套判别逻辑，
+	// 复用其 firstUserText 辅助函数。
+	prompt := firstUserText(body)
+	switch {
+	case strings.Contains(prompt, "【暗号】"):
+		msg["content"] = "7391"
+		usage["prompt_tokens"] = 950000
+		usage["total_tokens"] = 950005
+	case strings.Contains(prompt, "只回答两个字"):
+		msg["content"] = "收到"
+		usage["prompt_tokens"] = 5000
+		cached := 0
+		if cacheWarm.Swap(true) {
+			cached = 4800
+		}
+		usage["prompt_tokens_details"] = map[string]any{"cached_tokens": cached}
+	case strings.Contains(prompt, "ALPHA"):
+		msg["content"] = "ALPHA\n"
+	case strings.Contains(prompt, "《四季》"):
+		mt, _ := body["max_tokens"].(float64)
+		msg["content"] = "春天到了，风里带着新翻的泥土气息"
+		finish = "length"
+		usage["completion_tokens"] = int(mt)
+		usage["total_tokens"] = 10 + int(mt)
+	}
+
 	resp := map[string]any{
 		"id":      "chatcmpl-mock",
 		"object":  "chat.completion",
 		"created": 1700000000,
 		"model":   "mock-model",
 		"choices": []any{
-			map[string]any{"index": 0, "message": msg, "finish_reason": "stop"},
+			map[string]any{"index": 0, "message": msg, "finish_reason": finish},
 		},
 		"usage": usage,
 	}
@@ -200,6 +241,9 @@ func thinkingOn(body map[string]any) bool {
 		if b, ok := v["thinking"].(bool); ok {
 			return b
 		}
+	}
+	if v, ok := body["reasoning_effort"].(string); ok {
+		return v != "off"
 	}
 	return false // default_thinking_behavior = no_thinking_by_default
 }

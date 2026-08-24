@@ -1,9 +1,9 @@
 {
   "suite_id": "kimi-k3",
-  "suite_version": "1.1.0",
+  "suite_version": "1.2.0",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "Kimi-K3 套件的可执行套件定义：22 项基础用例 + 1 项 reasoning_effort 附加用例 + 5 项『输入校验』附加用例（v1.1.0 新增，不在最初套件范围内，来自真实测试中发现的网关输入校验缺口，见 07 节 SOP『若供应商有专属指导文档，人工新增/调整差异用例』）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
+  "description": "Kimi-K3 套件的可执行套件定义：25 项基础用例 + 2 项附加用例（reasoning_effort、长上下文）+ 6 项『输入校验』附加用例 + 1 项『上下文缓存』附加用例。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例（output_control.max_tokens_truncation、output_control.stop_semantics、determinism.temperature_zero、thinking.reasoning_effort_off、context.long_context_recall、cache.prompt_cache_hit_rate、input_validation.max_tokens_over_limit），使两套件覆盖对齐，差异只保留在各自模型的真实能力边界（多模态、tool_choice_function 等）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -14,7 +14,11 @@
     "category_timeout_overrides": {
       "多模态图像": 90,
       "多模态视频": 90,
-      "reasoning_effort": 180
+      "reasoning_effort": 180,
+      "输出控制": 120,
+      "确定性": 120,
+      "长上下文": 900,
+      "上下文缓存": 300
     }
   },
   "fixtures": {
@@ -37,7 +41,12 @@
       "weather_query": "北京今天天气怎么样？",
       "reasoning_prompt": "请计算 37 乘以 48 等于多少，并简要给出计算过程。",
       "reasoning_effort_prompt": "用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。",
-      "structured_weather_question": "请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。"
+      "structured_weather_question": "请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。",
+      "long_output_prompt": "请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。",
+      "stop_sequence_prompt": "请严格按下面的格式输出三行，每行一个单词，不要加任何解释、编号或标点：\nALPHA\nBRAVO\nCHARLIE",
+      "determinism_prompt": "请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。",
+      "cache_probe_question": "请只回答两个字：收到。",
+      "long_context_question": "上文中【暗号】后面的那个四位数字是多少？只输出这四位数字，不要输出任何其他字符。"
     }
   },
   "materials_manifest": "suites/kimi-k3/materials/manifest.json",
@@ -705,6 +714,173 @@
               ]
             }
           ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.max_tokens_truncation",
+      "category": "输出控制",
+      "name": "max_tokens 强制截断",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "max_tokens_truncation",
+      "repeat_attempts": 3,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项（见 07 节 SOP）。断言三条同时成立：finish_reason==\"length\"、usage.completion_tokens ∈ (0, max_tokens]、content 非空。请求里显式关掉思考，避免思考 token 把 256 的预算吃光导致 content 为空。",
+      "assertion_params": { "trace_body_max_chars": 4000 },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.long_output_prompt}}" }],
+          "max_tokens": 256,
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.stop_semantics",
+      "category": "输出控制",
+      "name": "stop 语义",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stop_sequence_respected",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项。断言输出含 ALPHA（证明模型确实开始作答）、不含 BRAVO（stop 序列本身必须被吞掉）、finish_reason==\"stop\"。",
+      "assertion_params": { "must_contain": "ALPHA" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.stop_sequence_prompt}}" }],
+          "stop": ["BRAVO"],
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "determinism.temperature_zero",
+      "category": "确定性",
+      "name": "temperature=0",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_repeat",
+      "repeat_attempts": 3,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项。同一请求连发 3 次，逐字节比对 content（不 trim）。提示词选了开放题（解释哈希函数）而不是有固定答案的题目，否则测不出确定性。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.determinism_prompt}}" }],
+          "temperature": 0,
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.reasoning_effort_off",
+      "category": "思考行为",
+      "name": "reasoning_effort（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:reasoning_effort_off",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入，覆盖『用 reasoning_effort 关闭思考』这条独立路径。CAPABILITY_PROFILE.thinking_toggle_methods 当前未包含 reasoning_effort_off，本用例会记 NOT_DECLARED，不计入分母。⚠️ 校准项：z-ai 套件的同类用例曾发现真实关闭取值是 \"none\" 而不是 \"off\"（见 reports/z-ai 对比报告『四.3』），Kimi-K3 若之后声明此能力，需先核实其真实合法取值再启用，不能假设 \"off\" 一定正确。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": false
+        }
+      },
+      "variants": [
+        { "variant_label": "on", "request_overrides": { "reasoning_effort": "high" } },
+        { "variant_label": "off", "request_overrides": { "reasoning_effort": "off" } }
+      ]
+    },
+    {
+      "id": "context.long_context_recall",
+      "category": "长上下文",
+      "name": "长上下文召回",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "long_context",
+      "assertion_type": "long_context_recall",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE 当前未声明 context_window_tokens，本用例会记 NOT_DECLARED。⚠️ 校准项：filler 字符数与 min_prompt_tokens 是照抄 z-ai 套件（按上下文窗口 1048576 token 估的），Kimi-K3 若之后声明 context_window_tokens，需按其真实上限重新校准这两个数值，不能直接照搬。",
+      "assertion_params": {
+        "needle": "7391",
+        "min_prompt_tokens": 900000,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{filler:750000}}\n【暗号】7391\n{{filler:750000}}\n{{prompts.long_context_question}}"
+            }
+          ],
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "cache.prompt_cache_hit_rate",
+      "category": "上下文缓存",
+      "name": "缓存命中率",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "prompt_cache",
+      "assertion_type": "prompt_cache_hit_rate",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE.prompt_cache=true 有实测依据：reports/kimi-k3/P3-性能测试结果表-2026-08-18.md 已确认 kimi-k3/tokenpanel 真实返回 usage.prompt_tokens_details.cached_tokens（实测命中率 93.9%），因此本用例会真正执行而非记 NOT_DECLARED。先发 1 次预热请求把前缀写进缓存，再发一次同样的请求判定 cached_tokens / prompt_tokens ≥ min_hit_rate。",
+      "assertion_params": {
+        "warmup_requests": 1,
+        "min_hit_rate": 0.5,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            { "role": "system", "content": "{{filler:8000}}" },
+            { "role": "user", "content": "{{prompts.cache_probe_question}}" }
+          ],
+          "temperature": 0,
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.max_tokens_over_limit",
+      "category": "输入校验",
+      "name": "max_tokens 非法（超出模型上限）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例：max_tokens 超出模型上限时网关应返回 4xx，不应 200 透传或 500。⚠️ 校准项：CAPABILITY_PROFILE 未声明 Kimi-K3 的 max_output_tokens 真实上限，10000000 是刻意选取的『必然超出任何真实上限』的极端占位值，用于在未知真实上限时仍能验证网关有做校验；Kimi-K3 若之后声明 max_output_tokens，应改成『声明值 + 1』这种贴近边界的取值以获得更强的检出力（参考 z-ai 套件同名用例：131073 = max_output_tokens(131072) + 1）。判定标准是 HTTP 状态码：4xx 通过；5xx 判失败并注明『网关把非法输入透传给后端』；200 判失败并注明『网关未做校验』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "max_tokens": 10000000,
           "stream": false
         }
       }

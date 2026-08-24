@@ -1,0 +1,838 @@
+<title>Kimi-K3 双通道实测</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --bg: #F4F6F7;
+    --surface: #FFFFFF;
+    --surface-2: #EAEDEF;
+    --surface-3: #EFF3F2;
+    --ink: #10161C;
+    --ink-2: #47525C;
+    --ink-3: #6B7680;
+    --line: #DCE2E5;
+    --line-strong: #C3CBD0;
+
+    --we2ai: #0E8C8F;
+    --we2ai-weak: #E1F3F2;
+    --official: #B87A1E;
+    --official-weak: #F7ECD9;
+
+    --pass: #1F8A5A;
+    --pass-weak: #E4F3EA;
+    --fail: #C1402B;
+    --fail-weak: #FBE7E2;
+    --na: #7A828A;
+    --na-weak: #EDEFF1;
+    --flag: #6D5BD0;
+
+    --shadow: 0 1px 2px rgba(16,22,28,0.04), 0 8px 24px rgba(16,22,28,0.05);
+
+    --font-display: 'Noto Serif SC', 'Songti SC', serif;
+    --font-body: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1318;
+      --surface: #161C22;
+      --surface-2: #1D242B;
+      --surface-3: #192129;
+      --ink: #E7ECEF;
+      --ink-2: #B7C0C7;
+      --ink-3: #8A939B;
+      --line: #2A323A;
+      --line-strong: #3A434C;
+
+      --we2ai: #3FC7C4;
+      --we2ai-weak: #123433;
+      --official: #E3A94A;
+      --official-weak: #3A2C13;
+
+      --pass: #4FCB8B;
+      --pass-weak: #123625;
+      --fail: #F17A64;
+      --fail-weak: #3B1712;
+      --na: #8A939B;
+      --na-weak: #232A31;
+      --flag: #9B8CF2;
+
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0E1318;
+    --surface: #161C22;
+    --surface-2: #1D242B;
+    --surface-3: #192129;
+    --ink: #E7ECEF;
+    --ink-2: #B7C0C7;
+    --ink-3: #8A939B;
+    --line: #2A323A;
+    --line-strong: #3A434C;
+
+    --we2ai: #3FC7C4;
+    --we2ai-weak: #123433;
+    --official: #E3A94A;
+    --official-weak: #3A2C13;
+
+    --pass: #4FCB8B;
+    --pass-weak: #123625;
+    --fail: #F17A64;
+    --fail-weak: #3B1712;
+    --na: #8A939B;
+    --na-weak: #232A31;
+    --flag: #9B8CF2;
+
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--we2ai-weak); color: var(--ink); }
+
+  a { color: var(--we2ai); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--we2ai); outline-offset: 2px; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  .nav {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    display: flex; align-items: center; gap: 22px;
+    max-width: 1080px; margin: 0 auto; padding: 14px 28px;
+    overflow-x: auto;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem;
+    letter-spacing: 0.06em; color: var(--ink); white-space: nowrap;
+  }
+  .nav-links { display: flex; gap: 18px; white-space: nowrap; }
+  .nav-links a {
+    font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
+    color: var(--ink-3); text-transform: uppercase;
+  }
+  .nav-links a:hover { color: var(--ink); text-decoration: none; }
+
+  header.masthead { padding: 64px 0 40px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--we2ai); }
+  h1 {
+    font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 4vw, 2.7rem);
+    line-height: 1.2; margin: 0 0 14px; text-wrap: balance;
+  }
+  .lede {
+    font-size: 1.08rem; color: var(--ink-2); max-width: 640px; margin: 0;
+  }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 26px;
+    font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-3);
+  }
+  .meta-row b { color: var(--ink-2); font-weight: 600; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .section-head { margin-bottom: 28px; }
+  .section-head .eyebrow { margin-bottom: 10px; }
+  h2 {
+    font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .section-sub { color: var(--ink-3); font-size: 0.95rem; margin: 0; max-width: 640px; }
+
+  /* diagram */
+  figure.diagram { margin: 0; }
+  .diagram-frame {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 8px; box-shadow: var(--shadow);
+  }
+  .diagram-frame svg { display: block; width: 100%; height: auto; }
+  figcaption {
+    margin-top: 14px; font-size: 0.92rem; color: var(--ink-2); max-width: 720px;
+  }
+  figcaption b.we2ai-t { color: var(--we2ai); font-weight: 600; }
+  figcaption b.official-t { color: var(--official); font-weight: 600; }
+
+  /* scorecards */
+  .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 720px) { .score-grid { grid-template-columns: 1fr; } }
+  .score-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 26px; box-shadow: var(--shadow); border-top: 3px solid var(--card-accent);
+  }
+  .score-card.we2ai { --card-accent: var(--we2ai); }
+  .score-card.official { --card-accent: var(--official); }
+  .score-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+  .score-card-name { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+  .score-card-name .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 999px; background: var(--card-accent); margin-right: 8px; }
+  .score-card-endpoint { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); }
+  .score-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .score-stat .num { font-family: var(--font-mono); font-weight: 700; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+  .score-stat .lbl { font-size: 0.76rem; color: var(--ink-3); margin-top: 4px; }
+  .verdict-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; padding: 4px 10px;
+    border-radius: 999px; background: var(--fail-weak); color: var(--fail); margin-top: 16px;
+  }
+
+  .takeaways { margin-top: 22px; background: var(--surface-3); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; }
+  .takeaways h3 { margin: 0 0 12px; font-size: 0.95rem; font-family: var(--font-body); font-weight: 700; }
+  .takeaways ul { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; color: var(--ink-2); }
+  .takeaways li::marker { color: var(--ink-3); }
+
+  /* env table */
+  .env-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  .env-table th, .env-table td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .env-table th { width: 160px; color: var(--ink-3); font-weight: 500; font-size: 0.85rem; }
+  .env-table code { font-family: var(--font-mono); font-size: 0.86em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+  .table-scroll .env-table { min-width: 560px; }
+
+  /* chips */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    font-family: var(--font-mono); font-size: 0.82rem; padding: 7px 13px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2);
+  }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  /* results table */
+  #results-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 880px; }
+  #results-table thead th {
+    text-align: left; padding: 10px 14px; font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--ink-3); border-bottom: 1px solid var(--line-strong);
+    background: var(--surface); font-weight: 600;
+  }
+  #results-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  #results-table tr.group-row td {
+    background: var(--surface-2); font-family: var(--font-mono); font-size: 0.72rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); padding: 8px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  #results-table tr.case-row:hover { background: var(--surface-3); }
+  .case-name { font-weight: 600; font-size: 0.92rem; }
+  .case-id { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); margin-top: 2px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 999px; }
+  .pill-pass { background: var(--pass-weak); color: var(--pass); }
+  .pill-pass .dot { background: var(--pass); }
+  .pill-fail { background: var(--fail-weak); color: var(--fail); }
+  .pill-fail .dot { background: var(--fail); }
+  .pill-na { background: var(--na-weak); color: var(--na); }
+  .pill-na .dot { background: var(--na); }
+
+  .lat-cell { min-width: 150px; }
+  .lat-row { display: flex; align-items: center; gap: 8px; height: 16px; margin: 3px 0; }
+  .lat-track { flex: 1; height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .lat-bar { height: 100%; border-radius: 4px; }
+  .lat-row.we2ai .lat-bar { background: var(--we2ai); }
+  .lat-row.official .lat-bar { background: var(--official); }
+  .lat-val { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-2); width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+  .lat-na { color: var(--ink-3); font-size: 0.8rem; }
+
+  .note-cell { font-size: 0.82rem; color: var(--ink-3); max-width: 220px; }
+  .note-diff { color: var(--flag); font-weight: 600; }
+  .note-diff::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: var(--flag); margin-right: 6px; }
+  .note-cell a { color: inherit; }
+
+  .legend-row { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 16px; font-size: 0.8rem; color: var(--ink-3); }
+  .legend-row span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 999px; }
+
+  /* findings */
+  .finding-grid { display: grid; gap: 18px; }
+  .finding-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 26px; box-shadow: var(--shadow); scroll-margin-top: 90px;
+  }
+  .finding-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .finding-num {
+    font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem; color: var(--ink-3);
+    flex-shrink: 0;
+  }
+  .finding-title { font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; text-wrap: balance; }
+  .finding-tag {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 9px; border-radius: 999px; margin-left: auto; flex-shrink: 0;
+  }
+  .tag-diff { background: color-mix(in srgb, var(--flag) 15%, transparent); color: var(--flag); }
+  .tag-shared { background: var(--na-weak); color: var(--na); }
+  .finding-body { color: var(--ink-2); font-size: 0.96rem; }
+  .finding-body p { margin: 0 0 12px; }
+  .finding-body p:last-child { margin-bottom: 0; }
+  pre.code-block {
+    font-family: var(--font-mono); font-size: 0.8rem; background: var(--surface-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto;
+    margin: 12px 0; color: var(--ink-2);
+  }
+
+  /* benchmark */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 36px; }
+  @media (max-width: 780px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
+  .stat-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat-tile .stat-name { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); margin-bottom: 10px; }
+  .stat-vals { display: flex; align-items: baseline; gap: 14px; }
+  .stat-val { display: flex; flex-direction: column; }
+  .stat-val .v { font-family: var(--font-mono); font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .stat-val.we2ai .v { color: var(--we2ai); }
+  .stat-val.official .v { color: var(--official); }
+  .stat-val .k { font-size: 0.68rem; color: var(--ink-3); margin-top: 2px; }
+  .stat-note { margin-top: 10px; font-size: 0.76rem; color: var(--ink-3); }
+  .stat-note.warn { color: var(--fail); }
+
+  .chart-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 26px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .chart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+  .chart-title { font-weight: 700; font-size: 1rem; }
+  .chart-unit { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); }
+  .chart-note { font-size: 0.8rem; color: var(--ink-3); margin: 2px 0 14px; }
+  .dotplot { width: 100%; height: auto; display: block; }
+
+  /* conclusion */
+  .conclusion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 780px) { .conclusion-grid { grid-template-columns: 1fr; } }
+  .conclusion-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow); }
+  .conclusion-card h3 { margin: 0 0 10px; font-size: 0.95rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); font-weight: 600; }
+  .conclusion-card p, .conclusion-card ul { margin: 0; color: var(--ink-2); font-size: 0.92rem; }
+  .conclusion-card ul { padding-left: 1.1em; display: grid; gap: 8px; }
+
+  .recommend {
+    margin-top: 22px; background: var(--we2ai-weak); border: 1px solid color-mix(in srgb, var(--we2ai) 30%, var(--line));
+    border-radius: 14px; padding: 24px 26px;
+  }
+  .recommend h3 { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.1rem; }
+  .recommend ul { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; color: var(--ink); }
+
+  footer { padding: 40px 0 70px; color: var(--ink-3); font-size: 0.82rem; }
+  footer .wrap { border-top: 1px solid var(--line); padding-top: 24px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-family: var(--font-mono); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .score-card, .stat-tile, .finding-card, .chart-card { transition: box-shadow 0.15s ease; }
+  }
+</style>
+
+<div class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">KIMI-K3 / 双通道实测</span>
+    <div class="nav-links">
+      <a href="#summary">要点</a>
+      <a href="#environment">环境</a>
+      <a href="#results">测试结果</a>
+      <a href="#findings">关键发现</a>
+      <a href="#benchmark">压测</a>
+      <a href="#conclusion">结论与建议</a>
+    </div>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow"><span class="dot"></span>模型接入渠道实测报告</p>
+    <h1>Kimi-K3 双通道实测：we2ai 中转 vs 官方 API 直连</h1>
+    <p class="lede">同一套功能用例与压测脚本，分别打向 we2ai 中转网关与 Moonshot 官方 API，用于评估两条接入路径在协议兼容性、行为一致性与响应延迟上的真实差异，供渠道选型参考。</p>
+    <div class="meta-row">
+      <span><b>模型</b> kimi-k3</span>
+      <span><b>测试日期</b> 2026-08-24</span>
+      <span><b>用例规模</b> 28 项（19 基础 + 9 附加）</span>
+      <span><b>压测参数</b> 3 会话 · seed 1 · 120s 超时</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="diagram-section" style="padding-top:0; border-top:none;">
+    <figure class="diagram">
+      <div class="diagram-frame">
+        <svg viewBox="0 0 920 210" role="img" aria-label="两条测试路径示意：we2ai 路径在客户端与 Kimi-K3 之间多一层中转网关，官方路径为直连；两条路径最终请求的是同一份用例与提示词。">
+          <defs>
+            <marker id="arrow-we2ai" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" style="fill:var(--we2ai)"></path>
+            </marker>
+            <marker id="arrow-official" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" style="fill:var(--official)"></path>
+            </marker>
+          </defs>
+
+          <rect x="20" y="20" width="150" height="170" rx="10" style="fill:var(--surface-2);stroke:var(--line-strong)"></rect>
+          <text x="95" y="98" text-anchor="middle" style="fill:var(--ink);font-family:var(--font-body);font-size:13px;font-weight:600">客户端</text>
+          <text x="95" y="116" text-anchor="middle" style="fill:var(--ink-3);font-family:var(--font-mono);font-size:10px">testbed-cli</text>
+
+          <line x1="170" y1="55" x2="345" y2="55" style="stroke:var(--we2ai);stroke-width:2" marker-end="url(#arrow-we2ai)"></line>
+          <text x="257" y="44" text-anchor="middle" style="fill:var(--we2ai);font-family:var(--font-mono);font-size:10.5px">HTTPS</text>
+
+          <rect x="350" y="25" width="190" height="60" rx="10" style="fill:var(--we2ai-weak);stroke:var(--we2ai)"></rect>
+          <text x="445" y="51" text-anchor="middle" style="fill:var(--ink);font-family:var(--font-body);font-size:13px;font-weight:600">we2ai 中转网关</text>
+          <text x="445" y="68" text-anchor="middle" style="fill:var(--ink-3);font-family:var(--font-mono);font-size:10px">api.we2ai.com</text>
+
+          <line x1="540" y1="55" x2="695" y2="55" style="stroke:var(--we2ai);stroke-width:2" marker-end="url(#arrow-we2ai)"></line>
+          <text x="617" y="44" text-anchor="middle" style="fill:var(--we2ai);font-family:var(--font-mono);font-size:10.5px">转发 · 可能改写</text>
+
+          <rect x="700" y="25" width="190" height="60" rx="10" style="fill:var(--surface);stroke:var(--we2ai)"></rect>
+          <text x="795" y="51" text-anchor="middle" style="fill:var(--ink);font-family:var(--font-body);font-size:13px;font-weight:600">Kimi-K3</text>
+          <text x="795" y="68" text-anchor="middle" style="fill:var(--ink-3);font-family:var(--font-mono);font-size:10px">经 we2ai</text>
+
+          <line x1="170" y1="165" x2="695" y2="165" style="stroke:var(--official);stroke-width:2" marker-end="url(#arrow-official)"></line>
+          <text x="432" y="153" text-anchor="middle" style="fill:var(--official);font-family:var(--font-mono);font-size:10.5px">HTTPS 直连 · 无中转</text>
+
+          <rect x="700" y="135" width="190" height="60" rx="10" style="fill:var(--surface);stroke:var(--official)"></rect>
+          <text x="795" y="161" text-anchor="middle" style="fill:var(--ink);font-family:var(--font-body);font-size:13px;font-weight:600">Kimi-K3</text>
+          <text x="795" y="178" text-anchor="middle" style="fill:var(--ink-3);font-family:var(--font-mono);font-size:10px">官方直连</text>
+        </svg>
+      </div>
+      <figcaption>两条路径打的是完全相同的用例与请求体：<b class="we2ai-t">we2ai 路径</b>在客户端与模型之间多一层中转，请求/响应有被网关改写的可能；<b class="official-t">官方路径</b>没有中间层，是 Moonshot 原生行为。下文的协议字段差异（如 usage、JSON 围栏）与官方侧的过载表现，都要结合这个结构差异来看。</figcaption>
+    </figure>
+  </section>
+
+  <section id="summary">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>要点摘要</p>
+      <h2>两条通道都没有达到验收标准，但卡住的地方不一样</h2>
+      <p class="section-sub">下面是完整测试的浓缩结论；决策所需的关键数字都在两张卡片里，细节展开见后续章节。</p>
+    </div>
+
+    <div class="score-grid">
+      <div class="score-card we2ai">
+        <div class="score-card-head">
+          <div>
+            <div class="score-card-name"><span class="swatch"></span>we2ai 中转</div>
+            <div class="score-card-endpoint">api.we2ai.com</div>
+          </div>
+        </div>
+        <div class="score-stats">
+          <div class="score-stat"><div class="num">15/19</div><div class="lbl">基础用例通过</div></div>
+          <div class="score-stat"><div class="num">3.3s</div><div class="lbl">端到端延迟 P50</div></div>
+          <div class="score-stat"><div class="num">0</div><div class="lbl">压测失败请求</div></div>
+        </div>
+        <span class="verdict-badge">总体判定 · FAIL</span>
+      </div>
+
+      <div class="score-card official">
+        <div class="score-card-head">
+          <div>
+            <div class="score-card-name"><span class="swatch"></span>官方 API 直连</div>
+            <div class="score-card-endpoint">api.moonshot.cn</div>
+          </div>
+        </div>
+        <div class="score-stats">
+          <div class="score-stat"><div class="num">13/19</div><div class="lbl">基础用例通过</div></div>
+          <div class="score-stat"><div class="num">7.2s</div><div class="lbl">端到端延迟 P50</div></div>
+          <div class="score-stat"><div class="num">1</div><div class="lbl">压测失败请求</div></div>
+        </div>
+        <span class="verdict-badge">总体判定 · FAIL</span>
+      </div>
+    </div>
+
+    <div class="takeaways">
+      <h3>三句话讲完</h3>
+      <ul>
+        <li>两渠道请求体、能力声明完全一致，但 <b>6 项用例的通过/失败结果不同</b>，说明 kimi-k3 在两个渠道上的行为一致性并不好，不能假设"哪边测过另一边就一定一样"。</li>
+        <li>we2ai 中转的首字与端到端延迟中位数明显更低（约为官方的一半），但尾部延迟（P99）更长、抖动更大；官方直连本次测试窗口内多次触发 <code>429 engine_overloaded_error</code>，压测阶段也出现 1 次真实过载失败。</li>
+        <li>结构化 JSON 输出在两个渠道都可能被套上 Markdown 代码块围栏，谁更"干净"并不固定，建议应用层统一做兜底解析。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="environment">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>一 · 测试环境</p>
+      <h2>两条通道除入口地址外，其余条件完全对齐</h2>
+    </div>
+    <div class="table-scroll">
+      <table class="env-table">
+        <tr><th>模型 ID</th><td><code>kimi-k3</code>（两渠道一致）</td></tr>
+        <tr><th>API 端点</th><td><code>we2ai</code>：https://api.we2ai.com/v1/chat/completions&nbsp;&nbsp;·&nbsp;&nbsp;<code>官方</code>：https://api.moonshot.cn/v1/chat/completions</td></tr>
+        <tr><th>测试日期</th><td>2026-08-24（两渠道同日、先后执行）</td></tr>
+        <tr><th>用例规模</th><td>28 项用例，19 项计入基础通过率分母，9 项为附加校准/边界用例不计入分母</td></tr>
+        <tr><th>压测参数</th><td>3 个并发会话，随机种子 1，单请求超时 120s，两渠道参数完全相同</td></tr>
+        <tr><th>一致性保证</th><td>两渠道使用完全相同的用例定义、能力声明与请求体，仅 base URL 与 API Key 不同，结果差异可直接归因于渠道本身</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="capabilities">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>二 · 能力声明</p>
+      <h2>本轮测试覆盖的能力范围</h2>
+      <p class="section-sub">未声明的能力（如 image_url、tool_choice_function）会被测试框架自动跳过，不计入通过率。</p>
+    </div>
+    <div class="chip-row">
+      <span class="chip"><b>工具调用</b> 支持</span>
+      <span class="chip"><b>tool_choice_function</b> 未声明</span>
+      <span class="chip"><b>思考开关</b> 4 种方式声明</span>
+      <span class="chip"><b>默认行为</b> 默认开启思考</span>
+      <span class="chip"><b>reasoning_effort</b> 支持</span>
+      <span class="chip"><b>图片/视频</b> 仅 Base64，不含 URL 输入</span>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>三 · 功能测试结果</p>
+      <h2>28 项用例逐一对照</h2>
+      <p class="section-sub">紫色圆点标记的行是两渠道结果不同的用例，共 6 项；延迟条按同一行内的最大值归一化，仅用于比较该用例下两渠道谁更快。</p>
+    </div>
+    <div class="legend-row">
+      <span><span class="legend-swatch" style="background:var(--we2ai)"></span>we2ai 延迟</span>
+      <span><span class="legend-swatch" style="background:var(--official)"></span>官方 API 延迟</span>
+      <span><span class="legend-swatch" style="background:var(--flag)"></span>两渠道结果不同</span>
+    </div>
+    <div class="table-scroll">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th style="width:26%">用例</th>
+            <th style="width:11%">we2ai</th>
+            <th style="width:11%">官方 API</th>
+            <th style="width:22%">平均延迟</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="findings">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>四 · 关键发现</p>
+      <h2>6 处真正值得关注的细节</h2>
+      <p class="section-sub">编号与上方结果表的「说明」列一一对应，可通过表格直接跳转到对应发现。</p>
+    </div>
+    <div class="finding-grid" id="finding-grid"></div>
+  </section>
+
+  <section id="benchmark">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>五 · 压测对比</p>
+      <h2>3 会话压测：延迟与吞吐</h2>
+      <p class="section-sub">参数：<code>-total-sessions 3 -seed 1 -request-timeout 120s</code>，两渠道完全相同。样本量较小，吞吐数字仅供参考，不建议单独作为容量结论。</p>
+    </div>
+
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <div class="legend-row">
+      <span><span class="legend-swatch" style="background:var(--we2ai)"></span>we2ai</span>
+      <span><span class="legend-swatch" style="background:var(--official)"></span>官方 API</span>
+      <span>● P50　◐ P90　○ P99</span>
+    </div>
+    <div id="charts"></div>
+  </section>
+
+  <section id="conclusion">
+    <div class="section-head">
+      <p class="eyebrow"><span class="dot"></span>六 · 结论</p>
+      <h2>怎么看这份结果</h2>
+    </div>
+
+    <div class="conclusion-grid">
+      <div class="conclusion-card">
+        <h3>验收结论</h3>
+        <p>两渠道 19 项基础用例通过率均未达到 100%（we2ai 15/19，官方 13/19），按验收标准均判定为 <b style="color:var(--fail)">整体 FAIL</b>。7 项失败用例中有 6 项两渠道结果不同，说明失败原因并不共通，需要分别处理。</p>
+      </div>
+      <div class="conclusion-card">
+        <h3>真实渠道差异</h3>
+        <ul>
+          <li>流式响应 usage 字段：we2ai 有，官方无</li>
+          <li>JSON 结构化输出围栏包裹：方向不固定，两渠道都可能出现</li>
+          <li>非法 role 校验：官方拒绝，we2ai 直接放行</li>
+          <li>官方直连在思考类用例上多次 429 过载，we2ai 未复现</li>
+        </ul>
+      </div>
+      <div class="conclusion-card">
+        <h3>模型本身的问题（与渠道无关）</h3>
+        <ul>
+          <li>两种"关闭思考"参数在两个渠道都不生效</li>
+          <li>reasoning_effort 低档位输出方差偏大，采样不稳定</li>
+          <li>重复 content parts 的非法输入，两渠道都未做校验</li>
+        </ul>
+      </div>
+      <div class="conclusion-card">
+        <h3>压测层面</h3>
+        <p>we2ai 中位数延迟明显更低，但 P99 尾部更长、抖动更大；官方直连本次出现 1 次真实 429 失败，与功能测试阶段的过载现象相互印证。吞吐两渠道均未达基线，建议后续加大会话数重跑以提升置信度。</p>
+      </div>
+    </div>
+
+    <div class="recommend">
+      <h3>给业务侧的建议</h3>
+      <ul>
+        <li>对首字延迟敏感的交互式场景，we2ai 中转当前实测更快；对尾部延迟稳定性要求高的场景，需留意 we2ai 的 P99 抖动更大。</li>
+        <li>官方直连的输入校验更严格，但本次测试窗口出现多次过载，建议错峰重跑一次交叉验证，排除偶发拥堵的可能。</li>
+        <li>依赖结构化 JSON 输出的场景，无论选哪个渠道，都建议在应用层加一层"剥离 Markdown 围栏"的兜底解析。</li>
+        <li>两渠道均未达到 100% 用例通过率，正式上线前建议与我们一起复核失败用例对具体业务场景的实际影响，而非直接以本报告作为唯一决策依据。</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>数据来源：testbed-cli + benchmark-cli 自动化实测</span>
+    <span>生成日期 2026-08-24</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var GROUPS = [
+    { key: 'conn', label: '连通性' },
+    { key: 'protocol', label: '协议 / 流式' },
+    { key: 'multimodal', label: '多模态输入' },
+    { key: 'tool', label: '工具调用' },
+    { key: 'thinking', label: '思考控制' },
+    { key: 'structured', label: '结构化输出' },
+    { key: 'extra', label: '附加用例（不计入基础分母）' }
+  ];
+
+  var CASES = [
+    { id: 'connectivity.basic', group: 'conn', name: '基础连通性', we2ai: ['pass', 5.5], off: ['pass', 8.4] },
+    { id: 'protocol.usage_nonstream', group: 'protocol', name: '非流式 usage 字段', we2ai: ['pass', 3.1], off: ['pass', 9.0] },
+    { id: 'protocol.usage_stream', group: 'protocol', name: '流式 usage 字段', we2ai: ['pass', 4.3], off: ['fail', 11.3], diff: true, finding: 1 },
+    { id: 'protocol.stream_integrity', group: 'protocol', name: '流式响应完整性', we2ai: ['pass', 5.5], off: ['pass', 12.6] },
+    { id: 'multimodal.image_url', group: 'multimodal', name: '图片 URL 输入', we2ai: ['na', null], off: ['na', null] },
+    { id: 'multimodal.image_base64', group: 'multimodal', name: '图片 Base64 输入', we2ai: ['pass', 9.7], off: ['pass', 4.7] },
+    { id: 'multimodal.video_url', group: 'multimodal', name: '视频 URL 输入', we2ai: ['na', null], off: ['na', null] },
+    { id: 'multimodal.video_base64', group: 'multimodal', name: '视频 Base64 输入', we2ai: ['pass', 4.8], off: ['pass', 4.0] },
+    { id: 'tool.call_capability', group: 'tool', name: '工具调用能力', we2ai: ['pass', 4.3], off: ['pass', 4.4] },
+    { id: 'tool.choice_default', group: 'tool', name: 'tool_choice 默认值', we2ai: ['pass', 4.7], off: ['pass', 6.3] },
+    { id: 'tool.choice_auto', group: 'tool', name: 'tool_choice = auto', we2ai: ['pass', 5.2], off: ['pass', 5.1] },
+    { id: 'tool.choice_required', group: 'tool', name: 'tool_choice = required', we2ai: ['pass', 4.9], off: ['pass', 3.8] },
+    { id: 'tool.choice_none', group: 'tool', name: 'tool_choice = none', we2ai: ['pass', 7.1], off: ['pass', 3.8] },
+    { id: 'tool.choice_function', group: 'tool', name: 'tool_choice = 指定函数', we2ai: ['na', null], off: ['na', null] },
+    { id: 'tool.choice_allowed_tools', group: 'tool', name: 'tool_choice = allowed_tools', we2ai: ['pass', 7.1], off: ['pass', 4.0] },
+    { id: 'thinking.enable_thinking', group: 'thinking', name: 'enable_thinking 开关', we2ai: ['fail', 4.6], off: ['fail', 7.2], finding: 2 },
+    { id: 'thinking.thinking_type', group: 'thinking', name: 'thinking_type 开关', we2ai: ['pass', 3.4], off: ['fail', 11.5], diff: true, finding: 3 },
+    { id: 'thinking.chat_template_kwargs_enable_thinking', group: 'thinking', name: 'chat_template_kwargs.enable_thinking', we2ai: ['fail', 9.0], off: ['fail', 10.2], finding: 3 },
+    { id: 'thinking.chat_template_kwargs_thinking', group: 'thinking', name: 'chat_template_kwargs.thinking', we2ai: ['fail', 11.0], off: ['fail', 8.0], finding: 2 },
+    { id: 'thinking.default_behavior', group: 'thinking', name: '默认思考行为', we2ai: ['pass', 6.8], off: ['fail', 9.7], diff: true, finding: 3 },
+    { id: 'structured.json_schema', group: 'structured', name: 'JSON Schema 严格模式', we2ai: ['pass', 4.5], off: ['pass', 7.4] },
+    { id: 'structured.json_object', group: 'structured', name: 'JSON Object 模式', we2ai: ['fail', 10.0], off: ['pass', 7.8], diff: true, finding: 4 },
+    { id: 'reasoning_effort.scaling', group: 'extra', name: 'reasoning_effort 分档采样', we2ai: ['fail', 25.4], off: ['fail', 44.2], finding: 5 },
+    { id: 'input_validation.max_tokens_negative', group: 'extra', name: 'max_tokens 负值校验', we2ai: ['pass', 0.3], off: ['pass', 0.1] },
+    { id: 'input_validation.tool_result_content_object', group: 'extra', name: 'tool 结果内容对象校验', we2ai: ['pass', 1.0], off: ['pass', 0.1] },
+    { id: 'input_validation.duplicate_content_parts', group: 'extra', name: '重复 content parts 校验', we2ai: ['fail', 10.2], off: ['fail', 10.4], finding: 6 },
+    { id: 'input_validation.invalid_role', group: 'extra', name: '非法 role 校验', we2ai: ['fail', 16.9], off: ['pass', 0.1], diff: true, finding: 6 },
+    { id: 'input_validation.corrupted_image_base64', group: 'extra', name: '损坏的图片 Base64 校验', we2ai: ['pass', 13.9], off: ['pass', 0.1] }
+  ];
+
+  var STATUS_LABEL = { pass: '通过', fail: '失败', na: '未声明' };
+
+  function pill(status) {
+    return '<span class="pill pill-' + status + '"><span class="dot"></span>' + STATUS_LABEL[status] + '</span>';
+  }
+
+  function latCell(c) {
+    var a = c.we2ai[1], b = c.off[1];
+    if (a === null && b === null) return '<span class="lat-na">—</span>';
+    var max = Math.max(a || 0, b || 0) || 1;
+    var pa = Math.max((a / max) * 100, 4);
+    var pb = Math.max((b / max) * 100, 4);
+    return (
+      '<div class="lat-row we2ai"><div class="lat-track"><div class="lat-bar" style="width:' + pa + '%"></div></div><span class="lat-val">' + a.toFixed(1) + 's</span></div>' +
+      '<div class="lat-row official"><div class="lat-track"><div class="lat-bar" style="width:' + pb + '%"></div></div><span class="lat-val">' + b.toFixed(1) + 's</span></div>'
+    );
+  }
+
+  function noteCell(c) {
+    if (c.diff) {
+      return '<a class="note-diff" href="#finding-' + c.finding + '">渠道差异 · 见发现 ' + c.finding + '</a>';
+    }
+    if (c.finding) {
+      return '<a href="#finding-' + c.finding + '" style="color:var(--ink-3)">两渠道一致 · 见发现 ' + c.finding + '</a>';
+    }
+    if (c.we2ai[0] === 'na') return '能力未声明，跳过';
+    return '';
+  }
+
+  var tbody = document.getElementById('results-tbody');
+  var rows = '';
+  GROUPS.forEach(function (g) {
+    var items = CASES.filter(function (c) { return c.group === g.key; });
+    if (!items.length) return;
+    rows += '<tr class="group-row"><td colspan="5">' + g.label + '</td></tr>';
+    items.forEach(function (c) {
+      rows += '<tr class="case-row">' +
+        '<td><span class="case-name">' + c.name + '</span><span class="case-id">' + c.id + '</span></td>' +
+        '<td>' + pill(c.we2ai[0]) + '</td>' +
+        '<td>' + pill(c.off[0]) + '</td>' +
+        '<td class="lat-cell">' + latCell(c) + '</td>' +
+        '<td class="note-cell">' + noteCell(c) + '</td>' +
+        '</tr>';
+    });
+  });
+  tbody.innerHTML = rows;
+
+  var FINDINGS = [
+    {
+      tag: 'diff',
+      title: '官方直连流式响应缺少 usage 字段，we2ai 正常',
+      body: '<p>两渠道请求体完全一致（<code>stream:true</code>，未显式传 <code>stream_options.include_usage</code>）。we2ai 返回的流式响应末尾带有 <code>usage</code> 字段，官方直连的流里没有这个字段。属于协议层的真实差异——we2ai 中转很可能默认补全了这个参数，官方原生行为是不传就不返回。</p>'
+    },
+    {
+      tag: 'shared',
+      title: '两种"关闭思考"参数在两渠道都不生效',
+      body: '<p>对 <code>enable_thinking=false</code> 与 <code>chat_template_kwargs.thinking=false</code> 两种关闭方式，两个渠道的模型都仍然返回了思考内容（reasoning_content）。两渠道现象一致，说明是 kimi-k3 模型本身对这两种取值不敏感，与走哪个渠道无关。</p>'
+    },
+    {
+      tag: 'diff',
+      title: '官方直连在思考类用例上多次触发过载',
+      body: '<p><code>thinking_type</code>、<code>chat_template_kwargs.enable_thinking</code>、<code>default_behavior</code> 三个用例，官方直连均返回 HTTP 429：</p>' +
+        '<pre class="code-block">{"error":{"message":"The engine is currently overloaded, please try again later","type":"engine_overloaded_error"}}</pre>' +
+        '<p>we2ai 中转对同样的请求全部正常返回。压测阶段官方也出现 1 次同类型失败，we2ai 压测零失败。本次测试窗口内官方 API 出现多次过载，无法仅凭一轮测试判断是系统性容量差异还是偶发拥堵，建议择时重跑交叉验证。</p>'
+    },
+    {
+      tag: 'diff',
+      title: 'JSON 结构化输出的围栏包裹方向不固定',
+      body: '<p>两渠道请求体逐字节相同（<code>response_format:{type:"json_object"}</code>）。we2ai 返回的内容被 Markdown 代码块围栏包裹，解析为非法 JSON 而失败；官方直连返回的是干净 JSON。这不代表官方"更规范"——依赖严格 JSON 输出的场景，无论走哪个渠道都建议在应用层做一层围栏剥离的兜底解析。</p>'
+    },
+    {
+      tag: 'shared',
+      title: 'reasoning_effort 分档采样两渠道都不稳定，但原因不同',
+      body: '<p>we2ai 在 <code>max</code> 档的一次采样返回 HTTP 503，导致该档采样不完整；官方全部采样请求都成功，但 <code>low</code> 档 3 次采样结果分散，没有形成多数结果。一个是传输层偶发失败，一个是模型输出本身在低强度档位下方差较大，都不是渠道路由逻辑导致的。</p>'
+    },
+    {
+      tag: 'diff',
+      title: '输入校验：重复内容两渠道都不拦，非法角色只有官方拦',
+      body: '<p>对重复 content parts 的非法输入，两渠道都返回 HTTP 200 直接当合法请求处理，现象一致。但对非法 <code>role</code> 字段，we2ai 同样直接放行，官方直连正确拒绝了该请求。这是本次唯一体现"官方直连输入校验更严格"的用例。</p>'
+    }
+  ];
+
+  var grid = document.getElementById('finding-grid');
+  var fh = '';
+  FINDINGS.forEach(function (f, i) {
+    var n = i + 1;
+    fh += '<article class="finding-card" id="finding-' + n + '">' +
+      '<div class="finding-head">' +
+      '<span class="finding-num">0' + n + '</span>' +
+      '<span class="finding-title">' + f.title + '</span>' +
+      '<span class="finding-tag ' + (f.tag === 'diff' ? 'tag-diff' : 'tag-shared') + '">' + (f.tag === 'diff' ? '渠道差异' : '两渠道一致') + '</span>' +
+      '</div>' +
+      '<div class="finding-body">' + f.body + '</div>' +
+      '</article>';
+  });
+  grid.innerHTML = fh;
+
+  var STATS = [
+    { name: '总请求数', we2ai: '91', off: '88', unit: '', note: '官方含 1 次 429 失败', warn: true },
+    { name: '总耗时', we2ai: '814.5', off: '902.3', unit: 's' },
+    { name: '吞吐 req/s', we2ai: '0.112', off: '0.096', unit: 'req/s', note: '两渠道均低于基线，判定 FAIL', warn: true },
+    { name: '吞吐 input tok/s', we2ai: '2275.97', off: '1963.52', unit: 'tok/s' },
+    { name: '吞吐 output tok/s', we2ai: '4.39', off: '5.47', unit: 'tok/s', note: '官方单请求输出吞吐略高' },
+    { name: '失败请求', we2ai: '0', off: '1', unit: '次', note: '官方：HTTP 429', warn: true }
+  ];
+  var sg = document.getElementById('stat-grid');
+  var sh = '';
+  STATS.forEach(function (s) {
+    sh += '<div class="stat-tile">' +
+      '<div class="stat-name">' + s.name + '</div>' +
+      '<div class="stat-vals">' +
+      '<div class="stat-val we2ai"><span class="v">' + s.we2ai + '</span><span class="k">we2ai</span></div>' +
+      '<div class="stat-val official"><span class="v">' + s.off + '</span><span class="k">官方 API</span></div>' +
+      '</div>' +
+      (s.note ? '<div class="stat-note' + (s.warn ? ' warn' : '') + '">' + s.note + '</div>' : '') +
+      '</div>';
+  });
+  sg.innerHTML = sh;
+
+  var METRICS = [
+    { title: 'TTFT · 首字延迟', unit: 's', note: '验收判定仅参考 P50，其余分位仅记录', we2ai: [3.081, 12.914, 24.230], off: [6.535, 14.812, 21.556] },
+    { title: 'TPOT · 逐 token 耗时', unit: 'ms', note: '验收判定仅参考 P50，其余分位仅记录', we2ai: [1.471, 8.101, 18.888], off: [0.003, 5.848, 11.015] },
+    { title: '端到端延迟', unit: 's', note: '验收判定仅参考 P50，其余分位仅记录', we2ai: [3.338, 15.534, 39.838], off: [7.180, 11.637, 28.694] }
+  ];
+
+  var charts = document.getElementById('charts');
+  var svgNS = 'http://www.w3.org/2000/svg';
+
+  function fmt(v, unit) {
+    return (unit === 'ms' ? v.toFixed(2) : v.toFixed(2)) + unit;
+  }
+
+  METRICS.forEach(function (m) {
+    var card = document.createElement('div');
+    card.className = 'chart-card';
+    card.innerHTML = '<div class="chart-head"><span class="chart-title">' + m.title + '</span><span class="chart-unit">' + m.unit + '</span></div>' +
+      '<div class="chart-note">' + m.note + '</div>';
+
+    var W = 900, H = 130, padL = 90, padR = 40;
+    var max = Math.max.apply(null, m.we2ai.concat(m.off)) * 1.12;
+    var scale = function (v) { return padL + (v / max) * (W - padL - padR); };
+
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('class', 'dotplot');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', m.title + ' 的 P50/P90/P99 对比：we2ai ' + m.we2ai.join('/') + m.unit + '，官方 ' + m.off.join('/') + m.unit);
+
+    function track(y, color, label, vals) {
+      var g = document.createElementNS(svgNS, 'g');
+      var line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', padL); line.setAttribute('x2', W - padR); line.setAttribute('y1', y); line.setAttribute('y2', y);
+      line.setAttribute('style', 'stroke:var(--line-strong);stroke-width:1');
+      g.appendChild(line);
+
+      var lbl = document.createElementNS(svgNS, 'text');
+      lbl.setAttribute('x', 0); lbl.setAttribute('y', y + 4);
+      lbl.setAttribute('style', 'fill:' + color + ';font-family:var(--font-mono);font-size:11px;font-weight:600');
+      lbl.textContent = label;
+      g.appendChild(lbl);
+
+      var radii = [5, 5, 6.5];
+      var opac = [1, 0.55, 1];
+      var fillMode = [true, true, false];
+      vals.forEach(function (v, idx) {
+        var x = scale(v);
+        var c = document.createElementNS(svgNS, 'circle');
+        c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', radii[idx]);
+        if (fillMode[idx]) {
+          c.setAttribute('style', 'fill:' + color + ';opacity:' + opac[idx]);
+        } else {
+          c.setAttribute('style', 'fill:none;stroke:' + color + ';stroke-width:2');
+        }
+        g.appendChild(c);
+
+        var t = document.createElementNS(svgNS, 'text');
+        t.setAttribute('x', x);
+        t.setAttribute('y', idx === 1 ? y - 12 : y + (y < H / 2 ? -14 : 20));
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('style', 'fill:var(--ink-2);font-family:var(--font-mono);font-size:10px');
+        t.textContent = fmt(v, m.unit);
+        g.appendChild(t);
+      });
+      return g;
+    }
+
+    svg.appendChild(track(40, 'var(--we2ai)', 'we2ai', m.we2ai));
+    svg.appendChild(track(95, 'var(--official)', '官方', m.off));
+
+    card.appendChild(svg);
+    charts.appendChild(card);
+  });
+})();
+</script>

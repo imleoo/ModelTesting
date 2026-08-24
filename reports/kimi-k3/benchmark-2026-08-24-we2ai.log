@@ -1,0 +1,117 @@
+开始压测：total_sessions=3 model=kimi-k3 base_url=https://api.we2ai.com（详细进度见日志）
+benchmark run start: total_sessions=3 model=kimi-k3 base_url=https://api.we2ai.com
+[request] session=1 round=0 ok ttft=0.000s latency=2.213s output_tokens=15 cached_tokens=64/8983
+[request] session=1 round=1 ok ttft=0.000s latency=1.554s output_tokens=2 cached_tokens=64/9289
+[request] session=0 round=0 ok ttft=18.744s latency=24.824s output_tokens=845 cached_tokens=0/33889
+[request] session=1 round=2 ok ttft=0.000s latency=1.340s output_tokens=23 cached_tokens=8992/9576
+[request] session=1 round=3 ok ttft=0.000s latency=2.050s output_tokens=5 cached_tokens=9600/9789
+[request] session=1 round=4 ok ttft=0.000s latency=1.832s output_tokens=3 cached_tokens=9312/10089
+[request] session=1 round=5 ok ttft=1.157s latency=1.181s output_tokens=15 cached_tokens=10112/10195
+[request] session=0 round=1 ok ttft=0.000s latency=3.836s output_tokens=36 cached_tokens=0/34245
+[request] session=1 round=6 ok ttft=2.090s latency=2.090s output_tokens=15 cached_tokens=9824/10406
+[request] session=2 round=0 ok ttft=0.000s latency=12.863s output_tokens=18 cached_tokens=64/119
+[request] session=0 round=2 ok ttft=0.000s latency=5.644s output_tokens=4 cached_tokens=0/34289
+[request] session=1 round=7 ok ttft=0.000s latency=2.182s output_tokens=1 cached_tokens=10240/11153
+[request] session=1 round=8 ok ttft=2.203s latency=2.203s output_tokens=15 cached_tokens=11200/11255
+[request] session=0 round=3 ok ttft=16.083s latency=16.286s output_tokens=16 cached_tokens=0/34324
+[request] session=1 round=9 ok ttft=0.000s latency=4.331s output_tokens=1 cached_tokens=11328/11368
+[request] session=2 round=1 ok ttft=6.700s latency=7.815s output_tokens=384 cached_tokens=64/182
+[request] session=1 round=10 ok ttft=12.914s latency=12.941s output_tokens=28 cached_tokens=10432/11413
+[request] session=2 round=2 ok ttft=0.000s latency=8.536s output_tokens=162 cached_tokens=64/739
+[request] session=0 round=4 ok ttft=7.629s latency=7.709s output_tokens=16 cached_tokens=0/34378
+[request] session=1 round=11 ok ttft=1.425s latency=1.425s output_tokens=15 cached_tokens=11456/11625
+[request] session=0 round=5 ok ttft=4.523s latency=4.542s output_tokens=11 cached_tokens=64/34524
+[request] session=2 round=3 ok ttft=1.020s latency=4.647s output_tokens=193 cached_tokens=64/785
+[request] session=0 round=6 ok ttft=0.000s latency=2.712s output_tokens=6 cached_tokens=34496/34902
+[request] session=0 round=7 ok ttft=4.589s latency=4.589s output_tokens=16 cached_tokens=34880/34989
+[request] session=1 round=12 ok ttft=11.685s latency=11.715s output_tokens=15 cached_tokens=11648/11764
+[request] session=1 round=13 ok ttft=1.493s latency=1.494s output_tokens=8 cached_tokens=11392/12575
+[request] session=2 round=4 ok ttft=8.033s latency=12.857s output_tokens=747 cached_tokens=160/2913
+[request] session=0 round=8 ok ttft=0.000s latency=17.163s output_tokens=12 cached_tokens=34944/35062
+[request] session=1 round=14 ok ttft=0.000s latency=5.525s output_tokens=4 cached_tokens=12608/12634
+[request] session=1 round=15 ok ttft=1.287s latency=1.322s output_tokens=15 cached_tokens=11840/13340
+[request] session=1 round=16 ok ttft=2.371s latency=2.371s output_tokens=15 cached_tokens=12672/13540
+[request] session=2 round=5 ok ttft=2.325s latency=3.975s output_tokens=124 cached_tokens=2944/3268
+[request] session=2 round=6 ok ttft=1.454s latency=2.473s output_tokens=166 cached_tokens=3456/4152
+[request] session=1 round=17 ok ttft=2.358s latency=2.391s output_tokens=15 cached_tokens=13568/13609
+[request] session=1 round=18 ok ttft=3.081s latency=3.112s output_tokens=15 cached_tokens=13632/13691
+[request] session=1 round=19 ok ttft=1.285s latency=1.398s output_tokens=15 cached_tokens=13760/13986
+[request] session=0 round=9 ok ttft=18.367s latency=18.367s output_tokens=16 cached_tokens=35008/35113
+[request] session=1 round=20 ok ttft=15.534s latency=15.534s output_tokens=15 cached_tokens=13376/14032
+[request] session=1 round=21 ok ttft=2.196s latency=2.217s output_tokens=15 cached_tokens=14080/15255
+[request] session=1 round=22 ok ttft=3.058s latency=3.058s output_tokens=15 cached_tokens=14016/15371
+[request] session=2 round=7 ok ttft=0.000s latency=31.035s output_tokens=2 cached_tokens=4352/4616
+[request] session=0 round=10 ok ttft=0.000s latency=25.150s output_tokens=1 cached_tokens=35072/35307
+[request] session=2 round=8 ok ttft=0.000s latency=1.699s output_tokens=2 cached_tokens=64/4855
+[request] session=1 round=23 ok ttft=1.393s latency=1.394s output_tokens=15 cached_tokens=15424/16869
+[request] session=0 round=11 ok ttft=4.255s latency=4.255s output_tokens=16 cached_tokens=35264/35576
+[request] session=1 round=24 ok ttft=3.109s latency=3.137s output_tokens=15 cached_tokens=16896/17444
+[request] session=1 round=25 ok ttft=1.778s latency=1.803s output_tokens=15 cached_tokens=17472/17496
+[request] session=0 round=12 ok ttft=0.000s latency=6.767s output_tokens=2 cached_tokens=35584/35836
+[request] session=1 round=26 ok ttft=2.711s latency=2.712s output_tokens=15 cached_tokens=17536/17542
+[request] session=1 round=27 ok ttft=0.000s latency=3.828s output_tokens=2 cached_tokens=17597/17597
+[request] session=0 round=13 ok ttft=0.000s latency=19.938s output_tokens=4 cached_tokens=35776/35901
+[request] session=1 round=28 ok ttft=0.000s latency=39.838s output_tokens=3 cached_tokens=17632/17646
+[request] session=1 round=29 ok ttft=3.297s latency=3.297s output_tokens=15 cached_tokens=17664/17849
+[request] session=0 round=14 ok ttft=24.230s latency=24.230s output_tokens=10 cached_tokens=35904/36118
+[request] session=0 round=15 ok ttft=3.645s latency=3.646s output_tokens=8 cached_tokens=36096/36320
+[request] session=1 round=30 ok ttft=3.150s latency=3.150s output_tokens=15 cached_tokens=64/18226
+[request] session=0 round=16 ok ttft=4.013s latency=4.013s output_tokens=16 cached_tokens=36288/36925
+[request] session=1 round=31 ok ttft=2.972s latency=3.000s output_tokens=15 cached_tokens=18272/18551
+[request] session=1 round=32 ok ttft=0.000s latency=11.706s output_tokens=1 cached_tokens=17920/18597
+[request] session=1 round=33 ok ttft=8.547s latency=8.575s output_tokens=15 cached_tokens=18624/18689
+[request] session=1 round=34 ok ttft=1.278s latency=1.278s output_tokens=8 cached_tokens=18752/18769
+[request] session=1 round=35 ok ttft=4.663s latency=4.689s output_tokens=15 cached_tokens=18816/18993
+[request] session=0 round=17 ok ttft=9.585s latency=9.588s output_tokens=16 cached_tokens=36928/36993
+[request] session=1 round=36 ok ttft=2.971s latency=3.004s output_tokens=16 cached_tokens=18624/19048
+[request] session=0 round=18 ok ttft=0.000s latency=5.611s output_tokens=2 cached_tokens=36992/38962
+[request] session=0 round=19 ok ttft=3.596s latency=3.596s output_tokens=8 cached_tokens=38912/39341
+[request] session=0 round=20 ok ttft=4.820s latency=4.851s output_tokens=16 cached_tokens=39296/40566
+[request] session=1 round=37 ok ttft=0.000s latency=1.329s output_tokens=2 cached_tokens=19072/19459
+[request] session=0 round=21 ok ttft=0.000s latency=3.693s output_tokens=5 cached_tokens=40512/41016
+[request] session=0 round=22 ok ttft=5.806s latency=5.807s output_tokens=16 cached_tokens=40960/42059
+[request] session=2 round=9 ok ttft=2.036s latency=2.070s output_tokens=15 cached_tokens=4832/5180
+[request] session=2 round=10 ok ttft=2.680s latency=2.680s output_tokens=15 cached_tokens=64/5259
+[request] session=2 round=11 ok ttft=0.000s latency=2.482s output_tokens=5 cached_tokens=4672/5328
+[request] session=0 round=23 ok ttft=0.000s latency=7.512s output_tokens=2 cached_tokens=42048/43193
+[request] session=0 round=24 ok ttft=6.060s latency=6.118s output_tokens=16 cached_tokens=43136/44389
+[request] session=0 round=25 ok ttft=5.387s latency=5.387s output_tokens=16 cached_tokens=44352/44779
+[request] session=1 round=38 ok ttft=0.000s latency=2.875s output_tokens=3 cached_tokens=19520/19564
+[request] session=0 round=26 ok ttft=4.895s latency=4.895s output_tokens=16 cached_tokens=44736/45108
+[request] session=1 round=39 ok ttft=0.000s latency=1.341s output_tokens=2 cached_tokens=15296/19610
+[request] session=0 round=27 ok ttft=0.000s latency=4.032s output_tokens=3 cached_tokens=45056/45217
+[request] session=1 round=40 ok ttft=2.494s latency=2.525s output_tokens=15 cached_tokens=19648/19671
+[request] session=2 round=12 ok ttft=1.604s latency=1.609s output_tokens=14 cached_tokens=5248/6100
+[request] session=2 round=13 ok ttft=1.661s latency=1.661s output_tokens=15 cached_tokens=64/6207
+[request] session=2 round=14 ok ttft=1.289s latency=1.534s output_tokens=15 cached_tokens=992/7239
+[request] session=2 round=15 ok ttft=1.452s latency=1.570s output_tokens=15 cached_tokens=7296/7861
+[request] session=1 round=41 ok ttft=0.000s latency=1.440s output_tokens=1 cached_tokens=19584/19725
+[request] session=1 round=42 ok ttft=3.387s latency=3.405s output_tokens=15 cached_tokens=19072/19770
+[request] session=1 round=43 ok ttft=2.419s latency=2.445s output_tokens=15 cached_tokens=19840/19905
+[request] session=1 round=44 ok ttft=2.526s latency=2.559s output_tokens=15 cached_tokens=19968/20274
+[request] session=1 round=45 ok ttft=3.318s latency=3.338s output_tokens=15 cached_tokens=20352/21605
+[request] session=1 round=46 ok ttft=0.000s latency=2.556s output_tokens=1 cached_tokens=19776/21708
+benchmark run end: duration=814.5s total_requests=91
+
+=== 压测完成 ===
+total_requests=91 duration=814.5s
+
+total_requests             avg=91.000     p50=0.000      p95=0.000      unit=count  verdict=NOT_APPLICABLE
+duration                   avg=814.451    p50=0.000      p95=0.000      unit=s      verdict=NOT_APPLICABLE
+throughput_req_s           avg=0.112      p50=0.000      p95=0.000      unit=req/s  verdict=FAIL
+throughput_input_tok_s     avg=2275.975   p50=0.000      p95=0.000      unit=tok/s  verdict=NOT_APPLICABLE
+                           note: PDF 未给该分项独立基线，随 throughput_req_s 一并参考
+throughput_output_tok_s    avg=4.392      p50=0.000      p95=0.000      unit=tok/s  verdict=NOT_APPLICABLE
+                           note: PDF 未给该分项独立基线，随 throughput_req_s 一并参考
+ttft                       avg=4.926      p50=3.081      p95=18.367     unit=s      verdict=OK
+                           note: 判定仅看 P50，其余分位仅记录（06 节 6.2 表）
+tpot                       avg=2.602      p50=1.471      p95=13.567     unit=ms     verdict=OK
+                           note: 判定仅看 P50，其余分位仅记录（06 节 6.2 表）
+latency                    avg=6.099      p50=3.338      p95=24.230     unit=s      verdict=MANUAL_REVIEW
+                           note: 无 PDF 基线，首版仅记录，待历史对比能力上线后启用趋势比较（06 节）
+itl                        avg=42.911     p50=18.805     p95=185.499    unit=ms     verdict=MANUAL_REVIEW
+                           note: 无 PDF 基线，首版仅记录，待历史对比能力上线后启用趋势比较（06 节）
+cache_hit_rate             avg=0.857      p50=0.000      p95=0.000      unit=ratio  verdict=OK
+                           note: 剔除首轮（Round 0）后，对各稳态轮次的命中率取算术平均
+
+完整结果已写入 reports/kimi-k3/benchmark-2026-08-24-we2ai.json

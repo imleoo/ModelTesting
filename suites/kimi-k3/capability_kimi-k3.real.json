@@ -8,5 +8,6 @@
   "tool_choice_function": false,
   "thinking_toggle_methods": ["enable_thinking", "thinking_type", "chat_template_kwargs_enable_thinking", "chat_template_kwargs_thinking"],
   "default_thinking_behavior": "thinks_by_default",
-  "reasoning_effort": true
+  "reasoning_effort": true,
+  "prompt_cache": true
 }
