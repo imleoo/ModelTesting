@@ -72,11 +72,13 @@ func mockGatewayHandler() http.HandlerFunc {
 		}
 		// 这个 mock 网关被 TestSmoke_FullSuiteAgainstMockGateway 当作"表现
 		// 良好的被测网关"用来驱动整套 suite.v1.json（含 input_validation.*
-		// 系列 rejects_invalid_request 用例），所以除了正常应答之外，还需要
-		// 正确拒绝那几类故意构造的非法输入——一个真正做了输入校验的网关
-		// 应该表现成这样，而不是像真实 tokenpanel 那样 500。
+		// 系列 rejects_invalid_request/rejects_with_error_type 用例），所以除了
+		// 正常应答之外，还需要正确拒绝那几类故意构造的非法输入——一个真正做了
+		// 输入校验的网关应该表现成这样，而不是像真实 tokenpanel 那样 500；
+		// 错误体也要是合规的 OpenAI 协议 {"error":{...}} JSON（而不是纯文本），
+		// 否则 input_validation.error_type_shape 这条用例在"理想网关"下也会误判 FAIL。
 		if reason := invalidRequestReason(body); reason != "" {
-			http.Error(w, reason, http.StatusBadRequest)
+			writeMockError(w, http.StatusBadRequest, reason)
 			return
 		}
 		streamed, _ := body["stream"].(bool)
@@ -88,8 +90,24 @@ func mockGatewayHandler() http.HandlerFunc {
 	}
 }
 
+// writeMockError 写一个合规的 OpenAI 协议错误体：error.type 固定为
+// invalid_request_error、具体原因放在 error.message、error.code 为 null，
+// 对应 input_validation.error_type_shape 用例校验的结构（见 0820 兼容性
+// 报告 2.4：内部网关曾把错误文本误用成 type，且多出非标准数字 code 字段）。
+func writeMockError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"error": map[string]any{
+			"message": message,
+			"type":    "invalid_request_error",
+			"code":    nil,
+		},
+	})
+}
+
 // invalidRequestReason 识别 suites/kimi-k3/suite.v1.json 里 input_validation.*
-// 系列用例构造的 5 类非法输入，非空字符串表示应该拒绝（400）。
+// 系列用例构造的 7 类非法输入，非空字符串表示应该拒绝（400）。
 func invalidRequestReason(body map[string]any) string {
 	if mt, ok := body["max_tokens"].(float64); ok {
 		if mt < 0 {
@@ -115,6 +133,23 @@ func invalidRequestReason(body map[string]any) string {
 			if _, isString := msg["content"].(string); !isString {
 				if _, isMap := msg["content"].(map[string]any); isMap {
 					return "tool message content must be a string"
+				}
+			}
+		}
+		if s, ok := msg["content"].(string); ok && s == "" {
+			return "message content must not be empty"
+		}
+		if toolCalls, ok := msg["tool_calls"].([]any); ok {
+			for _, tc := range toolCalls {
+				tcm, ok := tc.(map[string]any)
+				if !ok {
+					continue
+				}
+				fn, _ := tcm["function"].(map[string]any)
+				args, _ := fn["arguments"].(string)
+				var js any
+				if err := json.Unmarshal([]byte(args), &js); err != nil {
+					return "tool_calls.function.arguments must be valid JSON"
 				}
 			}
 		}
@@ -174,6 +209,17 @@ func serveMockNonStream(w http.ResponseWriter, body map[string]any, cacheWarm *a
 		usage["prompt_tokens_details"] = map[string]any{"cached_tokens": cached}
 	case strings.Contains(prompt, "ALPHA"):
 		msg["content"] = "ALPHA\n"
+	case strings.Contains(prompt, "人设身份"):
+		// context.multi_system_message_recall（v1.4.0）：mock 网关模拟"正确
+		// 保留了全部 system messages"的理想行为，回答需同时提到两条 system
+		// message 各自要求的关键词，呼应 0820 报告 2.5。
+		msg["content"] = "我的人设里，我既是猫也是狗。"
+	case strings.Contains(prompt, "只回答 CLARIFICATION 或 FABRICATION"):
+		// input_validation.empty_tool_result_no_fabrication（v1.7.0）的裁判轮：
+		// mock 网关模拟"裁判本身工作正常"，固定判给 CLARIFICATION——因为本 mock
+		// 对 tool 结果为 null 场景的初次回复走的是通用兜底文案（见下方默认分支），
+		// 不是编造具体数据，裁判判 CLARIFICATION 才是符合『理想网关』的正确结果。
+		msg["content"] = "CLARIFICATION"
 	case strings.Contains(prompt, "《四季》"):
 		mt, _ := body["max_tokens"].(float64)
 		msg["content"] = "春天到了，风里带着新翻的泥土气息"
@@ -275,6 +321,12 @@ func multimodalAnswer(body map[string]any) string {
 			}
 			if vu, ok := pm["video_url"].(map[string]any); ok {
 				url, _ := vu["url"].(string)
+				// multimodal.video_mkv_format（v1.4.0）用的是不同素材/答案
+				// （video_mkv_v1 → 3849），要在通用 "data:video/" 判断之前拦截，
+				// 否则会被误判成 video_qa_v1（8153）。
+				if strings.HasPrefix(url, "data:video/x-matroska") {
+					return "3849"
+				}
 				if strings.Contains(url, "video_qa_v1") || strings.HasPrefix(url, "data:video/") {
 					return "8153"
 				}

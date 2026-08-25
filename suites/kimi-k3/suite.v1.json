@@ -1,9 +1,9 @@
 {
   "suite_id": "kimi-k3",
-  "suite_version": "1.2.0",
+  "suite_version": "1.7.0",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "Kimi-K3 套件的可执行套件定义：25 项基础用例 + 2 项附加用例（reasoning_effort、长上下文）+ 6 项『输入校验』附加用例 + 1 项『上下文缓存』附加用例。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例（output_control.max_tokens_truncation、output_control.stop_semantics、determinism.temperature_zero、thinking.reasoning_effort_off、context.long_context_recall、cache.prompt_cache_hit_rate、input_validation.max_tokens_over_limit），使两套件覆盖对齐，差异只保留在各自模型的真实能力边界（多模态、tool_choice_function 等）。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
+  "description": "Kimi-K3 套件的可执行套件定义：25 项基础用例 + 2 项附加用例（reasoning_effort、长上下文）+ 20 项『输入校验/回归』附加用例 + 1 项『上下文缓存』附加用例。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例，使两套件覆盖对齐。v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》P0 级缺陷中挑选 8 项可用现有断言类型无歧义复现的回归用例并入。v1.4.0 继续从同一份报告补齐 5 项：structured.json_object_stream 复用现有 stream_integrity 断言；thinking.disabled_content_clean/output_control.no_prompt_echo/context.multi_system_message_recall/input_validation.error_type_shape 四项在 internal/assertion/assertion.go 新增了 4 个断言函数（均有单测覆盖）并接了对应 assertion_type。v1.5.0 补入 2.3（MKV 容器不支持）：新增 multimodal.video_mkv_format 用例 + video_mkv_v1 素材，素材用本地 ffmpeg 生成（见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），复用既有 deterministic_multimodal_qa 断言，无需新断言类型。v1.6.0 补入 1.11（视频 base64 体积边界 429）：新增 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条用例，素材是本地生成的噪声内容视频（分别精确到 48MB/52MB base64 体积，见 suites/kimi-k3/materials/generate_video_size_boundary.py），复用 content_nonempty 断言（不做数字精确比对，只验证网关是否正常处理了这个体积而不是笼统 429），经与用户确认接受为此新增约 75MB 仓库体积。v1.7.0 补入 1.6（空/null tool result 触发幻觉）：新增 assertion_type=self_judged_no_fabrication（见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict，均有单测覆盖）+ input_validation.empty_tool_result_no_fabrication 用例——经与用户确认，用被测模型自身当裁判（而非独立裁判模型），实现是二段式调用：先正常发起用例请求拿到回复，再把回复原文喂给同一模型自己判断是 CLARIFICATION 还是 FABRICATION。已知局限：自证过审偏差，PASS 不代表可以跳过人工抽查，FAIL 的两段完整留痕更值得信任。报告里余下 1 项（1.3 replay 批量重放）经与用户确认后跳过：完全不同的批量重放测试范式，超出当前引擎设计范围，且原始 146 条重放语料不在本仓库。1.12（fps=100 越界）经查阅 platform.kimi.com 官方文档（use-kimi-vision-model），视频输入的公开 API 完全没有 fps 参数（视频通过 video_url.url 传入，官方推荐大文件走 ms://<file-id> 的 Files API，小文件也可直接 base64/URL——本套件已有的 video_url/video_base64 用例已被真实官方 API 跑通验证，schema 假设是对的），fps 大概率是原报告某个内部/自建推理栈的私有扩展参数，公开 API 层面没有依据可以写这条用例，未纳入。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -46,7 +46,11 @@
       "stop_sequence_prompt": "请严格按下面的格式输出三行，每行一个单词，不要加任何解释、编号或标点：\nALPHA\nBRAVO\nCHARLIE",
       "determinism_prompt": "请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。",
       "cache_probe_question": "请只回答两个字：收到。",
-      "long_context_question": "上文中【暗号】后面的那个四位数字是多少？只输出这四位数字，不要输出任何其他字符。"
+      "long_context_question": "上文中【暗号】后面的那个四位数字是多少？只输出这四位数字，不要输出任何其他字符。",
+      "echo_probe_prompt": "请你用中文写一段关于信任的三句话短文，直接开始正文，不要重复题目或提示词。",
+      "system_identity_cat": "你现在的人设是一只猫，如果被问到身份，回答里必须提到你是猫。",
+      "system_identity_dog": "你现在的人设是一只狗，如果被问到身份，回答里必须提到你是狗。",
+      "identity_question": "请用一句话说明你现在的人设身份是什么。"
     }
   },
   "materials_manifest": "suites/kimi-k3/materials/manifest.json",
@@ -221,6 +225,88 @@
               "content": [
                 { "type": "text", "text": "{{material:video_qa_v1:question_prompt}}" },
                 { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_qa_v1:base64}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_mkv_format",
+      "category": "多模态视频",
+      "name": "Video · MKV 容器",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.3：传入 MKV（matroska）视频容器时，官方能正常解析并回答，内部网关曾返回笼统 400。素材为本仓库用 ffmpeg 本地生成的固定印刷体数字视频（video_mkv_v1，见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），与 video_qa_v1 同款可程序化比对方案，只是换成不同容器格式和数字串，避免和 mp4 素材混淆。",
+      "material_ref": { "material_id": "video_mkv_v1", "form": "base64" },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:video_mkv_v1:question_prompt}}" },
+                { "type": "video_url", "video_url": { "url": "data:video/x-matroska;base64,{{material:video_mkv_v1:base64}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.video_base64_size_boundary_under_50mb",
+      "category": "多模态视频",
+      "name": "video base64 体积边界 · 略小于 50MB",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "content_nonempty",
+      "repeat_attempts": 1,
+      "notes": "v1.6.0 新增，来自 0820 兼容性报告 1.11：base64 视频体积约 48MB（略小于 50MB）时，官方返回 200 正常描述，内部网关曾笼统返回 429。素材是本仓库本地生成的噪声内容视频（见 suites/kimi-k3/materials/generate_video_size_boundary.py），断言用 content_nonempty 而非 deterministic_multimodal_qa——本用例只关心『网关是否正常处理了这个体积的请求』，不对画面内容做数字精确比对；若网关仍返回 429，runSingleNonStream 会在到达该断言前就因 HTTP != 200 判 FAIL 并留痕状态码，不需要新断言类型。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:video_size_under_50mb:question_prompt}}" },
+                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_size_under_50mb:base64}}" } }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.video_base64_size_boundary_over_50mb",
+      "category": "多模态视频",
+      "name": "video base64 体积边界 · 略大于 50MB",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "content_nonempty",
+      "repeat_attempts": 1,
+      "notes": "v1.6.0 新增，同 input_validation.video_base64_size_boundary_under_50mb，体积换成约 52MB（略大于 50MB）。0820 报告原文这两档官方均返回 200，断言口径与 under_50mb 那条相同，不是『一个该成功一个该被拒绝』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                { "type": "text", "text": "{{material:video_size_over_50mb:question_prompt}}" },
+                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_size_over_50mb:base64}}" } }
               ]
             }
           ],
@@ -881,6 +967,333 @@
           "model": "{{model_key}}",
           "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
           "max_tokens": 10000000,
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_disabled",
+      "category": "思考行为",
+      "name": "流式 + thinking 关闭",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自《Kimi-K3-接口兼容性测试总结-0820.md》1.1：stream×thinking 6 种组合中『内部网关全量 500』一次真实复现的缺陷，本用例覆盖 stream=true × thinking=disabled 组合。runSingleStream 会先校验 HTTP 200，若网关再次对该组合返回 500，会在到达 stream_integrity 断言前就被判 FAIL 并留痕状态码，不需要新断言类型即可复现该缺陷。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "thinking": { "type": "disabled" },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_enabled",
+      "category": "思考行为",
+      "name": "流式 + thinking 开启",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.1，覆盖 stream=true × thinking=enabled 组合，其余同 thinking.stream_disabled。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "thinking": { "type": "enabled" },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_default",
+      "category": "思考行为",
+      "name": "流式 + thinking 未传（默认）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.1，覆盖 stream=true × thinking 参数完全不传（走模型默认思考行为）组合，与 thinking.stream_disabled/enabled 共同补齐『stream×thinking 3 种组合』；不要求声明具体思考开关方式，故 required_rule 为 fixed_required。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "tool.thinking_tool_call_combo",
+      "category": "工具调用检测",
+      "name": "thinking + tool_call 同开",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.2：thinking 与 tool_call 同时启用时被网关直接 400 拒绝（Agent 场景核心能力，PDF 未单列但属于协议基线）。tool_call_required 复用现有断言：runSingleNonStream 先校验 HTTP 200，若网关仍对该组合返回 400，会在断言前就判 FAIL 并留痕状态码，不需要新断言类型。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": ["{{fixtures.tools.get_weather}}"],
+          "tool_choice": "required",
+          "thinking": { "type": "enabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.dual_max_tokens_truncation",
+      "category": "输出控制",
+      "name": "max_tokens + max_completion_tokens 同传",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "max_tokens_truncation",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.10：同时设置 max_completion_tokens 与 max_tokens 时，官方返回被截断的正常文本，内部曾返回空 content（finish_reason 仍为 length）。复用 max_tokens_truncation 断言（读取请求体 max_tokens 字段核对 completion_tokens 边界 + content 非空），无需新断言类型即可复现该缺陷。请求里显式关闭思考，避免思考 token 把预算吃光导致误判。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.long_output_prompt}}" }],
+          "max_tokens": 256,
+          "max_completion_tokens": 256,
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.parameters_missing_type",
+      "category": "工具调用检测",
+      "name": "工具 parameters 缺失 type 字段",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.8：tools.function.parameters 缺少 type 字段时，官方返回 200 + tool_calls，内部曾返回 400（校验过严，未按 OpenAI 协议对缺省 type 做默认补全）。工具定义故意省略 parameters.type，若网关再次拒绝会在 HTTP 200 校验阶段判 FAIL，复用现有 tool_call_required 断言即可。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "get_weather",
+                "description": "查询指定城市的当前天气",
+                "parameters": { "properties": { "city": { "type": "string" } }, "required": ["city"] }
+              }
+            }
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.empty_content_message",
+      "category": "输入校验",
+      "name": "消息 content 为空字符串",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.9：messages 中存在 content 为空字符串的消息时，官方返回 429 engine_overloaded_error，内部曾返回 200 正常回复，拦截策略与官方不一致。rejects_invalid_request 断言只要求 4xx（含 429），不绑定具体错误码，与 z-ai/kimi-k3 套件其余 input_validation.* 用例口径一致。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.tool_call_arguments_invalid_json",
+      "category": "输入校验",
+      "name": "assistant tool_calls.arguments 为非法 JSON",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 2.2（test_16_12_invalid_json_arguments）：assistant 消息回填的 tool_calls[].function.arguments 不是合法 JSON 字符串时，官方返回 400，内部曾直接 200 放行。按 OpenAI 协议 arguments 必须是可解析的 JSON 字符串，这里故意传一个未闭合的字符串触发校验。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": { "name": "get_weather", "arguments": "{\"city\": \"北京\"" }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.empty_tool_result_no_fabrication",
+      "category": "输入校验",
+      "name": "tool 结果为 null 时不应编造数据",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "self_judged_no_fabrication",
+      "repeat_attempts": 1,
+      "notes": "v1.7.0 新增，来自 0820 兼容性报告 1.6：tool 消息 content 为 null 时，官方回复请求用户澄清，内部网关曾直接虚构具体数据（如编造天气数值）并伴随 tool_calls=null。这是『该拒答还是该编造』的语义判断，没有可靠的确定性规则，经与使用者确认，用被测模型自身当裁判：先正常发起本用例的请求拿到第一段回复，再把回复原文喂给同一个模型，让它自己判断第一段回复是 CLARIFICATION（请求澄清，未编造）还是 FABRICATION（编造了具体数据），见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict。已知局限：自证过审偏差——模型有可能倾向于认为自己的输出没问题，FAIL 的留痕比 PASS 更值得信任，不建议把 PASS 当作可以跳过人工抽查的硬保证。本用例的 tool content 用的是 null（而不是空字符串），与 input_validation.empty_tool_result_no_fabrication 之外那条 input_validation.empty_content_message（user 角色、content=\"\"、期望被 4xx 拒绝）是两个不同角色/不同取值的场景，二者结论口径不冲突。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": { "name": "get_weather", "arguments": "{\"city\":\"北京\"}" }
+                }
+              ]
+            },
+            { "role": "tool", "tool_call_id": "call_1", "content": null }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_object_stream",
+      "category": "结构化输出",
+      "name": "JSON Object · 流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.7（test_09_02_json_object_stream）：json_object 模式下流式响应末尾 chunk 缺失 finish_reason 字段。不需要新断言类型——runSingleStream 在跑自定义断言前会先对每个分片做 openai_schema_valid 基线校验（见 internal/openaiapi/schema.go validateChoice），该基线本身就要求每个分片必须带 finish_reason 键，若该缺陷复现会在基线阶段就判 FAIL 并留痕具体是哪个 chunk 缺失，无需额外实现。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。" }],
+          "response_format": { "type": "json_object" },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.disabled_content_clean",
+      "category": "思考行为",
+      "name": "thinking 关闭时 content 不应泄漏推理独白",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "thinking_disabled_content_clean",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.4：thinking 显式关闭时，内部网关曾仍把模型内部推理（如 \"The user is asking me to...\"）拼进用户可见的 content。新增 assertion_type=thinking_disabled_content_clean（见 internal/assertion/assertion.go ThinkingDisabledContentClean），校验 1) 不再返回 reasoning_content 字段 2) content 不含已知泄漏片段黑名单。黑名单是启发式的，只保证复现已发现的这种泄漏模式，不是穷举，详见函数注释。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "thinking": { "type": "disabled" },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.no_prompt_echo",
+      "category": "输出控制",
+      "name": "content 不应回显用户原始 prompt",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "no_prompt_echo",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.5：非流式响应中 content 曾以用户原始 prompt 开头，而不是模型生成的正文。新增 assertion_type=no_prompt_echo（见 internal/assertion/assertion.go NoPromptEcho），只比对 content 是否以 prompt 前 12 个字开头，不做全文包含比对（模型合法复述用户原话片段是正常行为）。assertion_params.prompt_text 必须和 request_template 里渲染出的 prompt 原文逐字一致——assertion_params 不走占位符渲染，改 prompts.echo_probe_prompt 时要同步改这里。",
+      "assertion_params": {
+        "prompt_text": "请你用中文写一段关于信任的三句话短文，直接开始正文，不要重复题目或提示词。"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "user", "content": "{{prompts.echo_probe_prompt}}" }],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "context.multi_system_message_recall",
+      "category": "系统提示",
+      "name": "多条 system messages 均应生效",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "contains_all_substrings",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.5：多 system messages 场景下，内部网关曾只保留最后一条 system message，导致回答只引用了其中一个身份设定。新增 assertion_type=contains_all_substrings（见 internal/assertion/assertion.go ContainsAllSubstrings），要求回答同时包含两条 system message 各自要求的关键词。",
+      "assertion_params": {
+        "required_substrings": ["猫", "狗"]
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            { "role": "system", "content": "{{prompts.system_identity_cat}}" },
+            { "role": "system", "content": "{{prompts.system_identity_dog}}" },
+            { "role": "user", "content": "{{prompts.identity_question}}" }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.error_type_shape",
+      "category": "输入校验",
+      "name": "拒绝响应的 error.type 结构",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_with_error_type",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.4：网关拒绝非法请求时，内部曾把具体错误文本误用成 error.type（而不是放进 error.message），且多出一个非标准的数字 code 字段（协议里 code 应为字符串或 null）。原报告用 top_p=0.9 触发这条校验，但该报告『5. K3 官方设计特性』一节又说 K3 固定 top_p=0.95 且不接受覆盖属于非缺陷设计——两处对『传入非默认 top_p 是否报错』的描述不一致，为避免用一个语义存疑的触发条件构造用例，这里改用本套件已验证过的、确定会被拒绝的非法 role 触发（同 input_validation.invalid_role），只是断言从『是否 4xx』升级为『4xx 响应体的 error 结构是否合规』，两条用例可以并存、互不冲突。",
+      "assertion_params": {
+        "expected_error_type": "invalid_request_error"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [{ "role": "not_a_real_role", "content": "{{prompts.generic_short}}" }],
           "stream": false
         }
       }

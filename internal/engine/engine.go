@@ -187,6 +187,16 @@ func (e *Engine) RunCase(ctx context.Context, c suitedef.Case) model.CaseResult 
 		e.runReasoningEffortScaling(ctx, c, &result)
 	case "rejects_invalid_request":
 		e.runRejectsInvalidRequest(ctx, c, &result)
+	case "rejects_with_error_type":
+		e.runRejectsWithErrorType(ctx, c, &result)
+	case "thinking_disabled_content_clean":
+		e.runSingleNonStream(ctx, c, &result, e.scoreThinkingDisabledContentClean)
+	case "no_prompt_echo":
+		e.runSingleNonStream(ctx, c, &result, e.scoreNoPromptEcho)
+	case "contains_all_substrings":
+		e.runSingleNonStream(ctx, c, &result, e.scoreContainsAllSubstrings)
+	case "self_judged_no_fabrication":
+		e.runSelfJudgedNoFabrication(ctx, c, &result)
 	case "max_tokens_truncation":
 		e.runSingleNonStream(ctx, c, &result, e.scoreMaxTokensTruncation)
 	case "stop_sequence_respected":
@@ -366,6 +376,177 @@ func (e *Engine) runRejectsInvalidRequest(ctx context.Context, c suitedef.Case, 
 			"HTTP 状态码 %d：网关未对非法输入做校验，直接当作合法请求处理了", cr.HTTPStatus)
 	}
 	result.CaseAttempts = append(result.CaseAttempts, attempt)
+}
+
+// runRejectsWithErrorType 同 runRejectsInvalidRequest 的判定前提（网关应对
+// 非法输入返回 4xx 而不是透传后端触发 5xx），但在 4xx 之上额外校验错误响应体
+// 的结构（error.type/error.message/error.code），对应 0820 报告 2.4：内部
+// 网关曾把具体错误文本误用成 error.type，且多出一个非标准数字 code 字段。
+func (e *Engine) runRejectsWithErrorType(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
+	cr, err := e.doCall(ctx, c, nil)
+	attempt := newAttempt(1, "", cr)
+	expectedType := c.ParamString("expected_error_type", "invalid_request_error")
+	switch {
+	case err != nil:
+		attempt.Passed, attempt.FailReason = false, err.Error()
+	case cr.TransportErr != nil:
+		attempt.Passed, attempt.FailReason = false, cr.TransportErr.Error()
+	case cr.HTTPStatus >= 500:
+		attempt.Passed = false
+		attempt.FailReason = fmt.Sprintf(
+			"HTTP 状态码 %d：网关把非法输入透传给了后端并触发服务端错误，应在网关层完成输入校验并返回 4xx", cr.HTTPStatus)
+	case cr.HTTPStatus >= 400 && cr.HTTPStatus < 500:
+		v := assertion.RejectsWithErrorType([]byte(cr.ResponseBody), expectedType)
+		attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+	default:
+		attempt.Passed = false
+		attempt.FailReason = fmt.Sprintf(
+			"HTTP 状态码 %d：网关未对非法输入做校验，直接当作合法请求处理了", cr.HTTPStatus)
+	}
+	result.CaseAttempts = append(result.CaseAttempts, attempt)
+}
+
+func (e *Engine) scoreThinkingDisabledContentClean(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	if len(resp.Choices) == 0 || resp.Choices[0].Message == nil {
+		attempt.Passed, attempt.FailReason = false, "choices 为空或缺少 message"
+		return
+	}
+	msg := resp.Choices[0].Message
+	content := ""
+	if msg.Content != nil {
+		content = *msg.Content
+	}
+	v := assertion.ThinkingDisabledContentClean(msg.ReasoningContent, content)
+	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+}
+
+func (e *Engine) scoreNoPromptEcho(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	prompt := c.ParamString("prompt_text", "")
+	content := ""
+	if len(resp.Choices) > 0 && resp.Choices[0].Message != nil && resp.Choices[0].Message.Content != nil {
+		content = *resp.Choices[0].Message.Content
+	}
+	v := assertion.NoPromptEcho(prompt, content)
+	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+}
+
+func (e *Engine) scoreContainsAllSubstrings(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
+	if err != nil {
+		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
+		return
+	}
+	content := ""
+	if len(resp.Choices) > 0 && resp.Choices[0].Message != nil && resp.Choices[0].Message.Content != nil {
+		content = *resp.Choices[0].Message.Content
+	}
+	raw, _ := c.AssertionParams["required_substrings"].([]any)
+	required := make([]string, 0, len(raw))
+	for _, r := range raw {
+		if s, ok := r.(string); ok {
+			required = append(required, s)
+		}
+	}
+	v := assertion.ContainsAllSubstrings(content, required)
+	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
+}
+
+// runSelfJudgedNoFabrication 编排"空/null tool result 不应引发模型编造"的
+// 二段式判定（对应 0820 报告 1.6）：第一段按用例的 request_template 正常发起
+// （构造一个 tool 结果为空的对话），第二段把第一段的回复原文喂给同一个被测
+// 模型，让它自己判断第一段回复是"请求澄清"还是"编造了具体数据"。
+//
+// 用被测模型自身当裁判是经与使用者确认的简化方案：实现成本低，但存在
+// "自证过审"的偏差风险（模型可能倾向于认为自己的输出没问题），所以这类
+// 用例的 PASS/FAIL 应当被当作初筛信号，FAIL 时的留痕（两段的完整请求/响应体）
+// 更值得信任，PASS 不代表可以完全跳过人工抽查。
+func (e *Engine) runSelfJudgedNoFabrication(ctx context.Context, c suitedef.Case, result *model.CaseResult) {
+	cr, err := e.doCall(ctx, c, nil)
+	primary := e.newAttemptTraced(c, 1, "primary", cr)
+	switch {
+	case err != nil:
+		primary.FailReason = err.Error()
+	case cr.TransportErr != nil:
+		primary.FailReason = cr.TransportErr.Error()
+	case cr.HTTPStatus != 200:
+		primary.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
+	default:
+		if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+			primary.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
+		} else {
+			primary.Passed = true
+		}
+	}
+	result.CaseAttempts = append(result.CaseAttempts, primary)
+	if !primary.Passed {
+		return
+	}
+
+	resp, perr := e.parseResponse([]byte(cr.ResponseBody))
+	reply := ""
+	if perr == nil && len(resp.Choices) > 0 && resp.Choices[0].Message != nil && resp.Choices[0].Message.Content != nil {
+		reply = *resp.Choices[0].Message.Content
+	}
+	if perr != nil {
+		result.CaseAttempts[0].Passed = false
+		result.CaseAttempts[0].FailReason = "响应体解析失败: " + perr.Error()
+		return
+	}
+	if strings.TrimSpace(reply) == "" {
+		result.CaseAttempts[0].Passed = false
+		result.CaseAttempts[0].FailReason = "初次回复 content 为空，无法交给裁判判断是否编造"
+		return
+	}
+
+	judgeCase := suitedef.Case{
+		ID: c.ID + ".judge",
+		RequestTemplate: suitedef.RequestTemplate{
+			Method: "POST",
+			Body: map[string]any{
+				// 不显式传 temperature：部分供应商（如 kimi-k3 官方 API）固定
+				// temperature=1.0，显式传别的值会被 400 拒绝（同一份 0820 报告
+				// 「K3 官方设计特性」一节记录的已知约束），裁判调用不需要靠
+				// temperature=0 来保证格式稳定——判定词是否命中 CLARIFICATION/
+				// FABRICATION 已经足够宽容（大小写不敏感、允许多余文字）。
+				"model":    "{{model_key}}",
+				"messages": []any{map[string]any{"role": "user", "content": assertion.FabricationJudgePrompt(reply)}},
+				"stream":   false,
+			},
+		},
+	}
+	judgeCR, jerr := e.doCall(ctx, judgeCase, nil)
+	judgeAttempt := e.newAttemptTraced(c, 2, "judge", judgeCR)
+	switch {
+	case jerr != nil:
+		judgeAttempt.FailReason = "裁判请求失败: " + jerr.Error()
+	case judgeCR.TransportErr != nil:
+		judgeAttempt.FailReason = "裁判请求失败: " + judgeCR.TransportErr.Error()
+	case judgeCR.HTTPStatus != 200:
+		judgeAttempt.FailReason = fmt.Sprintf("裁判请求 HTTP 状态码 %d，期望 200", judgeCR.HTTPStatus)
+	default:
+		judgeResp, jperr := e.parseResponse([]byte(judgeCR.ResponseBody))
+		if jperr != nil {
+			judgeAttempt.FailReason = "裁判响应体解析失败: " + jperr.Error()
+		} else {
+			verdictText := ""
+			if len(judgeResp.Choices) > 0 && judgeResp.Choices[0].Message != nil && judgeResp.Choices[0].Message.Content != nil {
+				verdictText = *judgeResp.Choices[0].Message.Content
+			}
+			v := assertion.NoFabricationVerdict(verdictText)
+			judgeAttempt.Passed, judgeAttempt.FailReason = v.Passed, v.Reason
+		}
+	}
+	result.CaseAttempts = append(result.CaseAttempts, judgeAttempt)
 }
 
 func validateStreamSchema(cr client.CallResult) (bool, string) {

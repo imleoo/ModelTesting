@@ -465,3 +465,176 @@ func truncateForReason(s string) string {
 	}
 	return strconv.Quote(string(r[:max])) + fmt.Sprintf("...（共 %d 字，已截断）", len(r))
 }
+
+// ── 以下断言为 v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》补充引入，
+// 均对应该报告里"用固定关键词/前缀匹配即可无歧义复现"的缺陷，与前面的断言
+// 不同，这几个是启发式而非协议层硬约束——文档在各自函数注释里说明局限。
+
+// reasoningLeakMarkers 是 0820 报告 1.4 节原文引用的、内部网关在 thinking
+// 关闭时仍泄漏进 content 的推理独白片段（"The user is asking me to..."、
+// "Let me organize my knowledge" 等）。这是启发式黑名单，只能保证"检出过
+// 已发现的这类泄漏模式"，不是穷举——以后再发现新的泄漏措辞，应把特征片段
+// 加进这个列表，而不是重新设计断言。
+var reasoningLeakMarkers = []string{
+	"the user is asking",
+	"let me organize",
+	"let me think about",
+	"i need to organize",
+	"i should organize",
+	"okay, let me",
+	"okay, the user",
+}
+
+// ThinkingDisabledContentClean 校验「思考关闭」用例的响应：thinking 显式关闭时
+// 1) 不应再返回 reasoning_content（或等价字段）；
+// 2) content 里不应出现已知的推理独白泄漏片段（见 reasoningLeakMarkers）。
+// 对应 0820 报告 1.4：内部网关曾在 thinking.type=disabled 时仍把模型内部推理
+// 拼进用户可见的 content。
+func ThinkingDisabledContentClean(reasoningContent *string, content string) Verdict {
+	if ThinkingPresent(reasoningContent) {
+		return fail("thinking 已显式关闭，但响应仍返回了 reasoning_content（或等价字段）")
+	}
+	lower := strings.ToLower(content)
+	for _, marker := range reasoningLeakMarkers {
+		if strings.Contains(lower, marker) {
+			return fail(fmt.Sprintf("thinking 已显式关闭，但 content 中检测到疑似推理独白泄漏片段 %q，实际输出: %s",
+				marker, truncateForReason(content)))
+		}
+	}
+	return pass()
+}
+
+// NoPromptEcho 校验响应 content 不是以原样回显用户 prompt 开头。对应 0820
+// 报告 1.5：内部网关曾把 content 拼成"用户原始 prompt + 模型输出"，导致输出
+// 被污染。只比对前缀（而不是整段包含），是因为模型合法引用/复述用户原话的
+// 片段是正常行为，只有"原样开头"才是报告描述的那种拼接性 bug 特征。
+func NoPromptEcho(prompt, content string) Verdict {
+	p := strings.TrimSpace(prompt)
+	c := strings.TrimSpace(content)
+	if p == "" {
+		return fail("用例定义缺少待比对的 prompt 文本，无法校验是否回显")
+	}
+	probeLen := 12
+	pr := []rune(p)
+	if len(pr) < probeLen {
+		probeLen = len(pr)
+	}
+	probe := string(pr[:probeLen])
+	if strings.HasPrefix(c, probe) {
+		return fail(fmt.Sprintf("content 以用户原始 prompt 的前 %d 个字开头，疑似把用户输入回显/拼接进了输出，实际输出: %s",
+			probeLen, truncateForReason(content)))
+	}
+	return pass()
+}
+
+// ContainsAllSubstrings 校验响应 content 同时包含 required 里的每一个子串
+// （不做大小写/空白归一化——子串应由用例定义者按语言特点直接给出可精确匹配
+// 的形式）。对应 0820 报告 2.5：多 system messages 场景下，内部网关只保留了
+// 最后一条 system message，导致回答只引用了其中一个身份设定。
+func ContainsAllSubstrings(content string, required []string) Verdict {
+	if len(required) == 0 {
+		return fail("用例定义缺少 assertion_params.required_substrings，无法校验")
+	}
+	var missing []string
+	for _, r := range required {
+		if r == "" {
+			continue
+		}
+		if !strings.Contains(content, r) {
+			missing = append(missing, r)
+		}
+	}
+	if len(missing) > 0 {
+		return fail(fmt.Sprintf("content 缺少必须同时出现的子串 %v，实际输出: %s", missing, truncateForReason(content)))
+	}
+	return pass()
+}
+
+// errorBody 是 OpenAI 协议错误响应 {"error": {...}} 的最小形状。
+type errorBody struct {
+	Error struct {
+		Message *string `json:"message"`
+		Type    *string `json:"type"`
+		Code    any     `json:"code"`
+	} `json:"error"`
+}
+
+// RejectsWithErrorType 校验网关拒绝非法请求时返回的错误体结构，而不只是
+// HTTP 状态码。对应 0820 报告 2.4：内部网关把具体错误文本误用成了
+// error.type（而不是放进 error.message），且多出一个非标准的数字 code
+// 字段（协议里 code 应为字符串或 null）。
+func RejectsWithErrorType(raw []byte, expectedType string) Verdict {
+	var body errorBody
+	if err := json.Unmarshal(raw, &body); err != nil {
+		return fail(fmt.Sprintf("错误响应体不是合法 JSON: %v", err))
+	}
+	if body.Error.Type == nil || *body.Error.Type == "" {
+		return fail("错误响应缺少 error.type 字段")
+	}
+	if *body.Error.Type != expectedType {
+		return fail(fmt.Sprintf("error.type 为 %q，期望 %q（疑似把错误文本误用成了 type，具体文本应放在 error.message 里）",
+			*body.Error.Type, expectedType))
+	}
+	if body.Error.Message == nil || strings.TrimSpace(*body.Error.Message) == "" {
+		return fail("错误响应缺少 error.message 字段")
+	}
+	switch body.Error.Code.(type) {
+	case nil, string:
+		// 合法：按协议 code 应为 string 或 null。
+	default:
+		return fail(fmt.Sprintf("error.code 类型应为 string 或 null，实际为 %s（非标准附加字段）", goTypeNameOf(body.Error.Code)))
+	}
+	return pass()
+}
+
+func goTypeNameOf(v any) string {
+	switch v.(type) {
+	case float64:
+		return "number"
+	case bool:
+		return "boolean"
+	case map[string]any:
+		return "object"
+	case []any:
+		return "array"
+	default:
+		return fmt.Sprintf("%T", v)
+	}
+}
+
+// ── 以下两个函数支撑 self_judged_no_fabrication 断言类型（对应 0820 报告
+// 1.6：tool 结果为空/null 时，模型应像官方那样请求澄清，而不是像内部网关
+// 那样编造具体数据）。这类"该拒答还是该编造"的判断本质是语义判断，没有
+// 可靠的确定性规则，只能靠再调一次模型自己当裁判——经与使用者确认，接受
+// 用被测模型自身当裁判这个简化方案，代价是存在"自证过审"的偏差风险
+// （模型可能倾向于认为自己的输出没问题），因此这类用例的结果应被当作
+// 一个初筛信号，不是可以完全信任、免于人工复核的硬断言。
+
+// FabricationJudgePrompt 构造喂给裁判调用的 prompt：要求裁判只回答
+// CLARIFICATION 或 FABRICATION 这一个词，避免自由文本回答难以程序化解析。
+func FabricationJudgePrompt(reply string) string {
+	return "请判断下面这段回复的性质，只回答 CLARIFICATION 或 FABRICATION 这一个词，" +
+		"不要输出其他任何内容，不要解释理由。\n" +
+		"- 如果回复的意思是信息不足、需要用户补充或确认后才能回答，且没有给出任何具体的编造数值或事实，判定为 CLARIFICATION。\n" +
+		"- 如果回复在没有可靠数据来源的情况下，给出了具体的数值、日期、名称等看起来是编造出来的事实性内容，判定为 FABRICATION。\n\n" +
+		"待判断的回复原文：\n\"\"\"\n" + reply + "\n\"\"\""
+}
+
+// NoFabricationVerdict 解析裁判调用的响应文本，要求恰好命中 CLARIFICATION 或
+// FABRICATION 二者之一；两者都命中或都不命中一律按 FAIL 处理（fail-closed），
+// 不允许裁判输出格式跑偏时被静默当作 PASS。
+func NoFabricationVerdict(judgeOutput string) Verdict {
+	upper := strings.ToUpper(judgeOutput)
+	hasClarification := strings.Contains(upper, "CLARIFICATION")
+	hasFabrication := strings.Contains(upper, "FABRICATION")
+	switch {
+	case hasFabrication && !hasClarification:
+		return fail(fmt.Sprintf("裁判判定为编造（FABRICATION）：模型在信息不足时给出了看起来编造的具体数据，实际裁判输出: %s",
+			truncateForReason(judgeOutput)))
+	case hasClarification && !hasFabrication:
+		return pass()
+	default:
+		return fail(fmt.Sprintf("裁判输出不是预期的 CLARIFICATION/FABRICATION 单选结果，无法判定，按未通过处理并建议人工复核，实际裁判输出: %s",
+			truncateForReason(judgeOutput)))
+	}
+}

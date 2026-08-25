@@ -77,6 +77,65 @@
         "status": "PATH_FROZEN_HOST_PENDING",
         "note": "同 image_qa_v1：URL 路径与承载服务已冻结并本地验证通过；base64 变体体积（15924 字节 base64 后）远小于常见网关请求体上限，已规避设计方案 05 节提到的『video_base64 载荷体积可能触及网关请求体上限』风险。剩余未决项仅为 base_url 的部署阶段确认。"
       }
+    },
+    {
+      "id": "video_mkv_v1",
+      "kind": "video",
+      "file": "video_mkv_v1.mkv",
+      "mime_type": "video/x-matroska",
+      "sha256": "fa7c39fe0b7104a08ce21c117b64a1d9808321b6740d877150318e9187d476d9",
+      "size_bytes": 8155,
+      "base64_size_bytes": 10877,
+      "duration_seconds": 3,
+      "fps": 25,
+      "expected_answer": "3849",
+      "question_prompt": "视频画面中央的数字是几？请只回答数字，不要包含其他文字。",
+      "answer_match": "digits_exact",
+      "used_by_cases": ["multimodal.video_mkv_format"],
+      "generation_note": "v1.4.0 新增，来自《Kimi-K3-接口兼容性测试总结-0820.md》2.3（MKV 容器不支持）。与 image_qa_v1/video_qa_v1 同款『固定印刷体数字』方案，画面用不同数字串（3849，故意不含 0，规避个别字体 0 带斜杠可能被误读的风险）区分素材。生成脚本：suites/kimi-k3/materials/generate_video_mkv_v1.sh（依赖本地 python3+Pillow、ffmpeg；libx264 输出不保证跨版本逐字节确定性，重新生成需按脚本输出重新核对本条目各字段）。",
+      "hosting": {
+        "mode": "base64_only",
+        "status": "NOT_URL_HOSTED",
+        "note": "本素材目前只用于 multimodal.video_mkv_format 的 base64 表单（{{material:video_mkv_v1:base64}}），未接入 materialssrv 的 URL 托管路径（frozen_url_path）；如未来需要 video_url 表单的 MKV 用例，需按 image_qa_v1/video_qa_v1 的模式补一条 hosting.frozen_url_path 并跑 verify_hosting.sh 验证。"
+      }
+    },
+    {
+      "id": "video_size_under_50mb",
+      "kind": "video",
+      "file": "video_size_under_50mb.mp4",
+      "mime_type": "video/mp4",
+      "sha256": "7b4b5ab67474598a41e205b4003be291dc1385b9072f59f836503402a46e3319",
+      "size_bytes": 36000000,
+      "base64_size_bytes": 48000000,
+      "duration_seconds": 3,
+      "question_prompt": "请描述这段视频的画面内容，用一句话概括即可。",
+      "answer_match": null,
+      "used_by_cases": ["input_validation.video_base64_size_boundary_under_50mb"],
+      "generation_note": "v1.6.0 新增，来自《Kimi-K3-接口兼容性测试总结-0820.md》1.11：验证 base64 视频体积接近/超过 50MB 时网关是否会笼统返回 429。内容为不可压缩噪声帧（保证体积不被编码器压没），并在文件尾部追加一个合法的 ISO-BMFF free box 精确填充到目标字节数——生成脚本：suites/kimi-k3/materials/generate_video_size_boundary.py。answer_match 特意留空（本用例只关心『网关是否正常处理了这个大小的请求』，不做数字精确比对，assertion_type 用 content_nonempty 而非 deterministic_multimodal_qa）。base64_size_bytes 是用 Python/Go 标准 base64（无换行）精确计算出的整数，不是估算值。",
+      "hosting": {
+        "mode": "base64_only",
+        "status": "NOT_URL_HOSTED",
+        "note": "36MB 二进制文件已直接提交到本仓库（经用户确认可以接受为此用例增加的仓库体积），仅用于 base64 表单，未接入 materialssrv URL 托管。"
+      }
+    },
+    {
+      "id": "video_size_over_50mb",
+      "kind": "video",
+      "file": "video_size_over_50mb.mp4",
+      "mime_type": "video/mp4",
+      "sha256": "52f599ede871a5685d81d95cf60b49167ad296894b761dc616f1685775a7564c",
+      "size_bytes": 39000000,
+      "base64_size_bytes": 52000000,
+      "duration_seconds": 3,
+      "question_prompt": "请描述这段视频的画面内容，用一句话概括即可。",
+      "answer_match": null,
+      "used_by_cases": ["input_validation.video_base64_size_boundary_over_50mb"],
+      "generation_note": "同 video_size_under_50mb，唯一区别是目标字节数（39,000,000 raw → 52,000,000 base64，越过 50MB 边界）。0820 报告原文这两档（≤50MB / >50MB）官方均返回 200，只有内部网关笼统 429，因此两条用例的断言口径相同，都是『应 200 且 content 非空』，不是『一个该成功一个该被拒绝』。",
+      "hosting": {
+        "mode": "base64_only",
+        "status": "NOT_URL_HOSTED",
+        "note": "39MB 二进制文件已直接提交到本仓库（经用户确认可以接受为此用例增加的仓库体积），仅用于 base64 表单，未接入 materialssrv URL 托管。"
+      }
     }
   ],
   "open_items": [
