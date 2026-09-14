@@ -1,9 +1,9 @@
 {
   "suite_id": "kimi-k3",
-  "suite_version": "1.7.0",
+  "suite_version": "1.9.0",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "Kimi-K3 套件的可执行套件定义：25 项基础用例 + 2 项附加用例（reasoning_effort、长上下文）+ 20 项『输入校验/回归』附加用例 + 1 项『上下文缓存』附加用例。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例，使两套件覆盖对齐。v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》P0 级缺陷中挑选 8 项可用现有断言类型无歧义复现的回归用例并入。v1.4.0 继续从同一份报告补齐 5 项：structured.json_object_stream 复用现有 stream_integrity 断言；thinking.disabled_content_clean/output_control.no_prompt_echo/context.multi_system_message_recall/input_validation.error_type_shape 四项在 internal/assertion/assertion.go 新增了 4 个断言函数（均有单测覆盖）并接了对应 assertion_type。v1.5.0 补入 2.3（MKV 容器不支持）：新增 multimodal.video_mkv_format 用例 + video_mkv_v1 素材，素材用本地 ffmpeg 生成（见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），复用既有 deterministic_multimodal_qa 断言，无需新断言类型。v1.6.0 补入 1.11（视频 base64 体积边界 429）：新增 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条用例，素材是本地生成的噪声内容视频（分别精确到 48MB/52MB base64 体积，见 suites/kimi-k3/materials/generate_video_size_boundary.py），复用 content_nonempty 断言（不做数字精确比对，只验证网关是否正常处理了这个体积而不是笼统 429），经与用户确认接受为此新增约 75MB 仓库体积。v1.7.0 补入 1.6（空/null tool result 触发幻觉）：新增 assertion_type=self_judged_no_fabrication（见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict，均有单测覆盖）+ input_validation.empty_tool_result_no_fabrication 用例——经与用户确认，用被测模型自身当裁判（而非独立裁判模型），实现是二段式调用：先正常发起用例请求拿到回复，再把回复原文喂给同一模型自己判断是 CLARIFICATION 还是 FABRICATION。已知局限：自证过审偏差，PASS 不代表可以跳过人工抽查，FAIL 的两段完整留痕更值得信任。报告里余下 1 项（1.3 replay 批量重放）经与用户确认后跳过：完全不同的批量重放测试范式，超出当前引擎设计范围，且原始 146 条重放语料不在本仓库。1.12（fps=100 越界）经查阅 platform.kimi.com 官方文档（use-kimi-vision-model），视频输入的公开 API 完全没有 fps 参数（视频通过 video_url.url 传入，官方推荐大文件走 ms://<file-id> 的 Files API，小文件也可直接 base64/URL——本套件已有的 video_url/video_base64 用例已被真实官方 API 跑通验证，schema 假设是对的），fps 大概率是原报告某个内部/自建推理栈的私有扩展参数，公开 API 层面没有依据可以写这条用例，未纳入。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
+  "description": "Kimi-K3 套件的可执行套件定义：25 项基础用例 + 2 项附加用例（reasoning_effort、长上下文）+ 20 项『输入校验/回归』附加用例 + 1 项『上下文缓存』附加用例。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例，使两套件覆盖对齐。v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》P0 级缺陷中挑选 8 项可用现有断言类型无歧义复现的回归用例并入。v1.4.0 继续从同一份报告补齐 5 项：structured.json_object_stream 复用现有 stream_integrity 断言；thinking.disabled_content_clean/output_control.no_prompt_echo/context.multi_system_message_recall/input_validation.error_type_shape 四项在 internal/assertion/assertion.go 新增了 4 个断言函数（均有单测覆盖）并接了对应 assertion_type。v1.5.0 补入 2.3（MKV 容器不支持）：新增 multimodal.video_mkv_format 用例 + video_mkv_v1 素材，素材用本地 ffmpeg 生成（见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），复用既有 deterministic_multimodal_qa 断言，无需新断言类型。v1.6.0 补入 1.11（视频 base64 体积边界 429）：新增 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条用例，素材是本地生成的噪声内容视频（分别精确到 48MB/52MB base64 体积，见 suites/kimi-k3/materials/generate_video_size_boundary.py），复用 content_nonempty 断言（不做数字精确比对，只验证网关是否正常处理了这个体积而不是笼统 429），经与用户确认接受为此新增约 75MB 仓库体积。v1.7.0 补入 1.6（空/null tool result 触发幻觉）：新增 assertion_type=self_judged_no_fabrication（见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict，均有单测覆盖）+ input_validation.empty_tool_result_no_fabrication 用例——经与用户确认，用被测模型自身当裁判（而非独立裁判模型），实现是二段式调用：先正常发起用例请求拿到回复，再把回复原文喂给同一模型自己判断是 CLARIFICATION 还是 FABRICATION。已知局限：自证过审偏差，PASS 不代表可以跳过人工抽查，FAIL 的两段完整留痕更值得信任。报告里余下 1 项（1.3 replay 批量重放）经与用户确认后跳过：完全不同的批量重放测试范式，超出当前引擎设计范围，且原始 146 条重放语料不在本仓库。1.12（fps=100 越界）经查阅 platform.kimi.com 官方文档（use-kimi-vision-model），视频输入的公开 API 完全没有 fps 参数（视频通过 video_url.url 传入，官方推荐大文件走 ms://<file-id> 的 Files API，小文件也可直接 base64/URL——本套件已有的 video_url/video_base64 用例已被真实官方 API 跑通验证，schema 假设是对的），fps 大概率是原报告某个内部/自建推理栈的私有扩展参数，公开 API 层面没有依据可以写这条用例，未纳入。v1.8.0：2026-08-25 用 v1.7.0 套件跑 we2ai/官方双渠道真实对比时，`input_validation.video_base64_size_boundary_under_50mb`/`over_50mb` 两条用例在 we2ai 上均在 90s（多模态视频分类超时）后传输层超时（`http_status=0`，非应用层拒绝），无法判断是偶发网络抖动还是系统性问题；把 `defaults.category_timeout_overrides.多模态视频` 从 90 改成 180，两条用例的 `repeat_attempts` 从 1 改成 3（3 次全部成功才算 PASS），以便在同一次运行里获得更确定的结论。v1.9.0：2026-08-26 用 v1.8.0 套件跑 we2ai/官方双渠道真实对比，两条视频体积边界用例在 we2ai 上第 1 次尝试仍在 180s 撞线（`http_status=0`），第 2、3 次实测服务端耗时 110~205s 才完成，说明 180s 对这条链路仍偏紧；经与用户确认，把 `defaults.category_timeout_overrides.多模态视频` 从 180 改成 1800（30 分钟），给传输层足够裕量以排除超时本身造成的假失败，聚焦排查是否存在真实的应用层问题。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -13,7 +13,7 @@
     "timeout_seconds": 30,
     "category_timeout_overrides": {
       "多模态图像": 90,
-      "多模态视频": 90,
+      "多模态视频": 1800,
       "reasoning_effort": 180,
       "输出控制": 120,
       "确定性": 120,
@@ -268,8 +268,8 @@
       "counts_in_base22": false,
       "capability_tag": null,
       "assertion_type": "content_nonempty",
-      "repeat_attempts": 1,
-      "notes": "v1.6.0 新增，来自 0820 兼容性报告 1.11：base64 视频体积约 48MB（略小于 50MB）时，官方返回 200 正常描述，内部网关曾笼统返回 429。素材是本仓库本地生成的噪声内容视频（见 suites/kimi-k3/materials/generate_video_size_boundary.py），断言用 content_nonempty 而非 deterministic_multimodal_qa——本用例只关心『网关是否正常处理了这个体积的请求』，不对画面内容做数字精确比对；若网关仍返回 429，runSingleNonStream 会在到达该断言前就因 HTTP != 200 判 FAIL 并留痕状态码，不需要新断言类型。",
+      "repeat_attempts": 3,
+      "notes": "v1.6.0 新增，来自 0820 兼容性报告 1.11：base64 视频体积约 48MB（略小于 50MB）时，官方返回 200 正常描述，内部网关曾笼统返回 429。素材是本仓库本地生成的噪声内容视频（见 suites/kimi-k3/materials/generate_video_size_boundary.py），断言用 content_nonempty 而非 deterministic_multimodal_qa——本用例只关心『网关是否正常处理了这个体积的请求』，不对画面内容做数字精确比对；若网关仍返回 429，runSingleNonStream 会在到达该断言前就因 HTTP != 200 判 FAIL 并留痕状态码，不需要新断言类型。v1.8.0 把分类超时（见 defaults.category_timeout_overrides.多模态视频）从 90s 放宽到 180s、repeat_attempts 从 1 改成 3：2026-08-25 那轮 we2ai 在 90s 超时线上两次都传输层超时（http_status=0），无法判断是偶发网络抖动还是系统性问题，加长超时 + 3 次重复请求（要求 3 次全部成功才算 PASS）能在同一次运行里给出更确定的结论。",
       "request_template": {
         "method": "POST",
         "body": {
@@ -295,8 +295,8 @@
       "counts_in_base22": false,
       "capability_tag": null,
       "assertion_type": "content_nonempty",
-      "repeat_attempts": 1,
-      "notes": "v1.6.0 新增，同 input_validation.video_base64_size_boundary_under_50mb，体积换成约 52MB（略大于 50MB）。0820 报告原文这两档官方均返回 200，断言口径与 under_50mb 那条相同，不是『一个该成功一个该被拒绝』。",
+      "repeat_attempts": 3,
+      "notes": "v1.6.0 新增，同 input_validation.video_base64_size_boundary_under_50mb，体积换成约 52MB（略大于 50MB）。0820 报告原文这两档官方均返回 200，断言口径与 under_50mb 那条相同，不是『一个该成功一个该被拒绝』。v1.8.0 同步把超时放宽到 180s、repeat_attempts 改成 3，原因同 under_50mb 那条的 notes。",
       "request_template": {
         "method": "POST",
         "body": {
