@@ -24,5 +24,8 @@ out/
 /data/
 /artifacts/
 
+# Test reports / run results (not committed)
+/reports/
+
 # OS
 .DS_Store
