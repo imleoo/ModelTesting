@@ -41,13 +41,19 @@ type RuleResult struct {
 
 // Summary 是「验收结论」章节的完整判定结果。
 type Summary struct {
-	// Rule1：22 项基础用例（CountsInBase22==true 且已声明/固定必过）100% 通过、
-	// 且这 22 项本身必须完整出现（不能因为缺失结果而被默默放过），MANUAL_REVIEW
-	// 视为未通过（08 节规则 1）。
+	// Rule1：基础用例（CountsInBase22==true）100% 通过、且必须完整出现（不能
+	// 因为缺失结果而被默默放过），MANUAL_REVIEW 视为未通过（08 节规则 1）。
+	// 基础用例的具体数量以套件定义为准，不固定等于 PDF 原文的 22 项，见设计
+	// 方案 05 节「用例总数口径」。
 	Rule1 RuleResult
-	// Rule2：已声明但不计入 22 分母的能力用例（当前套件里只有 reasoning_effort.
-	// scaling）100% 通过（08 节规则 2；v0.2 曾遗漏这条，声明能力失败时不拖累
-	// 总体结论）。
+	// Rule2：套件定义中全部不计入基础用例分母（CountsInBase22==false）的用例
+	// 100% 通过（08 节规则 2；v0.2 曾遗漏这条，声明能力失败时不拖累总体结论）。
+	// v0.4 明确：这一组的完整性校验范围是套件定义里的全部 CountsInBase22==
+	// false 用例，不局限于「已产出结果的用例」——缺失结果判 PENDING，产出
+	// FAIL 判 FAIL，与 Rule1 同一套规则（见 evalCaseGroup）。这一组不只是
+	// 「已声明的可选能力」（如 reasoning_effort.scaling），也包含套件按需
+	// 扩展加入的供应商专属加固/回归用例（见设计方案 04.3 节）——与是否对应
+	// 某项能力声明无关；NOT_DECLARED 视为已妥善处理，不阻塞判定。
 	Rule2 RuleResult
 	// Rule3：有 PDF 基线且可观测的性能指标（throughput_req_s / ttft P50 /
 	// tpot P50 / cache_hit_rate）满足 6.2 节单向判定规则（08 节规则 3）；
@@ -63,12 +69,12 @@ var gatedMetricNames = []string{"throughput_req_s", "ttft", "tpot", "cache_hit_r
 // Compute 按 08 节验收结论四条规则计算最终判定。
 //
 // cases 是当前套件的完整用例定义（通常直接传 suite.Cases），是"某个用例是否
-// 计入 22 项基础分母"的唯一权威来源——caseResults 里同名的 CountsInBase22
+// 计入基础用例分母"的唯一权威来源——caseResults 里同名的 CountsInBase22
 // 字段只用作一致性校验，不参与分组，防止两处数据来源不一致时出现"规则 1
 // 报告缺失、规则 2 报告多余、报告页面又展示在另一个分桶里"的分裂结果。
 //
 // cases 为空（未提供套件定义）时，Rule1/Rule2 直接判 PENDING，不静默退化成
-// 只看已出现结果的宽松检查——没有套件定义就无法确认 22 项是否齐全，绝不能
+// 只看已出现结果的宽松检查——没有套件定义就无法确认基础用例是否齐全，绝不能
 // 默认判 OK（这是此前版本的一个真实漏洞：生产入口一旦套件加载出问题、传入
 // 空 cases，完整性校验会被整体绕过）。
 //
@@ -105,7 +111,7 @@ func caseGroupOf(cases []suitedef.Case) map[string]bool {
 // validateSuiteCases 校验套件定义本身的完整性：Case ID 不能为空、不能重复。
 // caseGroupOf 用 map 构造分组依据，空/重复 ID 会被后一条定义静默覆盖前一条，
 // 使期望的用例集合在悄无声息间被压缩——哪怕调用方按规范传入了"非空"的
-// cases，22 项/附加能力用例的完整性校验也会因此形同虚设。必须在分组之前
+// cases，基础用例/附加能力用例的完整性校验也会因此形同虚设。必须在分组之前
 // 单独堵住，而不是指望"非空校验"顺带覆盖。
 func validateSuiteCases(cases []suitedef.Case) []string {
 	var problems []string
@@ -128,7 +134,7 @@ func validateSuiteCases(cases []suitedef.Case) []string {
 func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (RuleResult, RuleResult) {
 	if len(cases) == 0 {
 		noSuite := RuleResult{State: RulePending, Reasons: []string{
-			"未提供套件定义（cases 为空），无法校验 22 项基础用例是否完整，不能默认判 OK",
+			"未提供套件定义（cases 为空），无法校验基础用例是否完整，不能默认判 OK",
 		}}
 		return noSuite, noSuite
 	}
@@ -160,14 +166,14 @@ func evalRules1And2(cases []suitedef.Case, caseResults []model.CaseResult) (Rule
 		want, known := groupOf[r.CaseID]
 		if !known {
 			// 套件里完全找不到这个 CaseID，按定义它不属于任何一个分组，
-			// 归到规则 1 报告（22 项完整性是设计方案里最主要的度量维度）。
+			// 归到规则 1 报告（基础用例完整性是设计方案里最主要的度量维度）。
 			unknownReasons = append(unknownReasons, fmt.Sprintf("%s: 不在当前套件的用例列表中，套件定义可能已变更", r.CaseID))
 			continue
 		}
 		if r.CountsInBase22 != want {
 			// 归到套件定义所声明的那个分组，而不是无条件挂在规则 1 下——否则
 			// 一个附加能力用例（套件定义 CountsInBase22=false）的不一致会被
-			// 误报成"22 项基础用例"的问题，误导报告读者去错误的地方定位。
+			// 误报成"基础用例"的问题，误导报告读者去错误的地方定位。
 			reason := fmt.Sprintf("%s: 结果自带的分组标记（counts_in_base22=%v）与套件定义（%v）不一致，数据不一致", r.CaseID, r.CountsInBase22, want)
 			if want {
 				base22MismatchReasons = append(base22MismatchReasons, reason)

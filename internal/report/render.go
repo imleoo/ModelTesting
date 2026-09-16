@@ -42,11 +42,13 @@ type renderData struct {
 	Capability  model.CapabilityProfile
 	Base22      []caseView
 	NotDeclared []caseView
-	// Additional 是「已声明但不计入 22 分母」的能力用例（当前套件里是
-	// reasoning_effort.scaling）。按 CountsInBase22==false 分组，不按具体
-	// case_id 字符串匹配——套件定义里这类用例的 ID 可能不是 "reasoning_effort"
-	// 这个猜测出来的名字（真实套件里是 "reasoning_effort.scaling"），按 ID
-	// 硬编码曾经导致这类用例被静默漏掉，不出现在报告任何一个可见分桶里。
+	// Additional 是「不计入基础用例分母」（CountsInBase22==false）且状态不是
+	// NOT_DECLARED 的全部用例，对应 08 节规则 2 的判定范围——不只是已声明的
+	// 可选能力（如 reasoning_effort.scaling），也包含套件按需扩展加入的、
+	// counts_in_base22=false 的供应商专属加固/回归用例（见设计方案 04.3
+	// 节）。按 CountsInBase22 分组，不按具体 case_id 字符串匹配——套件定义
+	// 里这类用例的 ID 可能不是猜测出来的名字，按 ID 硬编码曾经导致这类用例
+	// 被静默漏掉，不出现在报告任何一个可见分桶里。
 	Additional       []caseView
 	AllCaseResults   []caseView
 	Base22Total      int

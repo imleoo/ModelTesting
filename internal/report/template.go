@@ -51,7 +51,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
 </table>
 
 {{if .Additional}}
-<h3>附加能力用例结果（不计入基础分母，如 reasoning_effort、长上下文、缓存命中率）</h3>
+<h3>附加/补充用例结果（不计入基础分母，含已声明能力用例如 reasoning_effort、长上下文、缓存命中率，以及供应商专属加固/回归用例）</h3>
 <table>
   <tr><th>用例 ID</th><th>名称</th><th>状态</th><th>通过次数</th><th>失败原因</th><th>各次采样明细</th></tr>
   {{range .Additional}}
@@ -140,7 +140,7 @@ const reportTemplate = `<title>自测报告 · {{.Env.ModelID}}</title>
   <p><strong>总体结论：<span class="badge badge-{{.Summary.Verdict}}">{{.VerdictLabel}}</span></strong></p>
   <p>规则 1（基础用例 100% 通过）：<span class="badge badge-{{.Summary.Rule1.State}}">{{.Summary.Rule1.State}}</span></p>
   {{if .Summary.Rule1.Reasons}}<ul class="reasons">{{range .Summary.Rule1.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
-  <p>规则 2（已声明且不计入基础分母的附加能力用例 100% 通过）：<span class="badge badge-{{.Summary.Rule2.State}}">{{.Summary.Rule2.State}}</span></p>
+  <p>规则 2（不计入基础分母的附加/补充用例 100% 通过）：<span class="badge badge-{{.Summary.Rule2.State}}">{{.Summary.Rule2.State}}</span></p>
   {{if .Summary.Rule2.Reasons}}<ul class="reasons">{{range .Summary.Rule2.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
   <p>规则 3（有 PDF 基线且可观测的性能指标满足判定）：<span class="badge badge-{{.Summary.Rule3.State}}">{{.Summary.Rule3.State}}</span></p>
   {{if .Summary.Rule3.Reasons}}<ul class="reasons">{{range .Summary.Rule3.Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}

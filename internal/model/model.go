@@ -93,8 +93,9 @@ type CaseResult struct {
 	PassRate       float64       `json:"pass_rate"`
 	FailReason     string        `json:"fail_reason,omitempty"`
 	CaseAttempts   []CaseAttempt `json:"case_attempts"`
-	// CountsInBase22 冗余保存用例定义里的 counts_in_base22（05 节口径：附加用例
-	// 如 reasoning_effort 不计入 22 项分母），供报告/CLI 汇总时无需回查套件定义。
+	// CountsInBase22 冗余保存用例定义里的 counts_in_base22（05 节口径：附加/
+	// 补充用例如 reasoning_effort 不计入基础用例分母），供报告/CLI 汇总时无需
+	// 回查套件定义。
 	CountsInBase22 bool `json:"counts_in_base22"`
 }
 
