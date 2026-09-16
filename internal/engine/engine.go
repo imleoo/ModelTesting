@@ -61,6 +61,13 @@ func (e *Engine) validateNonStreamSchema(raw []byte) (bool, []string) {
 	return openaiapi.ValidateSchema(raw, false)
 }
 
+func (e *Engine) validateStreamChunkSchema(raw []byte) (bool, []string) {
+	if e.Style == suitedef.StyleAnthropicMessages {
+		return anthropicapi.ValidateSchema(raw, true)
+	}
+	return openaiapi.ValidateSchema(raw, true)
+}
+
 // isStreamComplete 替代直接读取 cr.SSEResult.SawDone：OpenAI 协议的
 // "[DONE]" 哨兵由 internal/sse.Parse 在扫描阶段就识别并写入 SawDone；
 // Anthropic 协议没有这个哨兵，改为扫描分片里是否出现 message_stop 事件
@@ -339,7 +346,7 @@ func (e *Engine) runSingleStream(ctx context.Context, c suitedef.Case, result *m
 		} else if cr.HTTPStatus != 200 {
 			attempt.Passed = false
 			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
-		} else if ok, reason := validateStreamSchema(cr); !ok {
+		} else if ok, reason := e.validateStreamSchema(cr); !ok {
 			attempt.Passed = false
 			attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + reason
 		} else {
@@ -549,9 +556,9 @@ func (e *Engine) runSelfJudgedNoFabrication(ctx context.Context, c suitedef.Case
 	result.CaseAttempts = append(result.CaseAttempts, judgeAttempt)
 }
 
-func validateStreamSchema(cr client.CallResult) (bool, string) {
+func (e *Engine) validateStreamSchema(cr client.CallResult) (bool, string) {
 	for i, chunk := range cr.SSEResult.Chunks {
-		ok, violations := openaiapi.ValidateSchema([]byte(chunk), true)
+		ok, violations := e.validateStreamChunkSchema([]byte(chunk))
 		if !ok {
 			return false, fmt.Sprintf("chunk[%d]: %s", i, joinViolations(violations))
 		}
@@ -569,7 +576,7 @@ func (e *Engine) scoreStreamIntegrity(_ suitedef.Case, cr client.CallResult, att
 }
 
 func (e *Engine) scoreUsageNonstream(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -579,7 +586,7 @@ func (e *Engine) scoreUsageNonstream(_ suitedef.Case, cr client.CallResult, atte
 }
 
 func (e *Engine) scoreContentNonempty(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -589,7 +596,7 @@ func (e *Engine) scoreContentNonempty(_ suitedef.Case, cr client.CallResult, att
 }
 
 func (e *Engine) scoreTextOrToolCall(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -599,7 +606,7 @@ func (e *Engine) scoreTextOrToolCall(_ suitedef.Case, cr client.CallResult, atte
 }
 
 func (e *Engine) scoreToolCallRequired(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -609,7 +616,7 @@ func (e *Engine) scoreToolCallRequired(_ suitedef.Case, cr client.CallResult, at
 }
 
 func (e *Engine) scoreToolCallForbidden(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -619,7 +626,7 @@ func (e *Engine) scoreToolCallForbidden(_ suitedef.Case, cr client.CallResult, a
 }
 
 func (e *Engine) scoreToolCallNamed(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -640,7 +647,7 @@ func (e *Engine) scoreToolCallNamed(c suitedef.Case, cr client.CallResult, attem
 }
 
 func (e *Engine) scoreToolCallSubset(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -651,7 +658,7 @@ func (e *Engine) scoreToolCallSubset(c suitedef.Case, cr client.CallResult, atte
 }
 
 func (e *Engine) scoreDefaultThinking(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -662,7 +669,7 @@ func (e *Engine) scoreDefaultThinking(_ suitedef.Case, cr client.CallResult, att
 }
 
 func (e *Engine) scoreJSONParseable(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -672,7 +679,7 @@ func (e *Engine) scoreJSONParseable(_ suitedef.Case, cr client.CallResult, attem
 }
 
 func (e *Engine) scoreJSONSchemaValid(c suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	resp, err := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+	resp, err := e.parseResponse([]byte(cr.ResponseBody))
 	if err != nil {
 		attempt.Passed, attempt.FailReason = false, "响应体解析失败: "+err.Error()
 		return
@@ -698,8 +705,8 @@ func (e *Engine) runUsageFieldsStream(ctx context.Context, c suitedef.Case, resu
 		case cr.HTTPStatus != 200:
 			attempt.Passed, attempt.FailReason = false, fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
 		default:
-			if ok, reason := validateStreamSchema(cr); !ok {
-				attempt.Passed, attempt.FailReason = false, "openai_schema_valid 未通过: "+reason
+			if ok, reason := e.validateStreamSchema(cr); !ok {
+				attempt.Passed, attempt.FailReason = false, e.schemaBaselineLabel()+" 未通过: "+reason
 			} else if lastUsage, ok := lastChunkUsage(cr); !ok {
 				attempt.Passed, attempt.FailReason = false, "未收到 [DONE] 或末包缺失/无法解析，无法确认末包是否携带 usage"
 			} else {
@@ -754,10 +761,10 @@ func (e *Engine) runThinkingTogglePair(ctx context.Context, c suitedef.Case, res
 		case cr.HTTPStatus != 200:
 			attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
 		default:
-			if svOK, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !svOK {
-				attempt.FailReason = "openai_schema_valid 未通过: " + joinViolations(violations)
+			if svOK, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !svOK {
+				attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
 			} else {
-				resp, perr := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+				resp, perr := e.parseResponse([]byte(cr.ResponseBody))
 				if perr != nil {
 					attempt.FailReason = "响应体解析失败: " + perr.Error()
 				} else {
@@ -817,11 +824,11 @@ func (e *Engine) runDeterministicMultimodalQA(ctx context.Context, c suitedef.Ca
 		attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
 		result.Status = model.StatusFail
 	default:
-		if ok, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !ok {
-			attempt.FailReason = "openai_schema_valid 未通过: " + joinViolations(violations)
+		if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+			attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
 			result.Status = model.StatusFail
 		} else {
-			resp, perr := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+			resp, perr := e.parseResponse([]byte(cr.ResponseBody))
 			if perr != nil {
 				attempt.FailReason = "响应体解析失败: " + perr.Error()
 				result.Status = model.StatusFail
@@ -863,10 +870,10 @@ func (e *Engine) runReasoningEffortScaling(ctx context.Context, c suitedef.Case,
 			case cr.HTTPStatus != 200:
 				attempt.FailReason = fmt.Sprintf("HTTP 状态码 %d，期望 200", cr.HTTPStatus)
 			default:
-				if ok, violations := openaiapi.ValidateSchema([]byte(cr.ResponseBody), false); !ok {
-					attempt.FailReason = "openai_schema_valid 未通过: " + joinViolations(violations)
+				if ok, violations := e.validateNonStreamSchema([]byte(cr.ResponseBody)); !ok {
+					attempt.FailReason = e.schemaBaselineLabel() + " 未通过: " + joinViolations(violations)
 				} else {
-					resp, perr := openaiapi.ParseResponse([]byte(cr.ResponseBody))
+					resp, perr := e.parseResponse([]byte(cr.ResponseBody))
 					if perr != nil {
 						attempt.FailReason = "响应体解析失败: " + perr.Error()
 					} else if resp.Usage != nil && resp.Usage.CompletionTokensDetails != nil {
