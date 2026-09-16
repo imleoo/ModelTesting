@@ -19,7 +19,8 @@ import (
 func main() {
 	addr := flag.String("addr", ":8090", "监听地址")
 	dbPath := flag.String("db", "testbed.db", "SQLite 数据库文件路径")
-	suitesRoot := flag.String("suites-root", "suites", "套件定义根目录（TestRun.suite_id 是相对这个目录的路径）")
+	suitesRoot := flag.String("suites-root", "suites", "git 跟踪的套件定义种子目录，启动时同步进数据库，见 api.SeedSuitesFromDisk")
+	materialsRoot := flag.String("materials-root", "data/materials", "套件素材（图片/视频等二进制文件）的持久化根目录，materials-server 直接服务这个目录")
 	reportsRoot := flag.String("reports-root", "reports", "结果/报告文件落盘根目录")
 	materialsBaseURL := flag.String("materials-base-url", "http://127.0.0.1:8080", "素材托管服务 base URL")
 	repoRoot := flag.String("repo-root", ".", "仓库根目录（用于解析 materials_manifest 相对路径）")
@@ -38,11 +39,15 @@ func main() {
 	}
 	defer s.Close()
 
+	if err := api.SeedSuitesFromDisk(s, *suitesRoot, *materialsRoot); err != nil {
+		log.Printf("从磁盘同步套件到数据库失败: %v", err)
+	}
 	seedKimiK3Defaults(s, *suitesRoot)
 
 	cfg := &api.Config{
 		Store:                s,
 		SuitesRoot:           *suitesRoot,
+		MaterialsRoot:        *materialsRoot,
 		ReportsRoot:          *reportsRoot,
 		MaterialsBaseURL:     *materialsBaseURL,
 		RepoRoot:             *repoRoot,

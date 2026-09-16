@@ -279,3 +279,87 @@ func TestStore_GetReportForTestRun_ReturnsLatest(t *testing.T) {
 		t.Errorf("expected the most recently generated report, got %+v", got)
 	}
 }
+
+func TestStore_Suite_CreateListGet(t *testing.T) {
+	s := openTestStore(t)
+
+	created, err := s.CreateSuite(model.Suite{
+		Name:           "kimi-k3",
+		DefinitionJSON: `{"suite_id":"kimi-k3","cases":[]}`,
+		HasMaterials:   true,
+		CreatedAt:      "2026-01-01T00:00:00Z",
+	})
+	if err != nil {
+		t.Fatalf("CreateSuite: %v", err)
+	}
+	if created.ID == "" {
+		t.Fatal("expected suite ID to be assigned")
+	}
+
+	got, err := s.GetSuiteByName("kimi-k3")
+	if err != nil {
+		t.Fatalf("GetSuiteByName: %v", err)
+	}
+	if got.ID != created.ID || !got.HasMaterials || got.DefinitionJSON != created.DefinitionJSON {
+		t.Errorf("GetSuiteByName mismatch: %+v vs created %+v", got, created)
+	}
+
+	if _, err := s.CreateSuite(model.Suite{Name: "z-ai", DefinitionJSON: `{"suite_id":"z-ai","cases":[]}`, CreatedAt: "2026-01-01T00:00:00Z"}); err != nil {
+		t.Fatalf("CreateSuite (z-ai): %v", err)
+	}
+	list, err := s.ListSuites()
+	if err != nil {
+		t.Fatalf("ListSuites: %v", err)
+	}
+	if len(list) != 2 || list[0].Name != "kimi-k3" || list[1].Name != "z-ai" {
+		t.Fatalf("expected [kimi-k3, z-ai] ordered by name, got %+v", list)
+	}
+}
+
+func TestStore_Suite_CreateRejectsDuplicateName(t *testing.T) {
+	s := openTestStore(t)
+	if _, err := s.CreateSuite(model.Suite{Name: "dup", DefinitionJSON: `{}`, CreatedAt: "t"}); err != nil {
+		t.Fatalf("CreateSuite: %v", err)
+	}
+	if _, err := s.CreateSuite(model.Suite{Name: "dup", DefinitionJSON: `{}`, CreatedAt: "t"}); err == nil {
+		t.Fatal("expected error inserting a second suite with the same name (UNIQUE constraint)")
+	}
+}
+
+func TestStore_GetSuiteByName_NotFound(t *testing.T) {
+	s := openTestStore(t)
+	if _, err := s.GetSuiteByName("missing"); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+// TestStore_UpsertSuiteFromDisk_CreatesThenUpdatesInPlace 校验"关键设计决策
+// 3"：同名套件重复同步时是原地更新（保留 id），不是删了重建；不存在时才走
+// 新建路径。
+func TestStore_UpsertSuiteFromDisk_CreatesThenUpdatesInPlace(t *testing.T) {
+	s := openTestStore(t)
+
+	first, err := s.UpsertSuiteFromDisk(model.Suite{Name: "kimi-k3", DefinitionJSON: `{"suite_version":"1.0.0"}`, HasMaterials: true, CreatedAt: "t"})
+	if err != nil {
+		t.Fatalf("UpsertSuiteFromDisk (create): %v", err)
+	}
+	if first.ID == "" {
+		t.Fatal("expected id to be assigned on first upsert")
+	}
+
+	second, err := s.UpsertSuiteFromDisk(model.Suite{Name: "kimi-k3", DefinitionJSON: `{"suite_version":"1.1.0"}`, HasMaterials: false, CreatedAt: "t"})
+	if err != nil {
+		t.Fatalf("UpsertSuiteFromDisk (update): %v", err)
+	}
+	if second.ID != first.ID {
+		t.Fatalf("expected id to be preserved across re-sync, got %q vs %q", second.ID, first.ID)
+	}
+
+	got, err := s.GetSuiteByName("kimi-k3")
+	if err != nil {
+		t.Fatalf("GetSuiteByName: %v", err)
+	}
+	if got.DefinitionJSON != `{"suite_version":"1.1.0"}` || got.HasMaterials {
+		t.Errorf("expected the second sync's content to win, got %+v", got)
+	}
+}

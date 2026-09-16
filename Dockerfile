@@ -32,6 +32,12 @@ WORKDIR /app
 
 COPY --from=go-builder /out/api-server /app/bin/api-server
 COPY --from=go-builder /out/materials-server /app/bin/materials-server
+# suites/ 是 git 跟踪的套件定义种子（只读）：api-server 启动时把它同步进
+# /data/testbed.db（见 internal/api.SeedSuitesFromDisk），运行期间套件的
+# 权威来源是数据库，这份镜像内文件只在 testbed-cli/report-cli 这两个不连
+# 数据库的独立 CLI 工具里直接使用。素材文件（图片/视频）在同步时会被拷贝
+# 一份到 /data/materials（持久卷），materials-server 服务的是那份拷贝，不
+# 是这里的只读种子——UI 创建/克隆出的新套件的素材只存在于 /data/materials。
 COPY suites ./suites
 
 COPY --from=web-builder /src/web/.next/standalone ./web
@@ -47,6 +53,7 @@ ENV WEB_PORT=28082 \
     DB_PATH=/data/testbed.db \
     REPORTS_ROOT=/data/reports \
     SUITES_ROOT=/app/suites \
+    MATERIALS_ROOT=/data/materials \
     AUTH_TOKEN=""
 
 EXPOSE 28082

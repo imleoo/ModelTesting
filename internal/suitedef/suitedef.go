@@ -175,11 +175,23 @@ func LoadSuite(path string) (*Suite, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read suite file: %w", err)
 	}
+	s, err := ParseSuite(raw)
+	if err != nil {
+		return nil, err
+	}
+	s.dir = filepath.Dir(path)
+	return s, nil
+}
+
+// ParseSuite 只做 JSON 反序列化，不关联任何磁盘目录——供套件定义不落盘、
+// 直接以字节形式存在别处（如 internal/store 的 suites 表）的场景使用。
+// 这类套件的素材清单（如果有）不能靠 Suite.dir 解析相对路径，调用方需要
+// 自己算出 MaterialsManifest 的绝对路径去调 LoadMaterialsManifest。
+func ParseSuite(raw []byte) (*Suite, error) {
 	var s Suite
 	if err := json.Unmarshal(raw, &s); err != nil {
 		return nil, fmt.Errorf("parse suite json: %w", err)
 	}
-	s.dir = filepath.Dir(path)
 	return &s, nil
 }
 

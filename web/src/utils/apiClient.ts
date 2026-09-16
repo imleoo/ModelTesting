@@ -150,6 +150,37 @@ export function createModel(input: {
   });
 }
 
+export type SuiteSummary = {
+  suite_id: string;
+  name: string;
+  suite_version: string;
+  case_count: number;
+};
+
+export function listSuites(): Promise<SuiteSummary[]> {
+  return request<SuiteSummary[]>('/api/suites');
+}
+
+export function createSuite(input: {
+  name: string;
+  description?: string;
+}): Promise<SuiteSummary> {
+  return request<SuiteSummary>('/api/suites', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function cloneSuite(input: {
+  source_suite_id: string;
+  new_name: string;
+}): Promise<SuiteSummary> {
+  return request<SuiteSummary>('/api/suites/clone', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export function launchTestRun(input: {
   model_id: string;
   suite_id: string;

@@ -18,7 +18,6 @@ import (
 	"github.com/leoobai/modeltestbed/internal/render"
 	"github.com/leoobai/modeltestbed/internal/report"
 	"github.com/leoobai/modeltestbed/internal/store"
-	"github.com/leoobai/modeltestbed/internal/suitedef"
 )
 
 type launchTestRunRequest struct {
@@ -110,20 +109,9 @@ func (cfg *Config) orchestrate(ctx context.Context, run model.TestRun, m model.M
 		return
 	}
 
-	suitePath, err := safeJoinResolved(cfg.SuitesRoot, run.SuiteID)
+	suite, materials, err := cfg.loadSuiteByID(run.SuiteID)
 	if err != nil {
-		fail(fmt.Errorf("非法的 suite_id: %w", err))
-		return
-	}
-	suite, err := suitedef.LoadSuite(suitePath)
-	if err != nil {
-		fail(fmt.Errorf("加载套件定义失败: %w", err))
-		return
-	}
-
-	materials, err := suitedef.LoadMaterialsManifestForSuite(cfg.RepoRoot, suite)
-	if err != nil {
-		fail(fmt.Errorf("加载素材清单失败: %w", err))
+		fail(fmt.Errorf("加载套件失败: %w", err))
 		return
 	}
 

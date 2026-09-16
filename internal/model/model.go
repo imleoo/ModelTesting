@@ -200,6 +200,22 @@ type TestRun struct {
 	ErrorMessage        string        `json:"error_message,omitempty"`
 }
 
+// Suite 是套件定义（suitedef.Suite 的原始 JSON）在 SQLite 里的持久化记录。
+// DefinitionJSON 是完整的 suite.vN.json 内容，读取时按需用
+// suitedef.ParseSuite 解出版本号/用例数等字段，不在这里冗余存一份——和
+// Model.Capability 对 capability_json 的处理方式一致，避免两处字段不同步。
+// HasMaterials 标记这个套件是否有配套素材（图片/视频等二进制文件），有的话
+// 磁盘上 MaterialsRoot/<Name>/materials/ 下应该能找到 manifest.json；Name
+// 既是数据库里的唯一键，也是素材托管 URL /materials/<Name>/v1/<file> 的
+// 路径分量，校验规则见 internal/api/suites.go 的 suiteNamePattern。
+type Suite struct {
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	DefinitionJSON string `json:"-"`
+	HasMaterials   bool   `json:"-"`
+	CreatedAt      string `json:"-"`
+}
+
 // Report 对应 03 节 REPORT 实体：某次 TEST_RUN 生成的报告产物指针。
 type Report struct {
 	ID          string `json:"id"`

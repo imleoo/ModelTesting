@@ -23,15 +23,24 @@ import (
 type Config struct {
 	Store *store.Store
 
-	// SuitesRoot 是套件定义根目录；TestRun.SuiteID 是相对这个目录的路径
-	// （如 "kimi-k3/suite.v1.json"），不是一个独立的套件注册表——首版只有
-	// 手动登记的本地套件文件，见 07 节 SOP。
+	// SuitesRoot 是 git 跟踪的套件定义种子目录（testbed-cli/report-cli 这两个
+	// 独立 CLI 工具仍然直接读这里的文件，不经过数据库）。api-server 启动时
+	// 把这里的套件同步进 SQLite 的 suites 表（见 SeedSuitesFromDisk），运行期
+	// 间套件的权威来源是数据库，不再实时读这个目录——只在 loadSuiteByID 查不
+	// 到数据库记录时，按 TestRun.SuiteID 是旧版文件路径格式（如
+	// "kimi-k3/suite.v1.json"）这个假设回退到这里，兼容迁移前创建的历史
+	// TestRun。
 	SuitesRoot string
+	// MaterialsRoot 是套件素材（图片/视频等二进制文件 + manifest.json）的
+	// 持久化根目录，materials-server 直接服务这个目录。素材文件没法像套件
+	// 定义 JSON 那样挪进 SQLite（静态文件服务要直接读磁盘），所以单独给一个
+	// 持久化路径（Docker 部署下是 /data/materials，在持久卷里）。
+	MaterialsRoot string
 	// ReportsRoot 是功能测试结果/压测结果/报告 HTML 的落盘根目录，按
 	// model_key 分子目录，沿用 P1-P4 CLI 阶段已有的文件命名习惯。
 	ReportsRoot string
-	// RepoRoot 供 suitedef.LoadMaterialsManifestForSuite 解析素材清单的
-	// 相对路径。
+	// RepoRoot 供 suitedef.LoadMaterialsManifestForSuite 解析历史文件套件的
+	// 素材清单相对路径（见 loadSuiteByID 的回退分支）。
 	RepoRoot         string
 	MaterialsBaseURL string
 	RequestTimeout   time.Duration

@@ -12,7 +12,6 @@ import (
 
 	"github.com/leoobai/modeltestbed/internal/model"
 	"github.com/leoobai/modeltestbed/internal/store"
-	"github.com/leoobai/modeltestbed/internal/suitedef"
 )
 
 const (
@@ -134,12 +133,7 @@ func (cfg *Config) CompareTestRuns(c *gin.Context) {
 		}
 	}
 
-	suitePath, err := safeJoinResolved(cfg.SuitesRoot, suiteID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "非法的 suite_id: " + err.Error()})
-		return
-	}
-	suite, err := suitedef.LoadSuite(suitePath)
+	suite, _, err := cfg.loadSuiteByID(suiteID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "加载套件定义失败: " + err.Error()})
 		return

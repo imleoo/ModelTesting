@@ -9,6 +9,7 @@ package store
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -60,6 +61,14 @@ CREATE TABLE IF NOT EXISTS reports (
 	generated_at  TEXT NOT NULL,
 	verdict       TEXT NOT NULL,
 	html_ref      TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS suites (
+	id               TEXT PRIMARY KEY,
+	name             TEXT NOT NULL UNIQUE,
+	definition_json  TEXT NOT NULL,
+	has_materials    INTEGER NOT NULL DEFAULT 0,
+	created_at       TEXT NOT NULL
 );
 `
 
@@ -339,6 +348,95 @@ func (s *Store) GetReportForTestRun(testRunID string) (model.Report, error) {
 		return model.Report{}, fmt.Errorf("get report: %w", err)
 	}
 	return r, nil
+}
+
+// --- Suite ---
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// CreateSuite 插入一条新套件记录。name 唯一性由调用方（internal/api）通过
+// GetSuiteByName 预检查后再调用——和 CreateProvider/CreateModel 对 provider_id
+// 外键的处理方式一致：应用层前置校验给出比裸 SQLite 错误更明确的信息，不
+// 依赖解析 UNIQUE 约束冲突的驱动报错字符串。
+func (s *Store) CreateSuite(suite model.Suite) (model.Suite, error) {
+	if suite.Name == "" || suite.DefinitionJSON == "" {
+		return model.Suite{}, fmt.Errorf("name/definition_json 不能为空")
+	}
+	suite.ID = newID("suite")
+	_, err := s.db.Exec(`INSERT INTO suites (id, name, definition_json, has_materials, created_at) VALUES (?, ?, ?, ?, ?)`,
+		suite.ID, suite.Name, suite.DefinitionJSON, boolToInt(suite.HasMaterials), suite.CreatedAt)
+	if err != nil {
+		return model.Suite{}, fmt.Errorf("insert suite: %w", err)
+	}
+	return suite, nil
+}
+
+func scanSuite(row interface{ Scan(...any) error }) (model.Suite, error) {
+	var suite model.Suite
+	var hasMaterials int
+	if err := row.Scan(&suite.ID, &suite.Name, &suite.DefinitionJSON, &hasMaterials, &suite.CreatedAt); err != nil {
+		return model.Suite{}, err
+	}
+	suite.HasMaterials = hasMaterials != 0
+	return suite, nil
+}
+
+func (s *Store) GetSuiteByName(name string) (model.Suite, error) {
+	row := s.db.QueryRow(`SELECT id, name, definition_json, has_materials, created_at FROM suites WHERE name = ?`, name)
+	suite, err := scanSuite(row)
+	if err == sql.ErrNoRows {
+		return model.Suite{}, ErrNotFound
+	}
+	if err != nil {
+		return model.Suite{}, fmt.Errorf("get suite: %w", err)
+	}
+	return suite, nil
+}
+
+func (s *Store) ListSuites() ([]model.Suite, error) {
+	rows, err := s.db.Query(`SELECT id, name, definition_json, has_materials, created_at FROM suites ORDER BY name`)
+	if err != nil {
+		return nil, fmt.Errorf("list suites: %w", err)
+	}
+	defer rows.Close()
+
+	var out []model.Suite
+	for rows.Next() {
+		suite, err := scanSuite(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan suite: %w", err)
+		}
+		out = append(out, suite)
+	}
+	return out, rows.Err()
+}
+
+// UpsertSuiteFromDisk 只供 cmd/api-server 启动时从 git 跟踪的 suites/ 目录
+// 同步内置套件（kimi-k3、z-ai）用：已存在同名记录就原地覆盖更新（保留原
+// id），不存在就新建。这样每次重新部署，文件里的最新内容总会覆盖数据库里
+// 的旧副本——现在没有编辑套件的 UI，内置套件只能通过改 git 文件更新，覆盖
+// 式同步能保证线上数据库不会停留在导入时的旧版本。UI 创建/克隆出的套件在
+// 磁盘上没有对应文件，不会被这个函数碰到。
+func (s *Store) UpsertSuiteFromDisk(suite model.Suite) (model.Suite, error) {
+	existing, err := s.GetSuiteByName(suite.Name)
+	if err == nil {
+		suite.ID = existing.ID
+		_, err := s.db.Exec(`UPDATE suites SET definition_json=?, has_materials=? WHERE id=?`,
+			suite.DefinitionJSON, boolToInt(suite.HasMaterials), suite.ID)
+		if err != nil {
+			return model.Suite{}, fmt.Errorf("update suite: %w", err)
+		}
+		return suite, nil
+	}
+	if !errors.Is(err, ErrNotFound) {
+		return model.Suite{}, err
+	}
+	return s.CreateSuite(suite)
 }
 
 // ErrNotFound 是查询/更新目标不存在时的哨兵错误，调用方（如 API handler）

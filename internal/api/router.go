@@ -19,6 +19,10 @@ func NewRouter(cfg *Config) *gin.Engine {
 		api.GET("/models", cfg.ListModels)
 		api.GET("/models/:id", cfg.GetModel)
 
+		api.GET("/suites", cfg.ListSuites)
+		api.POST("/suites", cfg.CreateSuite)
+		api.POST("/suites/clone", cfg.CloneSuite)
+
 		api.POST("/test-runs", cfg.LaunchTestRun)
 		api.GET("/test-runs", cfg.ListTestRuns)
 		api.GET("/test-runs/compare", cfg.CompareTestRuns)

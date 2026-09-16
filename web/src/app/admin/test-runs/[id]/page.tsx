@@ -9,6 +9,7 @@ import {
   CaseResult,
   Model,
   Provider,
+  SuiteSummary,
   TestRun,
   getTestRun,
   getTestRunCaseResults,
@@ -16,6 +17,7 @@ import {
   launchTestRun,
   listModels,
   listProviders,
+  listSuites,
 } from 'utils/apiClient';
 
 // 合并了设计方案 10.3 节「发起任务」与「结果详情」两个概念页面：
@@ -52,20 +54,26 @@ function LaunchForm() {
   const searchParams = useSearchParams();
   const [models, setModels] = useState<Model[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [suites, setSuites] = useState<SuiteSummary[]>([]);
   const [modelId, setModelId] = useState(searchParams.get('model_id') || '');
-  const [suiteId, setSuiteId] = useState('kimi-k3/suite.v1.json');
+  const [suiteId, setSuiteId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [totalSessions, setTotalSessions] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([listModels(), listProviders()])
-      .then(([ms, ps]) => {
+    Promise.all([listModels(), listProviders(), listSuites()])
+      .then(([ms, ps, ss]) => {
         setModels(ms);
         setProviders(ps);
+        setSuites(ss);
+        if (!suiteId && ss.length > 0) {
+          setSuiteId(ss[0].suite_id);
+        }
       })
       .catch((e) => setError(e.message || String(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 同一个 model_key（如上游真实模型名 "kimi-k3"）可能挂在多个供应商/通道
@@ -134,14 +142,30 @@ function LaunchForm() {
 
         <label className="flex flex-col text-sm">
           <span className="font-medium text-navy-700 dark:text-white">
-            suite_id（相对套件根目录的路径）
+            测试套件（suite_id）
           </span>
-          <input
-            className="mt-1 h-11 rounded-xl border border-gray-200 bg-white/0 px-3 text-sm outline-none dark:!border-white/10 dark:text-white"
+          <select
+            className="mt-1 h-11 rounded-xl border border-gray-200 bg-white/0 px-3 text-sm outline-none dark:!border-white/10 dark:bg-navy-800 dark:text-white"
             value={suiteId}
             onChange={(e) => setSuiteId(e.target.value)}
             required
-          />
+          >
+            <option value="">请选择</option>
+            {suites.map((s) => (
+              <option key={s.suite_id} value={s.suite_id}>
+                {s.name}（{s.suite_version} · {s.case_count} 用例）
+              </option>
+            ))}
+          </select>
+          {suites.length === 0 && (
+            <span className="mt-1 text-xs text-gray-400">
+              还没有已登记的套件，请先前往
+              <Link href="/admin/suites" className="text-brand-500">
+                套件管理
+              </Link>
+              页面创建或克隆。
+            </span>
+          )}
         </label>
 
         <label className="flex flex-col text-sm">
@@ -173,7 +197,7 @@ function LaunchForm() {
         {error && <p className="text-sm text-red-500">{error}</p>}
         <button
           type="submit"
-          disabled={submitting || !modelId}
+          disabled={submitting || !modelId || !suiteId}
           className="mt-2 h-11 rounded-xl bg-brand-500 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
         >
           {submitting ? '发起中…' : '发起测试任务'}
