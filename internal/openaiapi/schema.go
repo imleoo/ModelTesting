@@ -39,14 +39,21 @@ func ValidateSchema(raw []byte, streamed bool) (bool, []string) {
 		violations = append(violations, "choices 字段类型应为数组")
 		return len(violations) == 0, violations
 	}
-	if len(choices) == 0 {
+	usageRaw, hasUsage := topMap["usage"]
+	hasNonNullUsage := hasUsage && usageRaw != nil
+	// 真实 OpenAI 流式协议：请求带 stream_options.include_usage=true 时，
+	// 末尾会额外发一个 choices:[]、只携带 usage 的收尾分片（2026-09-17 用
+	// gpt-6-astra 真实抓包确认：最后一个 data: 分片正是这个形状，[DONE] 前
+	// 的唯一分片）。这是合规行为，不是网关缺陷；只在非流式响应，或流式但
+	// 没有 usage 的分片里，choices 为空才判违规。
+	if len(choices) == 0 && !(streamed && hasNonNullUsage) {
 		violations = append(violations, "choices 数组不应为空")
 	}
 	for i, c := range choices {
 		validateChoice(c, i, streamed, &violations)
 	}
 
-	if usageRaw, hasUsage := topMap["usage"]; hasUsage && usageRaw != nil {
+	if hasNonNullUsage {
 		usage, ok := usageRaw.(map[string]any)
 		if !ok {
 			violations = append(violations, "usage 字段应为对象")

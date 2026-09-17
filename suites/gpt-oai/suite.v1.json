@@ -1,0 +1,1718 @@
+{
+  "suite_id": "gpt-oai",
+  "suite_version": "1.0.0",
+  "design_doc": "docs/模型自测台设计方案.md",
+  "design_doc_version": "v0.5",
+  "description": "从 kimi-k3 v1.9.0 克隆，用于接入 jiwu.wtgo.com.cn 测试服务器上的 OpenAI GPT-5.x/6 系列模型（gpt-5.5/gpt-5.6/gpt-5.6-luna/gpt-5.6-sol/gpt-5.6-terra/gpt-6-astra，经连通性探测确认为该测试服务器上仅有的 6 个真正可用于 Chat Completions 的通用对话模型；其余 18 个要么是非聊天模型（gpt-image-*系列）要么受限于 Codex+ChatGPT 账号渠道无法访问）。唯一的用例差异：thinking.reasoning_effort_off 用例的 off 变体覆盖值从 kimi-k3 原版的字面量 \"off\" 改为 \"none\"——经真实请求探测确认，GPT-6-astra 拒绝 reasoning_effort=\"off\"（400，错误信息列出合法取值为 none/minimal/low/medium/high/xhigh/max），legal 的关闭值是 \"none\"，与 07 节 SOP『供应商专属指导文档，人工新增/调整差异用例』的预期完全一致（这正是 kimi-k3 套件notes 字段里当初提醒过的『z-ai 同类用例曾发现真实取值是 none 而非 off』同一个坑）。materials_manifest 沿用 kimi-k3 的素材（未复制），因为这批模型未声明 image_url/video_url，只有 fixed_required 的 image_base64/video_base64 两项会实际执行且预期 FAIL（见能力声明文件注释：探测发现该测试网关的多模态图像处理对该渠道不稳定/不可用）。 [gpt-oai 克隆额外调整]：移除了 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条附加用例（原为排查 Kimi-K3 网关视频体积边界 429 问题所加，counts_in_base22=false，不影响验收判定）——每条 payload 36~39MB × repeat_attempts=3，对 GPT 家族这种已确认不支持视频输入的供应商没有信息价值，反而在首次试跑时可能是触发该测试渠道限流/熔断（HTTP 502/503持续60秒+）的主因之一（2026-09-17 观察，未100%确认因果，但保守起见移除）。",
+  "protocol": {
+    "base_path": "/v1/chat/completions",
+    "auth_header": "Authorization: Bearer {{api_key}}",
+    "content_type": "application/json"
+  },
+  "defaults": {
+    "timeout_seconds": 30,
+    "category_timeout_overrides": {
+      "多模态图像": 90,
+      "多模态视频": 1800,
+      "reasoning_effort": 180,
+      "输出控制": 120,
+      "确定性": 120,
+      "长上下文": 900,
+      "上下文缓存": 300
+    }
+  },
+  "fixtures": {
+    "tools": {
+      "get_weather": {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "description": "查询指定城市的当前天气",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
+          }
+        }
+      }
+    },
+    "prompts": {
+      "generic_short": "请用中文写一句关于春天的话。",
+      "weather_query": "北京今天天气怎么样？",
+      "reasoning_prompt": "请计算 37 乘以 48 等于多少，并简要给出计算过程。",
+      "reasoning_effort_prompt": "用 1、2、3、4、5 这五个数字各恰好使用一次，组成一个能被 11 整除的五位数，给出这个五位数。",
+      "structured_weather_question": "请用结构化数据回答一个用于测试的虚构天气示例：城市名 city 填“测试城市”，摄氏温度 temperature_c 填 21.5，这两个值是本次测试固定要求的取值，不代表真实天气，不需要查证真实数据。",
+      "long_output_prompt": "请写一篇不少于 2000 字的散文，题目是《四季》，直接开始正文，不要写标题也不要写提纲。",
+      "stop_sequence_prompt": "请严格按下面的格式输出三行，每行一个单词，不要加任何解释、编号或标点：\nALPHA\nBRAVO\nCHARLIE",
+      "determinism_prompt": "请用中文写一段 80 字左右的说明，介绍什么是哈希函数。直接输出正文。",
+      "cache_probe_question": "请只回答两个字：收到。",
+      "long_context_question": "上文中【暗号】后面的那个四位数字是多少？只输出这四位数字，不要输出任何其他字符。",
+      "echo_probe_prompt": "请你用中文写一段关于信任的三句话短文，直接开始正文，不要重复题目或提示词。",
+      "system_identity_cat": "你现在的人设是一只猫，如果被问到身份，回答里必须提到你是猫。",
+      "system_identity_dog": "你现在的人设是一只狗，如果被问到身份，回答里必须提到你是狗。",
+      "identity_question": "请用一句话说明你现在的人设身份是什么。"
+    }
+  },
+  "materials_manifest": "suites/kimi-k3/materials/manifest.json",
+  "cases": [
+    {
+      "id": "protocol.stream_integrity",
+      "category": "协议完整性",
+      "name": "Stream 完整性",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2 样例请求（Stream 完整性）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_nonstream",
+      "category": "协议完整性",
+      "name": "Usage 字段 · 非流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_nonstream",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "protocol.usage_stream",
+      "category": "协议完整性",
+      "name": "Usage 字段 · 流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "usage_fields_stream",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.2",
+      "notes": "两段式尝试：任一变体末包（[DONE] 前最后一包）自带合法 usage 即通过（04节修订，避免强制要求 stream_options.include_usage 生效）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": true
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "no_include_usage",
+          "request_overrides": {}
+        },
+        {
+          "variant_label": "with_include_usage",
+          "request_overrides": {
+            "stream_options": {
+              "include_usage": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "multimodal.image_url",
+      "category": "多模态图像",
+      "name": "Image_url",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "image_url",
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "material_ref": {
+        "material_id": "image_qa_v1",
+        "form": "url"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{{material:image_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "{{material:image_qa_v1:url}}"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.image_base64",
+      "category": "多模态图像",
+      "name": "Image_base64",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF『最少支持 Image_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）",
+      "material_ref": {
+        "material_id": "image_qa_v1",
+        "form": "base64"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{{material:image_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "data:image/png;base64,{{material:image_qa_v1:base64}}"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_url",
+      "category": "多模态视频",
+      "name": "Video_url",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "video_url",
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF 未给出视频输入的具体 content part schema，本模板假设供应商采用与 image_url 对称的 video_url content part（type:\"video_url\", video_url:{url:...}）；若实际供应商 schema 不同，需在克隆套件时按 07 节 SOP 调整此用例的 request_template，不属于全局断言口径变化。",
+      "material_ref": {
+        "material_id": "video_qa_v1",
+        "form": "url"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{{material:video_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "{{material:video_qa_v1:url}}"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_base64",
+      "category": "多模态视频",
+      "name": "Video_base64",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.3",
+      "notes": "PDF『最少支持 Video_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）；video content part schema 假设同 multimodal.video_url",
+      "material_ref": {
+        "material_id": "video_qa_v1",
+        "form": "base64"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{{material:video_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/mp4;base64,{{material:video_qa_v1:base64}}"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "multimodal.video_mkv_format",
+      "category": "多模态视频",
+      "name": "Video · MKV 容器",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "deterministic_multimodal_qa",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.3：传入 MKV（matroska）视频容器时，官方能正常解析并回答，内部网关曾返回笼统 400。素材为本仓库用 ffmpeg 本地生成的固定印刷体数字视频（video_mkv_v1，见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），与 video_qa_v1 同款可程序化比对方案，只是换成不同容器格式和数字串，避免和 mp4 素材混淆。",
+      "material_ref": {
+        "material_id": "video_mkv_v1",
+        "form": "base64"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{{material:video_mkv_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/x-matroska;base64,{{material:video_mkv_v1:base64}}"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.call_capability",
+      "category": "工具调用支持",
+      "name": "Tool Call 能力",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "与 tool.choice_required 共用 tool_choice:required 触发方式，两者均必过；本用例代表 PDF 总览表『工具调用支持 1 项』的独立计数项，与『工具调用检测』的 6 项分别计数（合计 7 项工具相关用例）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_default",
+      "category": "工具调用检测",
+      "name": "Default（不传）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_auto",
+      "category": "工具调用检测",
+      "name": "auto",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "text_or_tool_call",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "auto",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_required",
+      "category": "工具调用检测",
+      "name": "required",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_none",
+      "category": "工具调用检测",
+      "name": "none",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_forbidden",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "none",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_function",
+      "category": "工具调用检测",
+      "name": "function（强制指定）",
+      "required_rule": "exempt_allowed",
+      "counts_in_base22": true,
+      "capability_tag": "tool_choice_function",
+      "assertion_type": "tool_call_named",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4 样例请求（Tool Choice Function）",
+      "notes": "PDF『Function 可不过（官方不支持）』；能力声明未标记支持时记 NOT_DECLARED，不计入 22 项分母",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": {
+            "type": "function",
+            "function": {
+              "name": "get_weather"
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.choice_allowed_tools",
+      "category": "工具调用检测",
+      "name": "allowed_tools",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "tool_call_subset",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.4",
+      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）；allowed_tools 请求 schema 假设为 OpenAI 现行草案格式 {type:allowed_tools, allowed_tools:{mode, tools}}，需在 P1 联调时对照供应商实际 schema 核实",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": {
+            "type": "allowed_tools",
+            "allowed_tools": {
+              "mode": "auto",
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_weather"
+                  }
+                }
+              ]
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.enable_thinking",
+      "category": "思考行为",
+      "name": "enable_thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:enable_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "enable_thinking": true
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "enable_thinking": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.thinking_type",
+      "category": "思考行为",
+      "name": "thinking.type（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "thinking": {
+              "type": "disabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.chat_template_kwargs_enable_thinking",
+      "category": "思考行为",
+      "name": "chat_template_kwargs.enable_thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:chat_template_kwargs_enable_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "enable_thinking": true
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "enable_thinking": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.chat_template_kwargs_thinking",
+      "category": "思考行为",
+      "name": "chat_template_kwargs.thinking（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:chat_template_kwargs_thinking",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "thinking": true
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "thinking": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "thinking.default_behavior",
+      "category": "思考行为",
+      "name": "默认思考行为",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "default_thinking_matches_declaration",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.5",
+      "notes": "断言对比对象为 CAPABILITY_PROFILE.default_thinking_behavior 声明值，与思考开关的能力声明规则相互独立",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_schema",
+      "category": "结构化输出",
+      "name": "JSON Schema",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_schema_valid",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}"
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "weather_answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "temperature_c": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "city",
+                  "temperature_c"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_object",
+      "category": "结构化输出",
+      "name": "JSON Object",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "json_parseable",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.6",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。"
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "connectivity.basic",
+      "category": "连通性",
+      "name": "基础单轮请求",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "content_nonempty",
+      "repeat_attempts": 1,
+      "pdf_ref": "2.7",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "reasoning_effort.scaling",
+      "category": "reasoning_effort",
+      "name": "low / high / max 综合判定",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "reasoning_effort",
+      "assertion_type": "reasoning_effort_scaling",
+      "repeat_attempts": 3,
+      "pdf_ref": "2.8",
+      "notes": "附加用例，不计入 22 项分母；repeat_attempts 为每档重复采样次数，聚合取多数结果比较 reasoning_tokens，至少 low 与 high 需有可观测差异（04节）",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_effort_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "low",
+          "request_overrides": {
+            "reasoning_effort": "low"
+          }
+        },
+        {
+          "variant_label": "high",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "max",
+          "request_overrides": {
+            "reasoning_effort": "max"
+          }
+        }
+      ]
+    },
+    {
+      "id": "input_validation.max_tokens_negative",
+      "category": "输入校验",
+      "name": "max_tokens 为负数",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，07 节 SOP 允许的供应商专属补充：真实测试中发现 tokenpanel 对 max_tokens=-1 未做校验、直接透传后端触发 HTTP 500，应在网关层拦截并返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "max_tokens": -1,
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.tool_result_content_object",
+      "category": "输入校验",
+      "name": "tool 消息 content 为对象而非字符串",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：role=tool 的消息 content 按 OpenAI 协议必须是 string，这里故意传一个 JSON 对象；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\":\"北京\"}"
+                  }
+                }
+              ]
+            },
+            {
+              "role": "tool",
+              "tool_call_id": "call_1",
+              "content": {
+                "temperature": 21.5,
+                "unit": "celsius"
+              }
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.duplicate_content_parts",
+      "category": "输入校验",
+      "name": "content 数组含重复 text part",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：content 数组里两个完全相同的 text part；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "重复内容测试"
+                },
+                {
+                  "type": "text",
+                  "text": "重复内容测试"
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.invalid_role",
+      "category": "输入校验",
+      "name": "非法 role 取值",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充：role 传一个不在 system/user/assistant/tool 枚举内的非法值；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "not_a_real_role",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.corrupted_image_base64",
+      "category": "输入校验",
+      "name": "非法/损坏的 base64 图片数据",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "非 PDF 原文用例，同上补充。原始需求描述是『能力未声明时仍发送图片，预期网关拒绝』，但 kimi-k3 的 CAPABILITY_PROFILE 已声明 image_base64=true 且该能力按 04 节固定必过、不可标记不支持，这个前提在本套件的真实测试目标上不成立、会产生假阳性失败；改用同一类输入校验缺口的另一种表现形式——base64 数据本身无法解码，网关应在解析阶段就拒绝（400/422），不应把无法解码的数据透传给后端触发 500",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "描述这张图片"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "data:image/png;base64,!!!not-valid-base64-data!!!"
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.max_tokens_truncation",
+      "category": "输出控制",
+      "name": "max_tokens 强制截断",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "max_tokens_truncation",
+      "repeat_attempts": 3,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项（见 07 节 SOP）。断言三条同时成立：finish_reason==\"length\"、usage.completion_tokens ∈ (0, max_tokens]、content 非空。请求里显式关掉思考，避免思考 token 把 256 的预算吃光导致 content 为空。",
+      "assertion_params": {
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.long_output_prompt}}"
+            }
+          ],
+          "max_tokens": 256,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.stop_semantics",
+      "category": "输出控制",
+      "name": "stop 语义",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "stop_sequence_respected",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项。断言输出含 ALPHA（证明模型确实开始作答）、不含 BRAVO（stop 序列本身必须被吞掉）、finish_reason==\"stop\"。",
+      "assertion_params": {
+        "must_contain": "ALPHA"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.stop_sequence_prompt}}"
+            }
+          ],
+          "stop": [
+            "BRAVO"
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "determinism.temperature_zero",
+      "category": "确定性",
+      "name": "temperature=0",
+      "required_rule": "fixed_required",
+      "counts_in_base22": true,
+      "capability_tag": null,
+      "assertion_type": "deterministic_repeat",
+      "repeat_attempts": 3,
+      "notes": "v1.2.0 从 z-ai 套件并入的协议基线项。同一请求连发 3 次，逐字节比对 content（不 trim）。提示词选了开放题（解释哈希函数）而不是有固定答案的题目，否则测不出确定性。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.determinism_prompt}}"
+            }
+          ],
+          "temperature": 0,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.reasoning_effort_off",
+      "category": "思考行为",
+      "name": "reasoning_effort（开+关）",
+      "required_rule": "declared_required",
+      "counts_in_base22": true,
+      "capability_tag": "thinking_toggle:reasoning_effort_off",
+      "assertion_type": "thinking_toggle_pair",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入，覆盖『用 reasoning_effort 关闭思考』这条独立路径。CAPABILITY_PROFILE.thinking_toggle_methods 当前未包含 reasoning_effort_off，本用例会记 NOT_DECLARED，不计入分母。⚠️ 校准项：z-ai 套件的同类用例曾发现真实关闭取值是 \"none\" 而不是 \"off\"（见 reports/z-ai 对比报告『四.3』），Kimi-K3 若之后声明此能力，需先核实其真实合法取值再启用，不能假设 \"off\" 一定正确。 [gpt-oai 克隆修正]：经真实探测确认 GPT-6-astra 的合法关闭取值是 \"none\"，已把 off 变体的 reasoning_effort 覆盖值从 \"off\" 改成 \"none\"（2026-09-17 验证）。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      },
+      "variants": [
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "reasoning_effort": "none"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context.long_context_recall",
+      "category": "长上下文",
+      "name": "长上下文召回",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "long_context",
+      "assertion_type": "long_context_recall",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE 当前未声明 context_window_tokens，本用例会记 NOT_DECLARED。⚠️ 校准项：filler 字符数与 min_prompt_tokens 是照抄 z-ai 套件（按上下文窗口 1048576 token 估的），Kimi-K3 若之后声明 context_window_tokens，需按其真实上限重新校准这两个数值，不能直接照搬。",
+      "assertion_params": {
+        "needle": "7391",
+        "min_prompt_tokens": 900000,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{filler:750000}}\n【暗号】7391\n{{filler:750000}}\n{{prompts.long_context_question}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "cache.prompt_cache_hit_rate",
+      "category": "上下文缓存",
+      "name": "缓存命中率",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "prompt_cache",
+      "assertion_type": "prompt_cache_hit_rate",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE.prompt_cache=true 有实测依据：reports/kimi-k3/P3-性能测试结果表-2026-08-18.md 已确认 kimi-k3/tokenpanel 真实返回 usage.prompt_tokens_details.cached_tokens（实测命中率 93.9%），因此本用例会真正执行而非记 NOT_DECLARED。先发 1 次预热请求把前缀写进缓存，再发一次同样的请求判定 cached_tokens / prompt_tokens ≥ min_hit_rate。",
+      "assertion_params": {
+        "warmup_requests": 1,
+        "min_hit_rate": 0.5,
+        "trace_body_max_chars": 4000
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "system",
+              "content": "{{filler:8000}}"
+            },
+            {
+              "role": "user",
+              "content": "{{prompts.cache_probe_question}}"
+            }
+          ],
+          "temperature": 0,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.max_tokens_over_limit",
+      "category": "输入校验",
+      "name": "max_tokens 非法（超出模型上限）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例：max_tokens 超出模型上限时网关应返回 4xx，不应 200 透传或 500。⚠️ 校准项：CAPABILITY_PROFILE 未声明 Kimi-K3 的 max_output_tokens 真实上限，10000000 是刻意选取的『必然超出任何真实上限』的极端占位值，用于在未知真实上限时仍能验证网关有做校验；Kimi-K3 若之后声明 max_output_tokens，应改成『声明值 + 1』这种贴近边界的取值以获得更强的检出力（参考 z-ai 套件同名用例：131073 = max_output_tokens(131072) + 1）。判定标准是 HTTP 状态码：4xx 通过；5xx 判失败并注明『网关把非法输入透传给后端』；200 判失败并注明『网关未做校验』。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "max_tokens": 10000000,
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_disabled",
+      "category": "思考行为",
+      "name": "流式 + thinking 关闭",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自《Kimi-K3-接口兼容性测试总结-0820.md》1.1：stream×thinking 6 种组合中『内部网关全量 500』一次真实复现的缺陷，本用例覆盖 stream=true × thinking=disabled 组合。runSingleStream 会先校验 HTTP 200，若网关再次对该组合返回 500，会在到达 stream_integrity 断言前就被判 FAIL 并留痕状态码，不需要新断言类型即可复现该缺陷。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_enabled",
+      "category": "思考行为",
+      "name": "流式 + thinking 开启",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.1，覆盖 stream=true × thinking=enabled 组合，其余同 thinking.stream_disabled。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "enabled"
+          },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.stream_default",
+      "category": "思考行为",
+      "name": "流式 + thinking 未传（默认）",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.1，覆盖 stream=true × thinking 参数完全不传（走模型默认思考行为）组合，与 thinking.stream_disabled/enabled 共同补齐『stream×thinking 3 种组合』；不要求声明具体思考开关方式，故 required_rule 为 fixed_required。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "tool.thinking_tool_call_combo",
+      "category": "工具调用检测",
+      "name": "thinking + tool_call 同开",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.2：thinking 与 tool_call 同时启用时被网关直接 400 拒绝（Agent 场景核心能力，PDF 未单列但属于协议基线）。tool_call_required 复用现有断言：runSingleNonStream 先校验 HTTP 200，若网关仍对该组合返回 400，会在断言前就判 FAIL 并留痕状态码，不需要新断言类型。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": "required",
+          "thinking": {
+            "type": "enabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.dual_max_tokens_truncation",
+      "category": "输出控制",
+      "name": "max_tokens + max_completion_tokens 同传",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "max_tokens_truncation",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.10：同时设置 max_completion_tokens 与 max_tokens 时，官方返回被截断的正常文本，内部曾返回空 content（finish_reason 仍为 length）。复用 max_tokens_truncation 断言（读取请求体 max_tokens 字段核对 completion_tokens 边界 + content 非空），无需新断言类型即可复现该缺陷。请求里显式关闭思考，避免思考 token 把预算吃光导致误判。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.long_output_prompt}}"
+            }
+          ],
+          "max_tokens": 256,
+          "max_completion_tokens": 256,
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "tool.parameters_missing_type",
+      "category": "工具调用检测",
+      "name": "工具 parameters 缺失 type 字段",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "tool_call_required",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.8：tools.function.parameters 缺少 type 字段时，官方返回 200 + tool_calls，内部曾返回 400（校验过严，未按 OpenAI 协议对缺省 type 做默认补全）。工具定义故意省略 parameters.type，若网关再次拒绝会在 HTTP 200 校验阶段判 FAIL，复用现有 tool_call_required 断言即可。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "get_weather",
+                "description": "查询指定城市的当前天气",
+                "parameters": {
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ]
+                }
+              }
+            }
+          ],
+          "tool_choice": "required",
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.empty_content_message",
+      "category": "输入校验",
+      "name": "消息 content 为空字符串",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 1.9：messages 中存在 content 为空字符串的消息时，官方返回 429 engine_overloaded_error，内部曾返回 200 正常回复，拦截策略与官方不一致。rejects_invalid_request 断言只要求 4xx（含 429），不绑定具体错误码，与 z-ai/kimi-k3 套件其余 input_validation.* 用例口径一致。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": ""
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.tool_call_arguments_invalid_json",
+      "category": "输入校验",
+      "name": "assistant tool_calls.arguments 为非法 JSON",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_invalid_request",
+      "repeat_attempts": 1,
+      "notes": "v1.3.0 新增，来自 0820 兼容性报告 2.2（test_16_12_invalid_json_arguments）：assistant 消息回填的 tool_calls[].function.arguments 不是合法 JSON 字符串时，官方返回 400，内部曾直接 200 放行。按 OpenAI 协议 arguments 必须是可解析的 JSON 字符串，这里故意传一个未闭合的字符串触发校验。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\": \"北京\""
+                  }
+                }
+              ]
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.empty_tool_result_no_fabrication",
+      "category": "输入校验",
+      "name": "tool 结果为 null 时不应编造数据",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "self_judged_no_fabrication",
+      "repeat_attempts": 1,
+      "notes": "v1.7.0 新增，来自 0820 兼容性报告 1.6：tool 消息 content 为 null 时，官方回复请求用户澄清，内部网关曾直接虚构具体数据（如编造天气数值）并伴随 tool_calls=null。这是『该拒答还是该编造』的语义判断，没有可靠的确定性规则，经与使用者确认，用被测模型自身当裁判：先正常发起本用例的请求拿到第一段回复，再把回复原文喂给同一个模型，让它自己判断第一段回复是 CLARIFICATION（请求澄清，未编造）还是 FABRICATION（编造了具体数据），见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict。已知局限：自证过审偏差——模型有可能倾向于认为自己的输出没问题，FAIL 的留痕比 PASS 更值得信任，不建议把 PASS 当作可以跳过人工抽查的硬保证。本用例的 tool content 用的是 null（而不是空字符串），与 input_validation.empty_tool_result_no_fabrication 之外那条 input_validation.empty_content_message（user 角色、content=\"\"、期望被 4xx 拒绝）是两个不同角色/不同取值的场景，二者结论口径不冲突。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1",
+                  "type": "function",
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\":\"北京\"}"
+                  }
+                }
+              ]
+            },
+            {
+              "role": "tool",
+              "tool_call_id": "call_1",
+              "content": null
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "structured.json_object_stream",
+      "category": "结构化输出",
+      "name": "JSON Object · 流式",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "stream_integrity",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.7（test_09_02_json_object_stream）：json_object 模式下流式响应末尾 chunk 缺失 finish_reason 字段。不需要新断言类型——runSingleStream 在跑自定义断言前会先对每个分片做 openai_schema_valid 基线校验（见 internal/openaiapi/schema.go validateChoice），该基线本身就要求每个分片必须带 finish_reason 键，若该缺陷复现会在基线阶段就判 FAIL 并留痕具体是哪个 chunk 缺失，无需额外实现。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。"
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          },
+          "stream": true
+        }
+      }
+    },
+    {
+      "id": "thinking.disabled_content_clean",
+      "category": "思考行为",
+      "name": "thinking 关闭时 content 不应泄漏推理独白",
+      "required_rule": "declared_required",
+      "counts_in_base22": false,
+      "capability_tag": "thinking_toggle:thinking_type",
+      "assertion_type": "thinking_disabled_content_clean",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.4：thinking 显式关闭时，内部网关曾仍把模型内部推理（如 \"The user is asking me to...\"）拼进用户可见的 content。新增 assertion_type=thinking_disabled_content_clean（见 internal/assertion/assertion.go ThinkingDisabledContentClean），校验 1) 不再返回 reasoning_content 字段 2) content 不含已知泄漏片段黑名单。黑名单是启发式的，只保证复现已发现的这种泄漏模式，不是穷举，详见函数注释。",
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "output_control.no_prompt_echo",
+      "category": "输出控制",
+      "name": "content 不应回显用户原始 prompt",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "no_prompt_echo",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 1.5：非流式响应中 content 曾以用户原始 prompt 开头，而不是模型生成的正文。新增 assertion_type=no_prompt_echo（见 internal/assertion/assertion.go NoPromptEcho），只比对 content 是否以 prompt 前 12 个字开头，不做全文包含比对（模型合法复述用户原话片段是正常行为）。assertion_params.prompt_text 必须和 request_template 里渲染出的 prompt 原文逐字一致——assertion_params 不走占位符渲染，改 prompts.echo_probe_prompt 时要同步改这里。",
+      "assertion_params": {
+        "prompt_text": "请你用中文写一段关于信任的三句话短文，直接开始正文，不要重复题目或提示词。"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.echo_probe_prompt}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "context.multi_system_message_recall",
+      "category": "系统提示",
+      "name": "多条 system messages 均应生效",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "contains_all_substrings",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.5：多 system messages 场景下，内部网关曾只保留最后一条 system message，导致回答只引用了其中一个身份设定。新增 assertion_type=contains_all_substrings（见 internal/assertion/assertion.go ContainsAllSubstrings），要求回答同时包含两条 system message 各自要求的关键词。",
+      "assertion_params": {
+        "required_substrings": [
+          "猫",
+          "狗"
+        ]
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "system",
+              "content": "{{prompts.system_identity_cat}}"
+            },
+            {
+              "role": "system",
+              "content": "{{prompts.system_identity_dog}}"
+            },
+            {
+              "role": "user",
+              "content": "{{prompts.identity_question}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    },
+    {
+      "id": "input_validation.error_type_shape",
+      "category": "输入校验",
+      "name": "拒绝响应的 error.type 结构",
+      "required_rule": "fixed_required",
+      "counts_in_base22": false,
+      "capability_tag": null,
+      "assertion_type": "rejects_with_error_type",
+      "repeat_attempts": 1,
+      "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.4：网关拒绝非法请求时，内部曾把具体错误文本误用成 error.type（而不是放进 error.message），且多出一个非标准的数字 code 字段（协议里 code 应为字符串或 null）。原报告用 top_p=0.9 触发这条校验，但该报告『5. K3 官方设计特性』一节又说 K3 固定 top_p=0.95 且不接受覆盖属于非缺陷设计——两处对『传入非默认 top_p 是否报错』的描述不一致，为避免用一个语义存疑的触发条件构造用例，这里改用本套件已验证过的、确定会被拒绝的非法 role 触发（同 input_validation.invalid_role），只是断言从『是否 4xx』升级为『4xx 响应体的 error 结构是否合规』，两条用例可以并存、互不冲突。",
+      "assertion_params": {
+        "expected_error_type": "invalid_request_error"
+      },
+      "request_template": {
+        "method": "POST",
+        "body": {
+          "model": "{{model_key}}",
+          "messages": [
+            {
+              "role": "not_a_real_role",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
+          "stream": false
+        }
+      }
+    }
+  ]
+}

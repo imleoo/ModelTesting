@@ -1,0 +1,13 @@
+{
+  "model_id": "gpt-oai-family",
+  "image_url": false,
+  "image_base64": false,
+  "video_url": false,
+  "video_base64": false,
+  "tool_call": true,
+  "tool_choice_function": true,
+  "thinking_toggle_methods": ["reasoning_effort_off"],
+  "default_thinking_behavior": "no_thinking_by_default",
+  "reasoning_effort": true,
+  "prompt_cache": true
+}

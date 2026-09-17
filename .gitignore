@@ -29,3 +29,4 @@ out/
 
 # OS
 .DS_Store
+.purge-backup.git
