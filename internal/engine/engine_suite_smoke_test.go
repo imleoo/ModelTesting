@@ -376,12 +376,15 @@ func mockToolCalls(body map[string]any) []any {
 			return call(name)
 		}
 		if tc["type"] == "allowed_tools" {
-			at, _ := tc["allowed_tools"].(map[string]any)
-			tools, _ := at["tools"].([]any)
+			// 官方 OpenAI schema（2026-09-17 用 gpt-6-astra 真实请求核实）：mode/tools 是
+			// tool_choice 顶层直接字段，不嵌套在 allowed_tools 键下；tools[].name 是扁平
+			// 字段，不是 tools[].function.name。suites/kimi-k3/suite.v1.json v1.10.0 已
+			// 按此订正 request_template，mock 必须跟着走真实 schema，否则测的是一个真实
+			// 网关从未见过的请求形状。
+			tools, _ := tc["tools"].([]any)
 			if len(tools) > 0 {
 				tm, _ := tools[0].(map[string]any)
-				fn, _ := tm["function"].(map[string]any)
-				name, _ := fn["name"].(string)
+				name, _ := tm["name"].(string)
 				return call(name)
 			}
 		}

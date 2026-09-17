@@ -3,7 +3,7 @@
   "suite_version": "1.0.0",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.5",
-  "description": "从 kimi-k3 v1.9.0 克隆，用于接入 jiwu.wtgo.com.cn 测试服务器上的 OpenAI GPT-5.x/6 系列模型（gpt-5.5/gpt-5.6/gpt-5.6-luna/gpt-5.6-sol/gpt-5.6-terra/gpt-6-astra，经连通性探测确认为该测试服务器上仅有的 6 个真正可用于 Chat Completions 的通用对话模型；其余 18 个要么是非聊天模型（gpt-image-*系列）要么受限于 Codex+ChatGPT 账号渠道无法访问）。唯一的用例差异：thinking.reasoning_effort_off 用例的 off 变体覆盖值从 kimi-k3 原版的字面量 \"off\" 改为 \"none\"——经真实请求探测确认，GPT-6-astra 拒绝 reasoning_effort=\"off\"（400，错误信息列出合法取值为 none/minimal/low/medium/high/xhigh/max），legal 的关闭值是 \"none\"，与 07 节 SOP『供应商专属指导文档，人工新增/调整差异用例』的预期完全一致（这正是 kimi-k3 套件notes 字段里当初提醒过的『z-ai 同类用例曾发现真实取值是 none 而非 off』同一个坑）。materials_manifest 沿用 kimi-k3 的素材（未复制），因为这批模型未声明 image_url/video_url，只有 fixed_required 的 image_base64/video_base64 两项会实际执行且预期 FAIL（见能力声明文件注释：探测发现该测试网关的多模态图像处理对该渠道不稳定/不可用）。 [gpt-oai 克隆额外调整]：移除了 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条附加用例（原为排查 Kimi-K3 网关视频体积边界 429 问题所加，counts_in_base22=false，不影响验收判定）——每条 payload 36~39MB × repeat_attempts=3，对 GPT 家族这种已确认不支持视频输入的供应商没有信息价值，反而在首次试跑时可能是触发该测试渠道限流/熔断（HTTP 502/503持续60秒+）的主因之一（2026-09-17 观察，未100%确认因果，但保守起见移除）。",
+  "description": "从 kimi-k3 v1.10.0 克隆，用于接入 jiwu.wtgo.com.cn 测试服务器上的 OpenAI GPT-5.x/6 系列模型（gpt-5.5/gpt-5.6/gpt-5.6-luna/gpt-5.6-sol/gpt-5.6-terra/gpt-6-astra，经连通性探测确认为该测试服务器上仅有的 6 个真正可用于 Chat Completions 的通用对话模型；其余 18 个要么是非聊天模型（gpt-image-*系列）要么受限于 Codex+ChatGPT 账号渠道无法访问）。用例差异：① thinking.reasoning_effort_off 用例的 off 变体覆盖值从 kimi-k3 原版的字面量 \"off\" 改为 \"none\"——经真实请求探测确认，GPT-6-astra 拒绝 reasoning_effort=\"off\"（400，错误信息列出合法取值为 none/minimal/low/medium/high/xhigh/max，与官方 OpenAI 文档一致），legal 的关闭值是 \"none\"；② 移除了 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条附加用例（原为排查 Kimi-K3 网关视频体积边界 429 问题所加，counts_in_base22=false，不影响验收判定），每条 payload 36~39MB × repeat_attempts=3，对已确认不支持视频输入的 GPT 家族没有信息价值，且首次试跑时可能是触发测试渠道限流/熔断（HTTP 502/503 持续60秒+）的主因之一。tool.choice_allowed_tools 用例的请求体 schema 错误已在 kimi-k3 v1.10.0 源头修正（不是 gpt-oai 专属问题），本克隆直接继承修正后的版本。materials_manifest 沿用 kimi-k3 的素材（未复制），因为这批模型未声明 image_url/video_url，只有 fixed_required 的 image_base64/video_base64 两项会实际执行且预期 FAIL（探测发现该测试网关的多模态图像/视频处理对该渠道不稳定/不可用，多次尝试均快速返回 502/超时，不是慢挂起，无超时风险）。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -530,7 +530,7 @@
       "assertion_type": "tool_call_subset",
       "repeat_attempts": 1,
       "pdf_ref": "2.4",
-      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）；allowed_tools 请求 schema 假设为 OpenAI 现行草案格式 {type:allowed_tools, allowed_tools:{mode, tools}}，需在 P1 联调时对照供应商实际 schema 核实",
+      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）。[v0.5 修正] request_template.body.tool_choice 原先写成 {type:allowed_tools, allowed_tools:{mode, tools}}（多包了一层 allowed_tools 键，且 tools[].name 错误嵌套成 tools[].function.name），已用官方 OpenAI API 文档（platform.openai.com function-calling 指南 + 社区确认，2026-09-17 核实）订正为真实schema：{type:allowed_tools, mode, tools:[{type:function, name}]}（mode/tools 是 tool_choice 顶层的直接字段，不嵌套在 allowed_tools 键下；tools[].name 是扁平字段，不是 tools[].function.name）。回查 reports/kimi-k3/run-*.json 历史结果发现这个 bug 此前已经在部分真实渠道上暴露过（k3relay/vinzk/we2ai-v4 均报 HTTP 400），只是多数渠道对这层多余嵌套比较宽松、静默忽略掉了 tool_choice 约束仍然通过，掩盖了请求体本身有误的事实；用 gpt-6-astra（该渠道对此严格校验，直接 400 拒绝）复测证实了这一点，并用订正后的 schema 重新验证通过。",
       "request_template": {
         "method": "POST",
         "body": {
@@ -546,17 +546,13 @@
           ],
           "tool_choice": {
             "type": "allowed_tools",
-            "allowed_tools": {
-              "mode": "auto",
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_weather"
-                  }
-                }
-              ]
-            }
+            "mode": "auto",
+            "tools": [
+              {
+                "type": "function",
+                "name": "get_weather"
+              }
+            ]
           },
           "stream": false
         }
@@ -1158,7 +1154,7 @@
       "capability_tag": "thinking_toggle:reasoning_effort_off",
       "assertion_type": "thinking_toggle_pair",
       "repeat_attempts": 1,
-      "notes": "v1.2.0 从 z-ai 套件并入，覆盖『用 reasoning_effort 关闭思考』这条独立路径。CAPABILITY_PROFILE.thinking_toggle_methods 当前未包含 reasoning_effort_off，本用例会记 NOT_DECLARED，不计入分母。⚠️ 校准项：z-ai 套件的同类用例曾发现真实关闭取值是 \"none\" 而不是 \"off\"（见 reports/z-ai 对比报告『四.3』），Kimi-K3 若之后声明此能力，需先核实其真实合法取值再启用，不能假设 \"off\" 一定正确。 [gpt-oai 克隆修正]：经真实探测确认 GPT-6-astra 的合法关闭取值是 \"none\"，已把 off 变体的 reasoning_effort 覆盖值从 \"off\" 改成 \"none\"（2026-09-17 验证）。",
+      "notes": "v1.2.0 从 z-ai 套件并入，覆盖『用 reasoning_effort 关闭思考』这条独立路径。CAPABILITY_PROFILE.thinking_toggle_methods 当前未包含 reasoning_effort_off，本用例会记 NOT_DECLARED，不计入分母。⚠️ 校准项：z-ai 套件的同类用例曾发现真实关闭取值是 \"none\" 而不是 \"off\"（见 reports/z-ai 对比报告『四.3』），Kimi-K3 若之后声明此能力，需先核实其真实合法取值再启用，不能假设 \"off\" 一定正确。 [gpt-oai 克隆修正]：经真实探测 + 官方 OpenAI 文档核实，GPT-6-astra 的合法关闭取值是 \"none\"，已把 off 变体的 reasoning_effort 覆盖值从 \"off\" 改成 \"none\"（2026-09-17 验证）。",
       "request_template": {
         "method": "POST",
         "body": {

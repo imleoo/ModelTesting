@@ -1,9 +1,9 @@
 {
   "suite_id": "kimi-k3",
-  "suite_version": "1.9.0",
+  "suite_version": "1.10.0",
   "design_doc": "docs/模型自测台设计方案.md",
-  "design_doc_version": "v0.4",
-  "description": "Kimi-K3 套件的可执行套件定义：截至 v1.9.0，counts_in_base22=true 的基础用例（对应设计方案 05 节，含 v1.2.0 从 z-ai 套件回补的 4 项）为 26 项 + 1 项 reasoning_effort 附加用例 + 若干『长上下文/输入校验/回归/上下文缓存』补充用例（均 counts_in_base22=false，见设计方案 04.3 节）。此计数是本次编辑时的实际清点结果，后续版本增删用例后可能与此处文字漂移——权威计数请直接统计本文件 cases 数组的 counts_in_base22 字段，不要依赖这段自然语言描述。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例，使两套件覆盖对齐。v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》P0 级缺陷中挑选 8 项可用现有断言类型无歧义复现的回归用例并入。v1.4.0 继续从同一份报告补齐 5 项：structured.json_object_stream 复用现有 stream_integrity 断言；thinking.disabled_content_clean/output_control.no_prompt_echo/context.multi_system_message_recall/input_validation.error_type_shape 四项在 internal/assertion/assertion.go 新增了 4 个断言函数（均有单测覆盖）并接了对应 assertion_type。v1.5.0 补入 2.3（MKV 容器不支持）：新增 multimodal.video_mkv_format 用例 + video_mkv_v1 素材，素材用本地 ffmpeg 生成（见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），复用既有 deterministic_multimodal_qa 断言，无需新断言类型。v1.6.0 补入 1.11（视频 base64 体积边界 429）：新增 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条用例，素材是本地生成的噪声内容视频（分别精确到 48MB/52MB base64 体积，见 suites/kimi-k3/materials/generate_video_size_boundary.py），复用 content_nonempty 断言（不做数字精确比对，只验证网关是否正常处理了这个体积而不是笼统 429），经与用户确认接受为此新增约 75MB 仓库体积。v1.7.0 补入 1.6（空/null tool result 触发幻觉）：新增 assertion_type=self_judged_no_fabrication（见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict，均有单测覆盖）+ input_validation.empty_tool_result_no_fabrication 用例——经与用户确认，用被测模型自身当裁判（而非独立裁判模型），实现是二段式调用：先正常发起用例请求拿到回复，再把回复原文喂给同一模型自己判断是 CLARIFICATION 还是 FABRICATION。已知局限：自证过审偏差，PASS 不代表可以跳过人工抽查，FAIL 的两段完整留痕更值得信任。报告里余下 1 项（1.3 replay 批量重放）经与用户确认后跳过：完全不同的批量重放测试范式，超出当前引擎设计范围，且原始 146 条重放语料不在本仓库。1.12（fps=100 越界）经查阅 platform.kimi.com 官方文档（use-kimi-vision-model），视频输入的公开 API 完全没有 fps 参数（视频通过 video_url.url 传入，官方推荐大文件走 ms://<file-id> 的 Files API，小文件也可直接 base64/URL——本套件已有的 video_url/video_base64 用例已被真实官方 API 跑通验证，schema 假设是对的），fps 大概率是原报告某个内部/自建推理栈的私有扩展参数，公开 API 层面没有依据可以写这条用例，未纳入。v1.8.0：2026-08-25 用 v1.7.0 套件跑 we2ai/官方双渠道真实对比时，`input_validation.video_base64_size_boundary_under_50mb`/`over_50mb` 两条用例在 we2ai 上均在 90s（多模态视频分类超时）后传输层超时（`http_status=0`，非应用层拒绝），无法判断是偶发网络抖动还是系统性问题；把 `defaults.category_timeout_overrides.多模态视频` 从 90 改成 180，两条用例的 `repeat_attempts` 从 1 改成 3（3 次全部成功才算 PASS），以便在同一次运行里获得更确定的结论。v1.9.0：2026-08-26 用 v1.8.0 套件跑 we2ai/官方双渠道真实对比，两条视频体积边界用例在 we2ai 上第 1 次尝试仍在 180s 撞线（`http_status=0`），第 2、3 次实测服务端耗时 110~205s 才完成，说明 180s 对这条链路仍偏紧；经与用户确认，把 `defaults.category_timeout_overrides.多模态视频` 从 180 改成 1800（30 分钟），给传输层足够裕量以排除超时本身造成的假失败，聚焦排查是否存在真实的应用层问题。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。",
+  "design_doc_version": "v0.5",
+  "description": "Kimi-K3 套件的可执行套件定义：截至 v1.9.0，counts_in_base22=true 的基础用例（对应设计方案 05 节，含 v1.2.0 从 z-ai 套件回补的 4 项）为 26 项 + 1 项 reasoning_effort 附加用例 + 若干『长上下文/输入校验/回归/上下文缓存』补充用例（均 counts_in_base22=false，见设计方案 04.3 节）。此计数是本次编辑时的实际清点结果，后续版本增删用例后可能与此处文字漂移——权威计数请直接统计本文件 cases 数组的 counts_in_base22 字段，不要依赖这段自然语言描述。v1.1.0 新增 5 项输入校验用例，来自真实测试中发现的网关输入校验缺口。v1.2.0 从 z-ai 套件（suites/z-ai/suite.v1.json）补齐 7 项协议/能力基线用例，使两套件覆盖对齐。v1.3.0 从《Kimi-K3-接口兼容性测试总结-0820.md》P0 级缺陷中挑选 8 项可用现有断言类型无歧义复现的回归用例并入。v1.4.0 继续从同一份报告补齐 5 项：structured.json_object_stream 复用现有 stream_integrity 断言；thinking.disabled_content_clean/output_control.no_prompt_echo/context.multi_system_message_recall/input_validation.error_type_shape 四项在 internal/assertion/assertion.go 新增了 4 个断言函数（均有单测覆盖）并接了对应 assertion_type。v1.5.0 补入 2.3（MKV 容器不支持）：新增 multimodal.video_mkv_format 用例 + video_mkv_v1 素材，素材用本地 ffmpeg 生成（见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），复用既有 deterministic_multimodal_qa 断言，无需新断言类型。v1.6.0 补入 1.11（视频 base64 体积边界 429）：新增 input_validation.video_base64_size_boundary_under_50mb/over_50mb 两条用例，素材是本地生成的噪声内容视频（分别精确到 48MB/52MB base64 体积，见 suites/kimi-k3/materials/generate_video_size_boundary.py），复用 content_nonempty 断言（不做数字精确比对，只验证网关是否正常处理了这个体积而不是笼统 429），经与用户确认接受为此新增约 75MB 仓库体积。v1.7.0 补入 1.6（空/null tool result 触发幻觉）：新增 assertion_type=self_judged_no_fabrication（见 internal/assertion/assertion.go FabricationJudgePrompt/NoFabricationVerdict，均有单测覆盖）+ input_validation.empty_tool_result_no_fabrication 用例——经与用户确认，用被测模型自身当裁判（而非独立裁判模型），实现是二段式调用：先正常发起用例请求拿到回复，再把回复原文喂给同一模型自己判断是 CLARIFICATION 还是 FABRICATION。已知局限：自证过审偏差，PASS 不代表可以跳过人工抽查，FAIL 的两段完整留痕更值得信任。报告里余下 1 项（1.3 replay 批量重放）经与用户确认后跳过：完全不同的批量重放测试范式，超出当前引擎设计范围，且原始 146 条重放语料不在本仓库。1.12（fps=100 越界）经查阅 platform.kimi.com 官方文档（use-kimi-vision-model），视频输入的公开 API 完全没有 fps 参数（视频通过 video_url.url 传入，官方推荐大文件走 ms://<file-id> 的 Files API，小文件也可直接 base64/URL——本套件已有的 video_url/video_base64 用例已被真实官方 API 跑通验证，schema 假设是对的），fps 大概率是原报告某个内部/自建推理栈的私有扩展参数，公开 API 层面没有依据可以写这条用例，未纳入。v1.8.0：2026-08-25 用 v1.7.0 套件跑 we2ai/官方双渠道真实对比时，`input_validation.video_base64_size_boundary_under_50mb`/`over_50mb` 两条用例在 we2ai 上均在 90s（多模态视频分类超时）后传输层超时（`http_status=0`，非应用层拒绝），无法判断是偶发网络抖动还是系统性问题；把 `defaults.category_timeout_overrides.多模态视频` 从 90 改成 180，两条用例的 `repeat_attempts` 从 1 改成 3（3 次全部成功才算 PASS），以便在同一次运行里获得更确定的结论。v1.9.0：2026-08-26 用 v1.8.0 套件跑 we2ai/官方双渠道真实对比，两条视频体积边界用例在 we2ai 上第 1 次尝试仍在 180s 撞线（`http_status=0`），第 2、3 次实测服务端耗时 110~205s 才完成，说明 180s 对这条链路仍偏紧；经与用户确认，把 `defaults.category_timeout_overrides.多模态视频` 从 180 改成 1800（30 分钟），给传输层足够裕量以排除超时本身造成的假失败，聚焦排查是否存在真实的应用层问题。作为默认测试套件种子数据，新供应商可克隆本文件后按 CAPABILITY_PROFILE 差异增删。 v1.10.0：接入 jiwu.wtgo.com.cn 测试服务器的 gpt-oai（OpenAI GPT-5.x/6 家族）供应商时，tool.choice_allowed_tools 用例在 gpt-6-astra 上报 HTTP 400，排查后发现是 request_template 里tool_choice 的请求体结构本身有误（多包了一层 allowed_tools 键、tools[].name 错误嵌套），用官方 OpenAI API 文档核实订正为正确 schema（详见该用例 notes 字段）；这不是 gpt-oai 专属问题，是 kimi-k3 原始套件定义的 bug，已在源头修正，惠及所有已克隆/未来克隆的套件。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",
@@ -30,8 +30,14 @@
           "description": "查询指定城市的当前天气",
           "parameters": {
             "type": "object",
-            "properties": { "city": { "type": "string" } },
-            "required": ["city"]
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ]
           }
         }
       }
@@ -69,7 +75,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": true
         }
       }
@@ -88,7 +99,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": false
         }
       }
@@ -108,13 +124,28 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": true
         }
       },
       "variants": [
-        { "variant_label": "no_include_usage", "request_overrides": {} },
-        { "variant_label": "with_include_usage", "request_overrides": { "stream_options": { "include_usage": true } } }
+        {
+          "variant_label": "no_include_usage",
+          "request_overrides": {}
+        },
+        {
+          "variant_label": "with_include_usage",
+          "request_overrides": {
+            "stream_options": {
+              "include_usage": true
+            }
+          }
+        }
       ]
     },
     {
@@ -127,7 +158,10 @@
       "assertion_type": "deterministic_multimodal_qa",
       "repeat_attempts": 1,
       "pdf_ref": "2.3",
-      "material_ref": { "material_id": "image_qa_v1", "form": "url" },
+      "material_ref": {
+        "material_id": "image_qa_v1",
+        "form": "url"
+      },
       "request_template": {
         "method": "POST",
         "body": {
@@ -136,8 +170,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:image_qa_v1:question_prompt}}" },
-                { "type": "image_url", "image_url": { "url": "{{material:image_qa_v1:url}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:image_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "{{material:image_qa_v1:url}}"
+                  }
+                }
               ]
             }
           ],
@@ -156,7 +198,10 @@
       "repeat_attempts": 1,
       "pdf_ref": "2.3",
       "notes": "PDF『最少支持 Image_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）",
-      "material_ref": { "material_id": "image_qa_v1", "form": "base64" },
+      "material_ref": {
+        "material_id": "image_qa_v1",
+        "form": "base64"
+      },
       "request_template": {
         "method": "POST",
         "body": {
@@ -165,8 +210,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:image_qa_v1:question_prompt}}" },
-                { "type": "image_url", "image_url": { "url": "data:image/png;base64,{{material:image_qa_v1:base64}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:image_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "data:image/png;base64,{{material:image_qa_v1:base64}}"
+                  }
+                }
               ]
             }
           ],
@@ -185,7 +238,10 @@
       "repeat_attempts": 1,
       "pdf_ref": "2.3",
       "notes": "PDF 未给出视频输入的具体 content part schema，本模板假设供应商采用与 image_url 对称的 video_url content part（type:\"video_url\", video_url:{url:...}）；若实际供应商 schema 不同，需在克隆套件时按 07 节 SOP 调整此用例的 request_template，不属于全局断言口径变化。",
-      "material_ref": { "material_id": "video_qa_v1", "form": "url" },
+      "material_ref": {
+        "material_id": "video_qa_v1",
+        "form": "url"
+      },
       "request_template": {
         "method": "POST",
         "body": {
@@ -194,8 +250,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:video_qa_v1:question_prompt}}" },
-                { "type": "video_url", "video_url": { "url": "{{material:video_qa_v1:url}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:video_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "{{material:video_qa_v1:url}}"
+                  }
+                }
               ]
             }
           ],
@@ -214,7 +278,10 @@
       "repeat_attempts": 1,
       "pdf_ref": "2.3",
       "notes": "PDF『最少支持 Video_base64』，能力声明中不可标记为不支持，未声明也按必过执行（04节）；video content part schema 假设同 multimodal.video_url",
-      "material_ref": { "material_id": "video_qa_v1", "form": "base64" },
+      "material_ref": {
+        "material_id": "video_qa_v1",
+        "form": "base64"
+      },
       "request_template": {
         "method": "POST",
         "body": {
@@ -223,8 +290,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:video_qa_v1:question_prompt}}" },
-                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_qa_v1:base64}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:video_qa_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/mp4;base64,{{material:video_qa_v1:base64}}"
+                  }
+                }
               ]
             }
           ],
@@ -242,7 +317,10 @@
       "assertion_type": "deterministic_multimodal_qa",
       "repeat_attempts": 1,
       "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.3：传入 MKV（matroska）视频容器时，官方能正常解析并回答，内部网关曾返回笼统 400。素材为本仓库用 ffmpeg 本地生成的固定印刷体数字视频（video_mkv_v1，见 suites/kimi-k3/materials/generate_video_mkv_v1.sh），与 video_qa_v1 同款可程序化比对方案，只是换成不同容器格式和数字串，避免和 mp4 素材混淆。",
-      "material_ref": { "material_id": "video_mkv_v1", "form": "base64" },
+      "material_ref": {
+        "material_id": "video_mkv_v1",
+        "form": "base64"
+      },
       "request_template": {
         "method": "POST",
         "body": {
@@ -251,8 +329,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:video_mkv_v1:question_prompt}}" },
-                { "type": "video_url", "video_url": { "url": "data:video/x-matroska;base64,{{material:video_mkv_v1:base64}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:video_mkv_v1:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/x-matroska;base64,{{material:video_mkv_v1:base64}}"
+                  }
+                }
               ]
             }
           ],
@@ -278,8 +364,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:video_size_under_50mb:question_prompt}}" },
-                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_size_under_50mb:base64}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:video_size_under_50mb:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/mp4;base64,{{material:video_size_under_50mb:base64}}"
+                  }
+                }
               ]
             }
           ],
@@ -305,8 +399,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "{{material:video_size_over_50mb:question_prompt}}" },
-                { "type": "video_url", "video_url": { "url": "data:video/mp4;base64,{{material:video_size_over_50mb:base64}}" } }
+                {
+                  "type": "text",
+                  "text": "{{material:video_size_over_50mb:question_prompt}}"
+                },
+                {
+                  "type": "video_url",
+                  "video_url": {
+                    "url": "data:video/mp4;base64,{{material:video_size_over_50mb:base64}}"
+                  }
+                }
               ]
             }
           ],
@@ -329,8 +431,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": "required",
           "stream": false
         }
@@ -350,8 +459,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "stream": false
         }
       }
@@ -370,8 +486,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": "auto",
           "stream": false
         }
@@ -391,8 +514,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": "required",
           "stream": false
         }
@@ -412,8 +542,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": "none",
           "stream": false
         }
@@ -434,9 +571,21 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
-          "tool_choice": { "type": "function", "function": { "name": "get_weather" } },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
+          "tool_choice": {
+            "type": "function",
+            "function": {
+              "name": "get_weather"
+            }
+          },
           "stream": false
         }
       }
@@ -451,16 +600,29 @@
       "assertion_type": "tool_call_subset",
       "repeat_attempts": 1,
       "pdf_ref": "2.4",
-      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）；allowed_tools 请求 schema 假设为 OpenAI 现行草案格式 {type:allowed_tools, allowed_tools:{mode, tools}}，需在 P1 联调时对照供应商实际 schema 核实",
+      "notes": "从严解释：断言要求调用次数 ≥1 且全部函数名 ⊆ allowed_tools 集合（04节，PDF 原文未明确要求至少调用一次）。[v0.5 修正] request_template.body.tool_choice 原先写成 {type:allowed_tools, allowed_tools:{mode, tools}}（多包了一层 allowed_tools 键，且 tools[].name 错误嵌套成 tools[].function.name），已用官方 OpenAI API 文档（platform.openai.com function-calling 指南 + 社区确认，2026-09-17 核实）订正为真实schema：{type:allowed_tools, mode, tools:[{type:function, name}]}（mode/tools 是 tool_choice 顶层的直接字段，不嵌套在 allowed_tools 键下；tools[].name 是扁平字段，不是 tools[].function.name）。回查 reports/kimi-k3/run-*.json 历史结果发现这个 bug 此前已经在部分真实渠道上暴露过（k3relay/vinzk/we2ai-v4 均报 HTTP 400），只是多数渠道对这层多余嵌套比较宽松、静默忽略掉了 tool_choice 约束仍然通过，掩盖了请求体本身有误的事实；用 gpt-6-astra（该渠道对此严格校验，直接 400 拒绝）复测证实了这一点，并用订正后的 schema 重新验证通过。",
       "request_template": {
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": {
             "type": "allowed_tools",
-            "allowed_tools": { "mode": "auto", "tools": [{ "type": "function", "function": { "name": "get_weather" } }] }
+            "mode": "auto",
+            "tools": [
+              {
+                "type": "function",
+                "name": "get_weather"
+              }
+            ]
           },
           "stream": false
         }
@@ -480,13 +642,28 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "on", "request_overrides": { "enable_thinking": true } },
-        { "variant_label": "off", "request_overrides": { "enable_thinking": false } }
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "enable_thinking": true
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "enable_thinking": false
+          }
+        }
       ]
     },
     {
@@ -503,13 +680,32 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "on", "request_overrides": { "thinking": { "type": "enabled" } } },
-        { "variant_label": "off", "request_overrides": { "thinking": { "type": "disabled" } } }
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "thinking": {
+              "type": "disabled"
+            }
+          }
+        }
       ]
     },
     {
@@ -526,13 +722,32 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "on", "request_overrides": { "chat_template_kwargs": { "enable_thinking": true } } },
-        { "variant_label": "off", "request_overrides": { "chat_template_kwargs": { "enable_thinking": false } } }
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "enable_thinking": true
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "enable_thinking": false
+            }
+          }
+        }
       ]
     },
     {
@@ -549,13 +764,32 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "on", "request_overrides": { "chat_template_kwargs": { "thinking": true } } },
-        { "variant_label": "off", "request_overrides": { "chat_template_kwargs": { "thinking": false } } }
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "thinking": true
+            }
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "chat_template_kwargs": {
+              "thinking": false
+            }
+          }
+        }
       ]
     },
     {
@@ -573,7 +807,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       }
@@ -592,7 +831,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}"
+            }
+          ],
           "response_format": {
             "type": "json_schema",
             "json_schema": {
@@ -600,8 +844,18 @@
               "strict": true,
               "schema": {
                 "type": "object",
-                "properties": { "city": { "type": "string" }, "temperature_c": { "type": "number" } },
-                "required": ["city", "temperature_c"],
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "temperature_c": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "city",
+                  "temperature_c"
+                ],
                 "additionalProperties": false
               }
             }
@@ -624,8 +878,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。" }],
-          "response_format": { "type": "json_object" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。"
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          },
           "stream": false
         }
       }
@@ -644,7 +905,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": false
         }
       }
@@ -664,14 +930,34 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_effort_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_effort_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "low", "request_overrides": { "reasoning_effort": "low" } },
-        { "variant_label": "high", "request_overrides": { "reasoning_effort": "high" } },
-        { "variant_label": "max", "request_overrides": { "reasoning_effort": "max" } }
+        {
+          "variant_label": "low",
+          "request_overrides": {
+            "reasoning_effort": "low"
+          }
+        },
+        {
+          "variant_label": "high",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "max",
+          "request_overrides": {
+            "reasoning_effort": "max"
+          }
+        }
       ]
     },
     {
@@ -688,7 +974,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "max_tokens": -1,
           "stream": false
         }
@@ -709,7 +1000,10 @@
         "body": {
           "model": "{{model_key}}",
           "messages": [
-            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
             {
               "role": "assistant",
               "content": null,
@@ -717,14 +1011,20 @@
                 {
                   "id": "call_1",
                   "type": "function",
-                  "function": { "name": "get_weather", "arguments": "{\"city\":\"北京\"}" }
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\":\"北京\"}"
+                  }
                 }
               ]
             },
             {
               "role": "tool",
               "tool_call_id": "call_1",
-              "content": { "temperature": 21.5, "unit": "celsius" }
+              "content": {
+                "temperature": 21.5,
+                "unit": "celsius"
+              }
             }
           ],
           "stream": false
@@ -749,8 +1049,14 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "重复内容测试" },
-                { "type": "text", "text": "重复内容测试" }
+                {
+                  "type": "text",
+                  "text": "重复内容测试"
+                },
+                {
+                  "type": "text",
+                  "text": "重复内容测试"
+                }
               ]
             }
           ],
@@ -772,7 +1078,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "not_a_real_role", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "not_a_real_role",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": false
         }
       }
@@ -795,8 +1106,16 @@
             {
               "role": "user",
               "content": [
-                { "type": "text", "text": "描述这张图片" },
-                { "type": "image_url", "image_url": { "url": "data:image/png;base64,!!!not-valid-base64-data!!!" } }
+                {
+                  "type": "text",
+                  "text": "描述这张图片"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "data:image/png;base64,!!!not-valid-base64-data!!!"
+                  }
+                }
               ]
             }
           ],
@@ -814,14 +1133,23 @@
       "assertion_type": "max_tokens_truncation",
       "repeat_attempts": 3,
       "notes": "v1.2.0 从 z-ai 套件并入的协议基线项（见 07 节 SOP）。断言三条同时成立：finish_reason==\"length\"、usage.completion_tokens ∈ (0, max_tokens]、content 非空。请求里显式关掉思考，避免思考 token 把 256 的预算吃光导致 content 为空。",
-      "assertion_params": { "trace_body_max_chars": 4000 },
+      "assertion_params": {
+        "trace_body_max_chars": 4000
+      },
       "request_template": {
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.long_output_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.long_output_prompt}}"
+            }
+          ],
           "max_tokens": 256,
-          "thinking": { "type": "disabled" },
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -836,14 +1164,25 @@
       "assertion_type": "stop_sequence_respected",
       "repeat_attempts": 1,
       "notes": "v1.2.0 从 z-ai 套件并入的协议基线项。断言输出含 ALPHA（证明模型确实开始作答）、不含 BRAVO（stop 序列本身必须被吞掉）、finish_reason==\"stop\"。",
-      "assertion_params": { "must_contain": "ALPHA" },
+      "assertion_params": {
+        "must_contain": "ALPHA"
+      },
       "request_template": {
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.stop_sequence_prompt}}" }],
-          "stop": ["BRAVO"],
-          "thinking": { "type": "disabled" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.stop_sequence_prompt}}"
+            }
+          ],
+          "stop": [
+            "BRAVO"
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -862,9 +1201,16 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.determinism_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.determinism_prompt}}"
+            }
+          ],
           "temperature": 0,
-          "thinking": { "type": "disabled" },
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -883,13 +1229,28 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": false
         }
       },
       "variants": [
-        { "variant_label": "on", "request_overrides": { "reasoning_effort": "high" } },
-        { "variant_label": "off", "request_overrides": { "reasoning_effort": "off" } }
+        {
+          "variant_label": "on",
+          "request_overrides": {
+            "reasoning_effort": "high"
+          }
+        },
+        {
+          "variant_label": "off",
+          "request_overrides": {
+            "reasoning_effort": "off"
+          }
+        }
       ]
     },
     {
@@ -917,7 +1278,9 @@
               "content": "{{filler:750000}}\n【暗号】7391\n{{filler:750000}}\n{{prompts.long_context_question}}"
             }
           ],
-          "thinking": { "type": "disabled" },
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -942,11 +1305,19 @@
         "body": {
           "model": "{{model_key}}",
           "messages": [
-            { "role": "system", "content": "{{filler:8000}}" },
-            { "role": "user", "content": "{{prompts.cache_probe_question}}" }
+            {
+              "role": "system",
+              "content": "{{filler:8000}}"
+            },
+            {
+              "role": "user",
+              "content": "{{prompts.cache_probe_question}}"
+            }
           ],
           "temperature": 0,
-          "thinking": { "type": "disabled" },
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -965,7 +1336,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "max_tokens": 10000000,
           "stream": false
         }
@@ -985,8 +1361,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
-          "thinking": { "type": "disabled" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": true
         }
       }
@@ -1005,8 +1388,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
-          "thinking": { "type": "enabled" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "enabled"
+          },
           "stream": true
         }
       }
@@ -1025,7 +1415,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
           "stream": true
         }
       }
@@ -1044,10 +1439,19 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
-          "tools": ["{{fixtures.tools.get_weather}}"],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
+          "tools": [
+            "{{fixtures.tools.get_weather}}"
+          ],
           "tool_choice": "required",
-          "thinking": { "type": "enabled" },
+          "thinking": {
+            "type": "enabled"
+          },
           "stream": false
         }
       }
@@ -1066,10 +1470,17 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.long_output_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.long_output_prompt}}"
+            }
+          ],
           "max_tokens": 256,
           "max_completion_tokens": 256,
-          "thinking": { "type": "disabled" },
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -1088,14 +1499,28 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.weather_query}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            }
+          ],
           "tools": [
             {
               "type": "function",
               "function": {
                 "name": "get_weather",
                 "description": "查询指定城市的当前天气",
-                "parameters": { "properties": { "city": { "type": "string" } }, "required": ["city"] }
+                "parameters": {
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city"
+                  ]
+                }
               }
             }
           ],
@@ -1118,7 +1543,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": ""
+            }
+          ],
           "stream": false
         }
       }
@@ -1138,7 +1568,10 @@
         "body": {
           "model": "{{model_key}}",
           "messages": [
-            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
             {
               "role": "assistant",
               "content": null,
@@ -1146,7 +1579,10 @@
                 {
                   "id": "call_1",
                   "type": "function",
-                  "function": { "name": "get_weather", "arguments": "{\"city\": \"北京\"" }
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\": \"北京\""
+                  }
                 }
               ]
             }
@@ -1170,7 +1606,10 @@
         "body": {
           "model": "{{model_key}}",
           "messages": [
-            { "role": "user", "content": "{{prompts.weather_query}}" },
+            {
+              "role": "user",
+              "content": "{{prompts.weather_query}}"
+            },
             {
               "role": "assistant",
               "content": null,
@@ -1178,11 +1617,18 @@
                 {
                   "id": "call_1",
                   "type": "function",
-                  "function": { "name": "get_weather", "arguments": "{\"city\":\"北京\"}" }
+                  "function": {
+                    "name": "get_weather",
+                    "arguments": "{\"city\":\"北京\"}"
+                  }
                 }
               ]
             },
-            { "role": "tool", "tool_call_id": "call_1", "content": null }
+            {
+              "role": "tool",
+              "tool_call_id": "call_1",
+              "content": null
+            }
           ],
           "stream": false
         }
@@ -1202,8 +1648,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。" }],
-          "response_format": { "type": "json_object" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.structured_weather_question}}以 JSON 对象格式输出。"
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          },
           "stream": true
         }
       }
@@ -1222,8 +1675,15 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.reasoning_prompt}}" }],
-          "thinking": { "type": "disabled" },
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.reasoning_prompt}}"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          },
           "stream": false
         }
       }
@@ -1245,7 +1705,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "user", "content": "{{prompts.echo_probe_prompt}}" }],
+          "messages": [
+            {
+              "role": "user",
+              "content": "{{prompts.echo_probe_prompt}}"
+            }
+          ],
           "stream": false
         }
       }
@@ -1261,16 +1726,28 @@
       "repeat_attempts": 1,
       "notes": "v1.4.0 新增，来自 0820 兼容性报告 2.5：多 system messages 场景下，内部网关曾只保留最后一条 system message，导致回答只引用了其中一个身份设定。新增 assertion_type=contains_all_substrings（见 internal/assertion/assertion.go ContainsAllSubstrings），要求回答同时包含两条 system message 各自要求的关键词。",
       "assertion_params": {
-        "required_substrings": ["猫", "狗"]
+        "required_substrings": [
+          "猫",
+          "狗"
+        ]
       },
       "request_template": {
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
           "messages": [
-            { "role": "system", "content": "{{prompts.system_identity_cat}}" },
-            { "role": "system", "content": "{{prompts.system_identity_dog}}" },
-            { "role": "user", "content": "{{prompts.identity_question}}" }
+            {
+              "role": "system",
+              "content": "{{prompts.system_identity_cat}}"
+            },
+            {
+              "role": "system",
+              "content": "{{prompts.system_identity_dog}}"
+            },
+            {
+              "role": "user",
+              "content": "{{prompts.identity_question}}"
+            }
           ],
           "stream": false
         }
@@ -1293,7 +1770,12 @@
         "method": "POST",
         "body": {
           "model": "{{model_key}}",
-          "messages": [{ "role": "not_a_real_role", "content": "{{prompts.generic_short}}" }],
+          "messages": [
+            {
+              "role": "not_a_real_role",
+              "content": "{{prompts.generic_short}}"
+            }
+          ],
           "stream": false
         }
       }

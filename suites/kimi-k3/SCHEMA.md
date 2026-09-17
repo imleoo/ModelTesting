@@ -56,6 +56,6 @@
 ## 尚未解决的假设（需 P1/P2 联调时核实，不代表本文件已默认成立）
 
 1. `multimodal.video_url` / `multimodal.video_base64` 的 `video_url` content part 是本方案假设的 schema，PDF 原文未给出具体字段名。
-2. `tool.choice_allowed_tools` 的请求体假设为 OpenAI 现行草案格式 `{type:allowed_tools, allowed_tools:{mode, tools}}`。
+2. ~~`tool.choice_allowed_tools` 的请求体假设为 OpenAI 现行草案格式 `{type:allowed_tools, allowed_tools:{mode, tools}}`。~~ **已解决（v1.10.0）**：该假设是错的——用官方 OpenAI API 文档核实，真实 schema 是 `{type:allowed_tools, mode, tools:[{type:function, name}]}`（`mode`/`tools` 是 `tool_choice` 顶层直接字段，不嵌套在 `allowed_tools` 键下；`tools[].name` 是扁平字段，不是 `tools[].function.name`）。已订正用例定义，详见该用例 `notes` 字段；回查历史报告发现这个 bug 曾在 k3relay/vinzk/we2ai-v4 等渠道上以 HTTP 400 的形式暴露过，只是多数渠道对多余嵌套比较宽松、静默忽略约束后仍返回 200，掩盖了请求体本身有误的事实。
 3. 素材 `url` 形态的路径规则与承载服务（`cmd/materials-server`）已冻结并本地验证通过，仅 `base_url` 指向的公网/内网主机待部署阶段（设计方案 13 节）确认，见 `materials/manifest.json` 各素材的 `hosting` 字段。
 4. `reasoning_content` / `reasoning_tokens` 的响应字段路径为本文件冻结的默认假设（见上一节表格），非 PDF 逐字指定，供应商差异需在克隆套件时另行覆盖。

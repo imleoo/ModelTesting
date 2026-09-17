@@ -571,7 +571,7 @@ func joinViolations(v []string) string {
 }
 
 func (e *Engine) scoreStreamIntegrity(_ suitedef.Case, cr client.CallResult, attempt *model.CaseAttempt) {
-	v := assertion.StreamIntegrity(len(cr.SSEResult.Chunks), cr.SSEResult.SawDone)
+	v := assertion.StreamIntegrity(len(cr.SSEResult.Chunks), e.isStreamComplete(cr))
 	attempt.Passed, attempt.FailReason = v.Passed, v.Reason
 }
 
@@ -707,7 +707,7 @@ func (e *Engine) runUsageFieldsStream(ctx context.Context, c suitedef.Case, resu
 		default:
 			if ok, reason := e.validateStreamSchema(cr); !ok {
 				attempt.Passed, attempt.FailReason = false, e.schemaBaselineLabel()+" 未通过: "+reason
-			} else if lastUsage, ok := lastChunkUsage(cr); !ok {
+			} else if lastUsage, ok := e.finalStreamUsage(cr); !ok {
 				attempt.Passed, attempt.FailReason = false, "未收到 [DONE] 或末包缺失/无法解析，无法确认末包是否携带 usage"
 			} else {
 				v := assertion.UsageFieldsStreamAttempt(lastUsage)
@@ -988,16 +988,18 @@ func extractToolChoiceFunctionName(c suitedef.Case) (string, bool) {
 	return name, ok
 }
 
+// extractAllowedToolNames 从 tool_choice 里取出 allowed_tools 允许调用的函数
+// 名单。官方 OpenAI schema（2026-09-17 用 gpt-6-astra 真实请求核实）：mode/
+// tools 是 tool_choice 顶层直接字段，不嵌套在 allowed_tools 键下；
+// tools[].name 是扁平字段，不是 tools[].function.name——套件定义此前按错误
+// 假设的 schema 写，已在 suites/kimi-k3/suite.v1.json v1.10.0 订正，这里
+// 跟着改，否则永远解析不出任何 allowed 名单。
 func extractAllowedToolNames(c suitedef.Case) []string {
 	tc, ok := c.RequestTemplate.Body["tool_choice"].(map[string]any)
 	if !ok {
 		return nil
 	}
-	at, ok := tc["allowed_tools"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	tools, ok := at["tools"].([]any)
+	tools, ok := tc["tools"].([]any)
 	if !ok {
 		return nil
 	}
@@ -1007,11 +1009,7 @@ func extractAllowedToolNames(c suitedef.Case) []string {
 		if !ok {
 			continue
 		}
-		fn, ok := tm["function"].(map[string]any)
-		if !ok {
-			continue
-		}
-		if name, ok := fn["name"].(string); ok {
+		if name, ok := tm["name"].(string); ok {
 			names = append(names, name)
 		}
 	}
