@@ -969,7 +969,7 @@
       "capability_tag": null,
       "assertion_type": "rejects_invalid_request",
       "repeat_attempts": 1,
-      "notes": "非 PDF 原文用例，07 节 SOP 允许的供应商专属补充：真实测试中发现 tokenpanel 对 max_tokens=-1 未做校验、直接透传后端触发 HTTP 500，应在网关层拦截并返回 400/422",
+      "notes": "非 PDF 原文用例，07 节 SOP 允许的供应商专属补充：真实测试中发现被测网关对 max_tokens=-1 未做校验、直接透传后端触发 HTTP 500，应在网关层拦截并返回 400/422",
       "request_template": {
         "method": "POST",
         "body": {
@@ -994,7 +994,7 @@
       "capability_tag": null,
       "assertion_type": "rejects_invalid_request",
       "repeat_attempts": 1,
-      "notes": "非 PDF 原文用例，同上补充：role=tool 的消息 content 按 OpenAI 协议必须是 string，这里故意传一个 JSON 对象；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "notes": "非 PDF 原文用例，同上补充：role=tool 的消息 content 按 OpenAI 协议必须是 string，这里故意传一个 JSON 对象；真实测试中被测网关对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
       "request_template": {
         "method": "POST",
         "body": {
@@ -1040,7 +1040,7 @@
       "capability_tag": null,
       "assertion_type": "rejects_invalid_request",
       "repeat_attempts": 1,
-      "notes": "非 PDF 原文用例，同上补充：content 数组里两个完全相同的 text part；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "notes": "非 PDF 原文用例，同上补充：content 数组里两个完全相同的 text part；真实测试中被测网关对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
       "request_template": {
         "method": "POST",
         "body": {
@@ -1073,7 +1073,7 @@
       "capability_tag": null,
       "assertion_type": "rejects_invalid_request",
       "repeat_attempts": 1,
-      "notes": "非 PDF 原文用例，同上补充：role 传一个不在 system/user/assistant/tool 枚举内的非法值；真实测试中 tokenpanel 对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
+      "notes": "非 PDF 原文用例，同上补充：role 传一个不在 system/user/assistant/tool 枚举内的非法值；真实测试中被测网关对此未做校验、透传后端触发 HTTP 500，应返回 400/422",
       "request_template": {
         "method": "POST",
         "body": {
@@ -1294,7 +1294,7 @@
       "capability_tag": "prompt_cache",
       "assertion_type": "prompt_cache_hit_rate",
       "repeat_attempts": 1,
-      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE.prompt_cache=true 有实测依据：reports/kimi-k3/P3-性能测试结果表-2026-08-18.md 已确认 kimi-k3/tokenpanel 真实返回 usage.prompt_tokens_details.cached_tokens（实测命中率 93.9%），因此本用例会真正执行而非记 NOT_DECLARED。先发 1 次预热请求把前缀写进缓存，再发一次同样的请求判定 cached_tokens / prompt_tokens ≥ min_hit_rate。",
+      "notes": "v1.2.0 从 z-ai 套件并入的附加用例，不计入基础分母。CAPABILITY_PROFILE.prompt_cache=true 有实测依据：reports/kimi-k3/P3-性能测试结果表-2026-08-18.md 已确认 kimi-k3 被测网关真实返回 usage.prompt_tokens_details.cached_tokens（实测命中率 93.9%），因此本用例会真正执行而非记 NOT_DECLARED。先发 1 次预热请求把前缀写进缓存，再发一次同样的请求判定 cached_tokens / prompt_tokens ≥ min_hit_rate。",
       "assertion_params": {
         "warmup_requests": 1,
         "min_hit_rate": 0.5,

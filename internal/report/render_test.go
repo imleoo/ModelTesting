@@ -11,7 +11,7 @@ import (
 )
 
 // TestRender_AgainstRealP2P3Artifacts 用仓库里真实的 P2 功能测试结果、P3
-// 压测结果（对真实 tokenpanel/kimi-k3 网关执行产出，见 reports/kimi-k3/）
+// 压测结果（对真实 kimi-k3 网关执行产出，见 reports/kimi-k3/）
 // 渲染一次报告，验证 report 包和真实产物的 JSON 形状是匹配的，而不是只对
 // 手工构造的最小 fixture 有效。
 func TestRender_AgainstRealP2P3Artifacts(t *testing.T) {

@@ -32,7 +32,7 @@
         "frozen_url_path": "/materials/kimi-k3/v1/image_qa_v1.png",
         "base_url_resolution": {
           "local_dev_default": "http://127.0.0.1:8080",
-          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证 tokenpanel（49.233.9.153）网络可达"
+          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证被测网关网络可达"
         },
         "local_verification": {
           "verified_at": "2026-08-17",
@@ -42,7 +42,7 @@
           "result": "PASS（exit_code=0）：见 last_run_log 完整原始输出，非摘要转述"
         },
         "status": "PATH_FROZEN_HOST_PENDING",
-        "note": "URL 路径规则（/materials/<suite_id>/v1/<file>）与承载该路径的服务实现（cmd/materials-server）已冻结并本地验证通过；剩余未决项仅为『base_url 指向哪个对 tokenpanel 公网/内网可达的主机』，属于部署阶段（13节）动作，不在本文件预先假设结果。"
+        "note": "URL 路径规则（/materials/<suite_id>/v1/<file>）与承载该路径的服务实现（cmd/materials-server）已冻结并本地验证通过；剩余未决项仅为『base_url 指向哪个对被测网关公网/内网可达的主机』，属于部署阶段（13节）动作，不在本文件预先假设结果。"
       }
     },
     {
@@ -65,7 +65,7 @@
         "frozen_url_path": "/materials/kimi-k3/v1/video_qa_v1.mp4",
         "base_url_resolution": {
           "local_dev_default": "http://127.0.0.1:8080",
-          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证 tokenpanel（49.233.9.153）网络可达"
+          "production": "由部署环境变量 TESTBED_PUBLIC_BASE_URL 提供，不写入套件文件；取值需保证被测网关网络可达"
         },
         "local_verification": {
           "verified_at": "2026-08-17",
@@ -139,7 +139,7 @@
     }
   ],
   "open_items": [
-    "hosting.status = PATH_FROZEN_HOST_PENDING：URL 路径规则与承载服务（cmd/materials-server）已冻结并本地验证通过（见各素材 hosting.local_verification）；仅剩 base_url 指向的公网/内网主机需在部署阶段（13节）确认对 tokenpanel（49.233.9.153）可达后，通过 TESTBED_PUBLIC_BASE_URL 环境变量配置，无需再改动本文件或套件定义。",
+    "hosting.status = PATH_FROZEN_HOST_PENDING：URL 路径规则与承载服务（cmd/materials-server）已冻结并本地验证通过（见各素材 hosting.local_verification）；仅剩 base_url 指向的公网/内网主机需在部署阶段（13节）确认对被测网关可达后，通过 TESTBED_PUBLIC_BASE_URL 环境变量配置，无需再改动本文件或套件定义。",
     "验证方式说明：托管服务的实测证据以仓库内可复现脚本（verify_hosting.sh）+ 实际运行留痕（verify_hosting.last-run.log）形式提供，而非要求每次审核都现场联网执行——多轮审核确认只读审核沙箱通常网络隔离/禁止写临时目录，无法现场重跑构建与网络请求；脚本本身可读、可静态审查其逻辑是否等于其声称的验证内容，也可在有权限的环境下随时重新执行复核。",
     "本素材为测试台自制（非既有评测框架素材），采用『固定印刷体数字』方案以保证答案确定性，非对既有评测集的复刻；如后续需要与既有评测框架的素材对齐，需额外获取并替换。"
   ]

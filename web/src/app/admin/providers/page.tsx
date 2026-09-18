@@ -189,7 +189,7 @@ export default function ProvidersPage() {
               placeholder="如 kimi-k3（仅限字母/数字开头，其余为字母数字 . _ -）"
             />
           </Field>
-          <Field label="tokenpanel 端点（endpoint_via_tokenpanel）">
+          <Field label="网关端点（endpoint_via_tokenpanel）">
             <TextInput
               value={endpoint}
               onChange={setEndpoint}

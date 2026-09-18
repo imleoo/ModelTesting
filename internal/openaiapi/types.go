@@ -40,7 +40,7 @@ type Usage struct {
 	TotalTokens             int                      `json:"total_tokens"`
 	CompletionTokensDetails *CompletionTokensDetails `json:"completion_tokens_details,omitempty"`
 	PromptTokensDetails     *PromptTokensDetails     `json:"prompt_tokens_details,omitempty"`
-	// CachedTokensFlat 是部分网关（含 tokenpanel 转发的 z.ai）把缓存命中数直接
+	// CachedTokensFlat 是部分网关（含转发 z.ai 的中转网关）把缓存命中数直接
 	// 平铺在 usage 顶层的形态。不做协议层面的对错判断，读到哪个用哪个。
 	CachedTokensFlat *int `json:"cached_tokens,omitempty"`
 }

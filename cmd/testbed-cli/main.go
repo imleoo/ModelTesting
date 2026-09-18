@@ -1,5 +1,5 @@
 // testbed-cli 是 P1「无 UI 调用器」：按套件定义逐条执行用例，产出 CaseResult/CaseAttempt
-// 留痕。用于对接真实 tokenpanel（P2）或对接 mock 服务器验证引擎自身正确性（P1 验收）。
+// 留痕。用于对接真实被测网关（P2）或对接 mock 服务器验证引擎自身正确性（P1 验收）。
 package main
 
 import (

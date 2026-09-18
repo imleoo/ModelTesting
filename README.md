@@ -1,6 +1,6 @@
 # 模型自测台（Model Testbed）
 
-面向多供应商 LLM 接入场景的自测执行与报告平台：对被测网关（当前为 we2ai.com 企业级模型中转服务平台）暴露的 OpenAI 兼容接口（`/v1/chat/completions`，流式 + 非流式）执行功能用例断言与压测，产出可归档的自测报告，新供应商接入时按能力声明克隆/裁剪套件即可复用，不用改代码。
+面向多供应商 LLM 接入场景的自测执行与报告平台：对被测网关（当前为 [we2ai.com](https://we2ai.com) 企业级模型中转服务平台）暴露的 OpenAI 兼容接口（`/v1/chat/completions`，流式 + 非流式）执行功能用例断言与压测，产出可归档的自测报告，新供应商接入时按能力声明克隆/裁剪套件即可复用，不用改代码。
 
 首版实现是单进程 + SQLite（无队列/无 Redis），目标是单人可用、能跑通全部功能与性能验收要求；更大规模的队列化架构是后续按需演进项，见 [`docs/模型自测台设计方案.md`](docs/模型自测台设计方案.md) 第 02、10 节。
 
@@ -153,6 +153,6 @@ docker compose up -d --build
 
 ## 版权与维护
 
-Copyright © 2026 we2ai.com. All rights reserved.
+Copyright © 2026 [we2ai.com](https://we2ai.com). All rights reserved.
 
 本项目由 we2ai.com 负责开发与维护。代码、测试套件、文档及报告模板的版权归 we2ai.com 所有，未经书面授权不得复制、分发或用于商业用途。

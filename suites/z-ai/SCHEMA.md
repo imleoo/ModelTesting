@@ -92,9 +92,9 @@
 ```bash
 go run ./cmd/testbed-cli \
   -suite suites/z-ai/suite.v1.json \
-  -base-url https://<tokenpanel 网关> \
+  -base-url https://<被测网关> \
   -api-key <key> \
-  -model-key <tokenpanel 里配置的 z.ai 模型 ID> \
+  -model-key <网关里配置的 z.ai 模型 ID> \
   -capability suites/z-ai/capability_z-ai.real.json \
   -out reports/z-ai/run-$(date +%F).json
 ```

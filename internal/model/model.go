@@ -147,9 +147,9 @@ type Provider struct {
 	Contact string `json:"contact,omitempty"`
 }
 
-// Model 对应 03 节 MODEL 实体：某供应商在 tokenpanel 上开通的一个被测模型端点。
-// EndpointViaTokenpanel 是 tokenpanel 暴露的 OpenAI 兼容 base URL（不是供应商
-// 自己的上游地址——本系统只消费 tokenpanel 已开通的端点，见 01 节范围边界）。
+// Model 对应 03 节 MODEL 实体：某供应商在被测网关上开通的一个被测模型端点。
+// EndpointViaTokenpanel 是被测网关暴露的 OpenAI 兼容 base URL（不是供应商
+// 自己的上游地址——本系统只消费被测网关已开通的端点，见 01 节范围边界）。
 type Model struct {
 	ID                    string            `json:"id"`
 	ProviderID            string            `json:"provider_id"`

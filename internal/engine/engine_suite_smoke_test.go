@@ -74,7 +74,7 @@ func mockGatewayHandler() http.HandlerFunc {
 		// 良好的被测网关"用来驱动整套 suite.v1.json（含 input_validation.*
 		// 系列 rejects_invalid_request/rejects_with_error_type 用例），所以除了
 		// 正常应答之外，还需要正确拒绝那几类故意构造的非法输入——一个真正做了
-		// 输入校验的网关应该表现成这样，而不是像真实 tokenpanel 那样 500；
+		// 输入校验的网关应该表现成这样，而不是像真实被测网关那样 500；
 		// 错误体也要是合规的 OpenAI 协议 {"error":{...}} JSON（而不是纯文本），
 		// 否则 input_validation.error_type_shape 这条用例在"理想网关"下也会误判 FAIL。
 		if reason := invalidRequestReason(body); reason != "" {

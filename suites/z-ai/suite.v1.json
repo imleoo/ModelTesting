@@ -3,7 +3,7 @@
   "suite_version": "1.0.0",
   "design_doc": "docs/模型自测台设计方案.md",
   "design_doc_version": "v0.3",
-  "description": "z.ai（GLM 系列，经 tokenpanel 网关转发）的可执行套件定义：18 项基础用例 + 4 项附加用例。用例主干来自 z.ai 实测底稿的 14 个测试项，另按 07 节 SOP 补入 kimi-k3 套件里正交且低成本的协议基线项（Stream 完整性、tool_choice 的 default/auto/required/none、默认思考行为、连通性）。不含多模态用例——本套件的被测模型是纯文本模型 glm-5.2，多模态需另建 glm-5v-turbo 的克隆套件并补 materials。",
+  "description": "z.ai（GLM 系列，经被测网关转发）的可执行套件定义：18 项基础用例 + 4 项附加用例。用例主干来自 z.ai 实测底稿的 14 个测试项，另按 07 节 SOP 补入 kimi-k3 套件里正交且低成本的协议基线项（Stream 完整性、tool_choice 的 default/auto/required/none、默认思考行为、连通性）。不含多模态用例——本套件的被测模型是纯文本模型 glm-5.2，多模态需另建 glm-5v-turbo 的克隆套件并补 materials。",
   "protocol": {
     "base_path": "/v1/chat/completions",
     "auth_header": "Authorization: Bearer {{api_key}}",

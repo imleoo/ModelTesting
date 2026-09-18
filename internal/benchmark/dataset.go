@@ -17,7 +17,7 @@ type Params struct {
 }
 
 // DefaultParams 构造设计方案 6.1 节表格里的固化参数。totalSessions 由调用方
-// 指定（PDF 原文："按目标并发设定（供应商/tokenpanel 侧约定）"，不是固定值）。
+// 指定（PDF 原文："按目标并发设定（供应商/网关侧约定）"，不是固定值）。
 func DefaultParams(totalSessions int) (*Params, error) {
 	numRounds, err := NewPercentileSampler("num-rounds", 1,
 		[]PercentilePoint{{0.50, 25.0}, {0.75, 34.0}, {0.90, 47.0}, {0.95, 57.0}},
