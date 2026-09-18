@@ -1,12 +1,4 @@
 /** @type {import('next').NextConfig} */
-
-// const withTM = require('next-transpile-modules')(['@babel/preset-react']);
-//   '@fullcalendar/common',
-//   '@fullcalendar/common',
-//   '@fullcalendar/daygrid',
-//   '@fullcalendar/interaction',
-//   '@fullcalendar/react',
-
 const nextConfig = {
   // 明确锁定 workspace root 到本项目目录：用户主目录下恰好也有一个
   // package-lock.json（与本项目无关），Next.js 会把它误认成候选的
@@ -19,12 +11,6 @@ const nextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH,
   images: {
-    domains: [
-      'images.unsplash.com',
-      'i.ibb.co',
-      'scontent.fotp8-1.fna.fbcdn.net',
-    ],
-    // Make ENV
     unoptimized: true,
   },
   // 单容器部署下 api-server 与 Next.js 共享同一个对外端口：浏览器只

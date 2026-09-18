@@ -1,11 +1,14 @@
-/* eslint-disable */
-
 import { HiX } from 'react-icons/hi';
 import Links from './components/Links';
 
 import { IRoute } from 'types/navigation';
 
-function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
+function Sidebar(props: {
+  routes: IRoute[];
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  [x: string]: any;
+}) {
   const { routes, open, setOpen } = props;
   return (
     <div
@@ -20,21 +23,21 @@ function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
         <HiX />
       </span>
 
-      <div className={`mx-[56px] mt-[50px] flex items-center`}>
-        <div className="ml-1 mt-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white">
-          Horizon <span className="font-medium">FREE</span>
+      <div className="mx-[56px] mt-[50px] flex flex-col">
+        <div className="text-[26px] font-bold leading-tight text-navy-700 dark:text-white">
+          模型自测台
+        </div>
+        <div className="mt-1 text-xs font-medium uppercase tracking-wider text-gray-600">
+          Model Testbed
         </div>
       </div>
-      <div className="mb-7 mt-[58px] h-px bg-gray-300 dark:bg-white/30" />
-      {/* Nav item */}
+      <div className="mb-7 mt-[40px] h-px bg-gray-300 dark:bg-white/30" />
 
       <ul className="mb-auto pt-1">
         <Links routes={routes} />
       </ul>
-
-      {/* Nav item end */}
     </div>
   );
 }
 
-export default SidebarHorizon;
+export default Sidebar;

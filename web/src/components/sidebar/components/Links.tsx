@@ -1,18 +1,14 @@
-/* eslint-disable */
 import React from 'react';
 import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import NavLink from 'components/link/NavLink';
-import DashIcon from 'components/icons/DashIcon';
-// chakra imports
+import { IRoute } from 'types/navigation';
 
-export const SidebarLinks = (props: { routes: RoutesType[] }): JSX.Element => {
-  // Chakra color mode
+export const SidebarLinks = (props: { routes: IRoute[] }): JSX.Element => {
   const pathname = usePathname();
-
   const { routes } = props;
 
-  // verifies if routeName is the one active (in browser input)
+  // 当前浏览器路径是否落在该路由下
   const activeRoute = useCallback(
     (routeName: string) => {
       return pathname?.includes(routeName);
@@ -20,50 +16,44 @@ export const SidebarLinks = (props: { routes: RoutesType[] }): JSX.Element => {
     [pathname],
   );
 
-  const createLinks = (routes: RoutesType[]) => {
-    return routes.map((route, index) => {
-      if (
-        route.layout === '/admin' ||
-        route.layout === '/auth' ||
-        route.layout === '/rtl'
-      ) {
-        return (
-          <NavLink key={index} href={route.layout + '/' + route.path}>
-            <div className="relative mb-3 flex hover:cursor-pointer">
-              <li
-                className="my-[3px] flex cursor-pointer items-center px-8"
-                key={index}
-              >
-                <span
-                  className={`${
-                    activeRoute(route.path) === true
-                      ? 'font-bold text-brand-500 dark:text-white'
-                      : 'font-medium text-gray-600'
-                  }`}
-                >
-                  {route.icon ? route.icon : <DashIcon />}{' '}
-                </span>
-                <p
-                  className={`leading-1 ml-4 flex ${
-                    activeRoute(route.path) === true
-                      ? 'font-bold text-navy-700 dark:text-white'
-                      : 'font-medium text-gray-600'
-                  }`}
-                >
-                  {route.name}
-                </p>
-              </li>
-              {activeRoute(route.path) ? (
-                <div className="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400" />
-              ) : null}
-            </div>
-          </NavLink>
-        );
-      }
-    });
-  };
-  // BRAND
-  return <>{createLinks(routes)}</>;
+  return (
+    <>
+      {routes
+        .filter((route) => !route.hidden)
+        .map((route, index) => {
+          const active = activeRoute(route.path) === true;
+          return (
+            <NavLink key={index} href={route.layout + '/' + route.path}>
+              <div className="relative mb-3 flex hover:cursor-pointer">
+                <li className="my-[3px] flex cursor-pointer items-center px-8">
+                  <span
+                    className={
+                      active
+                        ? 'font-bold text-brand-500 dark:text-white'
+                        : 'font-medium text-gray-600'
+                    }
+                  >
+                    {route.icon}
+                  </span>
+                  <p
+                    className={`leading-1 ml-4 flex ${
+                      active
+                        ? 'font-bold text-navy-700 dark:text-white'
+                        : 'font-medium text-gray-600'
+                    }`}
+                  >
+                    {route.name}
+                  </p>
+                </li>
+                {active ? (
+                  <div className="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400" />
+                ) : null}
+              </div>
+            </NavLink>
+          );
+        })}
+    </>
+  );
 };
 
 export default SidebarLinks;

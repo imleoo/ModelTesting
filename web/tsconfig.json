@@ -20,9 +20,6 @@
     "strictNullChecks": false,
     "downlevelIteration": true,
     "baseUrl": "src",
-    "paths": {
-      "@/public/*": ["./src/assets/public/*"]
-    },
     "incremental": true,
     "plugins": [
       {
