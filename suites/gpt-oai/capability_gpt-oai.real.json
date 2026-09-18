@@ -1,6 +1,6 @@
 {
   "model_id": "gpt-oai-family",
-  "image_url": true,
+  "image_url": false,
   "image_base64": true,
   "video_url": false,
   "video_base64": false,
